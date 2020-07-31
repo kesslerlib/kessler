@@ -2,7 +2,7 @@ import numpy as np
 import warnings
 import datetime
 import uuid
-
+import copy
 
 # Based on CCSDS 508.0-B-1
 # https://public.ccsds.org/Pubs/508x0b1e2c1.pdf
