@@ -1,3 +1,3 @@
 __version__ = '0.1.0.dev3'
 
-from .cdm import CDM
+from .cdm import ConjunctionDataMessage

@@ -4,9 +4,10 @@ import datetime
 import uuid
 import copy
 
+
 # Based on CCSDS 508.0-B-1
 # https://public.ccsds.org/Pubs/508x0b1e2c1.pdf
-class CDM():
+class ConjunctionDataMessage():
     def __init__(self):
         self._obligatory = {}
         self._optional = {}
@@ -63,7 +64,7 @@ class CDM():
         self.set_object(1, 'REF_FRAME', 'ITRF')
 
     def copy(self):
-        ret = CDM()
+        ret = ConjunctionDataMessage()
         ret._values_header = copy.deepcopy(self._values_header)
         ret._values_relative_metadata = copy.deepcopy(self._values_relative_metadata)
         ret._values_object_metadata = copy.deepcopy(self._values_object_metadata)
@@ -71,6 +72,14 @@ class CDM():
         ret._values_object_data_state = copy.deepcopy(self._values_object_data_state)
         ret._values_object_data_covariance = copy.deepcopy(self._values_object_data_covariance)
         return ret
+
+    def __hash__(self):
+        return hash(self.kvn(show_all=True))
+
+    def __eq__(self, other):
+        if isinstance(other, ConjunctionDataMessage):
+            return hash(self) == hash(other)
+        return False
 
     def set_header(self, key, value):
         if key in self._keys_header:
