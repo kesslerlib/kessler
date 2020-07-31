@@ -62,6 +62,16 @@ class CDM():
         self.set_object(1, 'MANEUVERABLE', 'N/A')
         self.set_object(1, 'REF_FRAME', 'ITRF')
 
+    def copy(self):
+        ret = CDM()
+        ret._values_header = copy.deepcopy(self._values_header)
+        ret._values_relative_metadata = copy.deepcopy(self._values_relative_metadata)
+        ret._values_object_metadata = copy.deepcopy(self._values_object_metadata)
+        ret._values_object_data_od = copy.deepcopy(self._values_object_data_od)
+        ret._values_object_data_state = copy.deepcopy(self._values_object_data_state)
+        ret._values_object_data_covariance = copy.deepcopy(self._values_object_data_covariance)
+        return ret
+
     def set_header(self, key, value):
         if key in self._keys_header:
             self._values_header[key] = value
