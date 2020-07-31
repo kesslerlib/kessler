@@ -156,20 +156,13 @@ class ConjunctionDataMessage():
             v = np.cross(w, u)
             return np.vstack((u, v, w))
 
-#         def from_cartesian_to_rtn(r, v):
-#             T = uvw_matrix(r, v)
-#             r_rtn = np.dot(T,r)
-#             v_rtn = np.dot(T,v)
-#             return r_rtn, v_rtn
-#         def relative_state(state_object1, state_object2):
-#             return np.zeros([2, 3])
         def relative_state(state_obj_1, state_obj_2):
-            rot_matrix=uvw_matrix(state_obj_1[0], state_obj_1[1])
+            rot_matrix = uvw_matrix(state_obj_1[0], state_obj_1[1])
             rel_position_xyz = state_obj_2[0] - state_obj_1[0]
             rel_velocity_xyz = state_obj_2[1] - state_obj_1[1]
-            relative_state=np.zeros([2,3])
-            relative_state[0] = np.array([np.dot(rot_matrix[0],rel_position_xyz), np.dot(rot_matrix[1],rel_position_xyz), np.dot(rot_matrix[2],rel_position_xyz)])
-            relative_state[1] = np.array([np.dot(rot_matrix[0],rel_velocity_xyz), np.dot(rot_matrix[1],rel_velocity_xyz), np.dot(rot_matrix[2],rel_velocity_xyz)])
+            relative_state = np.zeros([2, 3])
+            relative_state[0] = np.array([np.dot(rot_matrix[0], rel_position_xyz), np.dot(rot_matrix[1], rel_position_xyz), np.dot(rot_matrix[2], rel_position_xyz)])
+            relative_state[1] = np.array([np.dot(rot_matrix[0], rel_velocity_xyz), np.dot(rot_matrix[1], rel_velocity_xyz), np.dot(rot_matrix[2], rel_velocity_xyz)])
             return relative_state
 
         state_object1 = self.get_state(0)
