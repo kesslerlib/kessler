@@ -11,4 +11,4 @@ stages:
 pytest:
   stage: Test
   script:
-  - pytest -rA
+  - pytest -n auto -x -rA

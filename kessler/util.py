@@ -1,4 +1,7 @@
+import numpy as np
+import torch
 import math
+import pykep
 
 
 # This function is from python-sgp4 released under MIT License, (c) 2012–2016 Brandon Rhodes
@@ -38,3 +41,39 @@ def tle(satnum, classification, international_designator, epoch_year, epoch_days
         raise RuntimeError('TLE line 2 has unexpected length ({})'.format(len(line2)))
 
     return line1, line2
+
+
+def upsample(s, target_resolution):
+    s = s.transpose(0, 1)
+    s = torch.nn.functional.interpolate(s.unsqueeze(0), size=(target_resolution), mode='linear', align_corners=True)
+    s = s.squeeze(0).transpose(0, 1)
+    return s
+
+
+pykep_satellite = None
+
+
+def lpop_init(tle):
+    global pykep_satellite
+    pykep_satellite = pykep.planet.tle(tle[0], tle[1])
+
+
+def lpop_single(target_mjd):
+    return pykep_satellite.eph(pykep.epoch(target_mjd, 'mjd'))
+
+
+def lpop_sequence(target_mjds):
+    return np.array(list(map(lpop_single, target_mjds)))
+
+
+def lpop_sequence_upsample(target_mjds, upsample_factor=1):
+    if upsample_factor == 1:
+        return lpop_sequence(target_mjds)
+    else:
+        take_every = max(upsample_factor, 1)
+        target_mjds_subsample = [target_mjds[i] for i in range(0, len(target_mjds), take_every)]
+        ret = lpop_sequence(target_mjds_subsample)
+        ret = torch.from_numpy(ret).view(ret.shape[0], -1)
+        ret = upsample(ret, len(target_mjds))
+        ret = ret.view(ret.shape[0], 2, 3).cpu().numpy()
+        return ret
