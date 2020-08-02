@@ -43,6 +43,38 @@ def tle(satnum, classification, international_designator, epoch_year, epoch_days
     return line1, line2
 
 
+def from_cartesian_to_tle_elements(r, v):
+    kepl_el = pykep.ic2par(r, v, pykep.MU_EARTH)
+    # these are returned as (a,e,i,W,w,E) --> [m], [-], [rad], [rad], [rad], [rad]
+    mean_motion         = np.sqrt(pykep.MU_EARTH/((kepl_el[0])**(3.0)))
+    eccentricity        = kepl_el[1]
+    inclination         = kepl_el[2]
+    argument_of_perigee = kepl_el[4]
+    raan                = kepl_el[3]
+    mean_anomaly        = kepl_el[5] - kepl_el[1]*np.sin(kepl_el[5])+np.pi
+    return [mean_motion, eccentricity, inclination, argument_of_perigee, raan, mean_anomaly]
+
+
+def uvw_matrix(r, v):
+    u = r / np.linalg.norm(r)
+    w = np.cross(r, v)
+    w = w / np.linalg.norm(w)
+    v = np.cross(w, u)
+    return np.vstack((u, v, w))
+
+
+def from_cartesian_to_RTN(r, v):
+    T = uvw_matrix(r, v)
+    r_rtn = np.dot(T, r)
+    v_rtn = np.dot(T, v)
+    return r_rtn, v_rtn
+
+
+def find_closest(values, t):
+    indx = np.argmin(abs(values-t))
+    return indx, values[indx]
+
+
 def upsample(s, target_resolution):
     s = s.transpose(0, 1)
     s = torch.nn.functional.interpolate(s.unsqueeze(0), size=(target_resolution), mode='linear', align_corners=True)
