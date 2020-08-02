@@ -1,0 +1,13 @@
+image: "python:3.7"
+
+before_script:
+  - python --version
+  - pip install .
+
+stages:
+  - Test
+
+pytest:
+  stage: Test
+  script:
+  - pytest -rA

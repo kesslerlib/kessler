@@ -30,7 +30,7 @@ setup(
     author='ESA FDL Europe Constellations Team',
     # author_email='',
     packages=find_packages(),
-    install_requires=['numpy'],
+    install_requires=['numpy', 'pyprob', 'torch'],
     # url='https://github.com/kessler/kessler',
     classifiers=['License :: OSI Approved :: BSD License', 'Programming Language :: Python :: 3'],
     license='BSD'
