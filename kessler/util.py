@@ -76,9 +76,9 @@ def from_TEME_to_ITRF(state, time):
     r, v = state[0], state[1]
     #time must be in J2000 
     #velocity in the converter is in m/days, so we multiply by 86400 before conversion and divide later
-    print(f'pos: {r}, vel: {v}')
+    # print(f'pos: {r}, vel: {v}')
     r_new, v_new = skyfield.sgp4lib.TEME_to_ITRF(time, r, v*86400.)
-    print(f'pos: {r_new}, vel: {v_new/86400.}')
+    # print(f'pos: {r_new}, vel: {v_new/86400.}')
     v_new = v_new / 86400.
     state = np.stack([r_new,v_new])
     return state
