@@ -101,10 +101,21 @@ def from_jd_to_datetime(jd_date):
     e = pykep.epoch(jd_date, 'jd')
     return datetime.datetime.strptime(str(e), '%Y-%b-%d %H:%M:%S.%f')
 
+def from_mjd_to_datetime(mjd_date):
+    e = pykep.epoch(mjd_date, 'mjd')
+    return datetime.datetime.strptime(str(e), '%Y-%b-%d %H:%M:%S.%f')
+
 def from_jd_to_cdm_datetime_str(jd_date):
     d = from_jd_to_datetime(jd_date)
     return from_datetime_to_cdm_datetime_str(d)
-    
+
+def from_mjd_to_epoch_days_after_1_jan(mjd_date):
+    d = from_mjd_to_datetime(mjd_date)
+    dd = d - datetime.datetime(d.year, 1, 1)
+    days = dd.days
+    days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
+    return days + days_fraction
+
 pykep_satellite = None
 
 def lpop_init(tle):
