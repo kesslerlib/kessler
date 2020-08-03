@@ -95,18 +95,17 @@ def upsample(s, target_resolution):
     return s
 
 def from_datetime_to_cdm_datetime_str(datetime):
-    # ret = list(str(datetime))
-    # ret[10] = 'T'
-    # return ''.join(ret)
     return datetime.strftime('%Y-%m-%dT%H:%M:%S.%f')
 
+def from_jd_to_datetime(jd_date):
+    e = pykep.epoch(jd_date, 'jd')
+    return datetime.datetime.strptime(str(e), '%Y-%b-%d %H:%M:%S.%f')
+
 def from_jd_to_cdm_datetime_str(jd_date):
-    e = pykep.epoch(jd_date,'jd')
-    d = datetime.datetime.strptime(str(e), '%Y-%b-%d %H:%M:%S.%f')
+    d = from_jd_to_datetime(jd_date)
     return from_datetime_to_cdm_datetime_str(d)
     
 pykep_satellite = None
-
 
 def lpop_init(tle):
     global pykep_satellite
