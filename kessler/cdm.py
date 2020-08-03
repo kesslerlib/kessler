@@ -156,6 +156,7 @@ class ConjunctionDataMessage():
             v = np.cross(w, u)
             return np.vstack((u, v, w))
 
+        # Takes states in ITRF and returns relative state in RTN with target as reference
         def relative_state(state_obj_1, state_obj_2):
             rot_matrix = uvw_matrix(state_obj_1[0], state_obj_1[1])
             rel_position_xyz = state_obj_2[0] - state_obj_1[0]

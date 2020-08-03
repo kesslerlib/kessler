@@ -55,7 +55,7 @@ def from_cartesian_to_tle_elements(r, v):
     argument_of_perigee = kepl_el[4]
     raan                = kepl_el[3]
     mean_anomaly        = kepl_el[5] - kepl_el[1]*np.sin(kepl_el[5])+np.pi
-    return [mean_motion, eccentricity, inclination, argument_of_perigee, raan, mean_anomaly]
+    return mean_motion, eccentricity, inclination, argument_of_perigee, raan, mean_anomaly
 
 
 def uvw_matrix(r, v):
