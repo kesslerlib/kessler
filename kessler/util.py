@@ -2,6 +2,9 @@ import numpy as np
 import torch
 import math
 import pykep
+import skyfield
+from skyfield.api import load
+import datetime 
 
 
 # This function is from python-sgp4 released under MIT License, (c) 2012–2016 Brandon Rhodes
@@ -69,6 +72,16 @@ def from_cartesian_to_RTN(r, v):
     v_rtn = np.dot(T, v)
     return r_rtn, v_rtn
 
+def from_TEME_to_ITRF(state, time):
+    r, v = state[0], state[1]
+    #time must be in J2000 
+    #velocity in the converter is in m/days, so we multiply by 86400 before conversion and divide later
+    print(f'pos: {r}, vel: {v}')
+    r_new, v_new = skyfield.sgp4lib.TEME_to_ITRF(time, r, v*86400.)
+    print(f'pos: {r_new}, vel: {v_new/86400.}')
+    v_new = v_new / 86400.
+    state = np.stack([r_new,v_new])
+    return state
 
 def find_closest(values, t):
     indx = np.argmin(abs(values-t))
@@ -81,7 +94,17 @@ def upsample(s, target_resolution):
     s = s.squeeze(0).transpose(0, 1)
     return s
 
+def from_datetime_to_cdm_datetime_str(datetime):
+    # ret = list(str(datetime))
+    # ret[10] = 'T'
+    # return ''.join(ret)
+    return datetime.strftime('%Y-%m-%dT%H:%M:%S.%f')
 
+def from_jd_to_cdm_datetime_str(jd_date):
+    e = pykep.epoch(jd_date,'jd')
+    d = datetime.datetime.strptime(str(e), '%Y-%b-%d %H:%M:%S.%f')
+    return from_datetime_to_cdm_datetime_str(d)
+    
 pykep_satellite = None
 
 
