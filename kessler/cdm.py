@@ -279,7 +279,13 @@ class ConjunctionDataMessage():
                     if show_all or k in d_obligatory:
                         s += '{} =\n'.format(k_str)
                 else:
-                    s += '{} = {}\n'.format(k_str, str(v))
+                    if isinstance(v, float) or isinstance(v, int):
+                        v_str = '{}'.format(v)
+                        if 'e' in v_str:
+                            v_str = '{:.3E}'.format(v)
+                    else:
+                        v_str = str(v)
+                    s += '{} = {}\n'.format(k_str, v_str)
             return s
         ret = ''
         ret = append(ret, self._values_header, self._keys_header_obligatory)
