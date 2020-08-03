@@ -1,7 +1,6 @@
 import numpy as np
 import warnings
 import datetime
-import uuid
 import copy
 
 from . import util
@@ -16,9 +15,10 @@ class ConjunctionDataMessage():
 
         # Header
         # Relative metadata
-        # Metadata
-        # Data (for Object1 and Object2)
-        #  OD, State, Covariance
+        # Object 1
+        #  Metadata, OD, State, Covariance
+        # Object 2
+        #  Metadata, OD, State, Covariance
         # Optional comments
 
         self._keys_header = ['CCSDS_CDM_VERS', 'CREATION_DATE', 'ORIGINATOR', 'MESSAGE_FOR', 'MESSAGE_ID']
