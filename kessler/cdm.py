@@ -279,7 +279,7 @@ class ConjunctionDataMessage():
                     if show_all or k in d_obligatory:
                         s += '{} =\n'.format(k_str)
                 else:
-                    s += '{} = {}\n'.format(k_str, v)
+                    s += '{} = {}\n'.format(k_str, str(v))
             return s
         ret = ''
         ret = append(ret, self._values_header, self._keys_header_obligatory)

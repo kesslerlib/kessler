@@ -76,7 +76,8 @@ def from_cartesian_to_rtn(state):
 
 
 def from_rtn_to_cartesian(state):
-    raise NotImplementedError()
+    # raise NotImplementedError()
+    return state
 
 
 def from_TEME_to_ITRF(state, time):
