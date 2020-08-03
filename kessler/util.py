@@ -4,7 +4,7 @@ import math
 import pykep
 import skyfield
 from skyfield.api import load
-import datetime 
+import datetime
 
 
 # This function is from python-sgp4 released under MIT License, (c) 2012–2016 Brandon Rhodes
@@ -82,8 +82,8 @@ def from_rtn_to_cartesian(state):
 
 def from_TEME_to_ITRF(state, time):
     r, v = state[0], state[1]
-    #time must be in J2000 
-    #velocity in the converter is in m/days, so we multiply by 86400 before conversion and divide later
+    # time must be in J2000
+    # velocity in the converter is in m/days, so we multiply by 86400 before conversion and divide later
     # print(f'pos: {r}, vel: {v}')
     r_new, v_new = skyfield.sgp4lib.TEME_to_ITRF(time, r, v*86400.)
     # print(f'pos: {r_new}, vel: {v_new/86400.}')
@@ -103,20 +103,33 @@ def upsample(s, target_resolution):
     s = s.squeeze(0).transpose(0, 1)
     return s
 
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
 def from_datetime_to_cdm_datetime_str(datetime):
     return datetime.strftime('%Y-%m-%dT%H:%M:%S.%f')
+
 
 def from_jd_to_datetime(jd_date):
     e = pykep.epoch(jd_date, 'jd')
     return datetime.datetime.strptime(str(e), '%Y-%b-%d %H:%M:%S.%f')
 
+
 def from_mjd_to_datetime(mjd_date):
     e = pykep.epoch(mjd_date, 'mjd')
     return datetime.datetime.strptime(str(e), '%Y-%b-%d %H:%M:%S.%f')
 
+
 def from_jd_to_cdm_datetime_str(jd_date):
     d = from_jd_to_datetime(jd_date)
     return from_datetime_to_cdm_datetime_str(d)
+
 
 def from_mjd_to_epoch_days_after_1_jan(mjd_date):
     d = from_mjd_to_datetime(mjd_date)
@@ -125,7 +138,9 @@ def from_mjd_to_epoch_days_after_1_jan(mjd_date):
     days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
     return days + days_fraction
 
+
 pykep_satellite = None
+
 
 def lpop_init(tle):
     global pykep_satellite

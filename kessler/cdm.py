@@ -4,11 +4,13 @@ import datetime
 import uuid
 import copy
 
+from . import util
+
 
 # Based on CCSDS 508.0-B-1
 # https://public.ccsds.org/Pubs/508x0b1e2c1.pdf
 class ConjunctionDataMessage():
-    def __init__(self):
+    def __init__(self, set_defaults=True):
         self._obligatory = {}
         self._optional = {}
 
@@ -40,30 +42,11 @@ class ConjunctionDataMessage():
         self._values_object_data_state = [dict.fromkeys(self._keys_data_state), dict.fromkeys(self._keys_data_state)]
         self._values_object_data_covariance = [dict.fromkeys(self._keys_data_covariance), dict.fromkeys(self._keys_data_covariance)]
 
-        self.set_header('CCSDS_CDM_VERS', '1.0')
-        self.set_header('ORIGINATOR', 'ESA_FDL_CONSTELLATIONS')
-        self.set_header('CREATION_DATE', datetime.datetime.utcnow().isoformat())
-        self.set_header('MESSAGE_ID', 'ESA_FDL_{}'.format(str(uuid.uuid1())))
-
-        self.set_object(0, 'OBJECT', 'OBJECT1')
-        self.set_object(0, 'INTERNATIONAL_DESIGNATOR', 'UNKNOWN')
-        self.set_object(0, 'OBJECT_NAME', 'ESA_FDL_TARGET')
-        self.set_object(0, 'CATALOG_NAME', 'UNKNOWN')
-        self.set_object(0, 'EPHEMERIS_NAME', 'NONE')
-        self.set_object(0, 'COVARIANCE_METHOD', 'CALCULATED')
-        self.set_object(0, 'MANEUVERABLE', 'N/A')
-        self.set_object(0, 'REF_FRAME', 'ITRF')
-        self.set_object(0, 'ORBIT_CENTER', 'EARTH')
-
-        self.set_object(1, 'OBJECT', 'OBJECT2')
-        self.set_object(1, 'INTERNATIONAL_DESIGNATOR', 'UNKNOWN')
-        self.set_object(1, 'OBJECT_NAME', 'ESA_FDL_CHASER')
-        self.set_object(1, 'CATALOG_NAME', 'UNKNOWN')
-        self.set_object(1, 'EPHEMERIS_NAME', 'NONE')
-        self.set_object(1, 'COVARIANCE_METHOD', 'CALCULATED')
-        self.set_object(1, 'MANEUVERABLE', 'N/A')
-        self.set_object(1, 'REF_FRAME', 'ITRF')
-        self.set_object(1, 'ORBIT_CENTER', 'EARTH')
+        if set_defaults:
+            self.set_header('CCSDS_CDM_VERS', '1.0')
+            self.set_header('CREATION_DATE', datetime.datetime.utcnow().isoformat())
+            self.set_object(0, 'OBJECT', 'OBJECT1')
+            self.set_object(1, 'OBJECT', 'OBJECT2')
 
     def copy(self):
         ret = ConjunctionDataMessage()
@@ -74,6 +57,62 @@ class ConjunctionDataMessage():
         ret._values_object_data_state = copy.deepcopy(self._values_object_data_state)
         ret._values_object_data_covariance = copy.deepcopy(self._values_object_data_covariance)
         return ret
+
+    def load(file_name):
+        content = []
+        with open(file_name) as f:
+            lines = f.readlines()
+            for line in lines:
+                line = line.replace(u'\ufeff', '')
+                line = line.strip()
+                if line.startswith('COMMENT') or len(line) == 0:
+                    continue
+                key, value = line.split('=')
+                key, value = key.strip(), value.strip()
+                if util.is_number(value):
+                    value = float(value)
+    #             print(line)
+                content.append((key, value))
+        cdm = ConjunctionDataMessage(set_defaults=False)
+        currently_parsing = 'header_and_relative_metadata'
+        for key, value in content:
+            if currently_parsing == 'header_and_relative_metadata':
+                if key in cdm._keys_header:
+                    cdm.set_header(key, value)
+                elif key in cdm._keys_relative_metadata:
+                    cdm.set_relative_metadata(key, value)
+                elif key == 'OBJECT' and value == 'OBJECT1':
+                    cdm.set_object(0, key, value)
+                    currently_parsing = 'object1'
+                    continue
+                elif key == 'OBJECT' and value == 'OBJECT2':
+                    cdm.set_object(1, key, value)
+                    currently_parsing = 'object2'
+                    continue
+            elif currently_parsing == 'object1':
+                if key == 'OBJECT' and value == 'OBJECT2':
+                    cdm.set_object(1, key, value)
+                    currently_parsing = 'object2'
+                    continue
+                try:
+                    cdm.set_object(0, key, value)
+                except:
+                    continue
+            elif currently_parsing == 'object2':
+                if key == 'OBJECT' and value == 'OBJECT1':
+                    cdm.set_object(0, key, value)
+                    currently_parsing = 'object1'
+                    continue
+                try:
+                    cdm.set_object(1, key, value)
+                except:
+                    continue
+        return cdm
+
+    def save(self, file_name):
+        content = self.kvn()
+        with open(file_name, 'w') as f:
+            f.write(content)
 
     def __hash__(self):
         return hash(self.kvn(show_all=True))

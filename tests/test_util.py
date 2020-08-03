@@ -5,6 +5,7 @@ import datetime
 import kessler
 import kessler.util
 
+
 class UtilTestCase(unittest.TestCase):
     def test_tle(self):
         args = dict(
@@ -64,13 +65,13 @@ class UtilTestCase(unittest.TestCase):
         date_str = kessler.util.from_datetime_to_cdm_datetime_str(date)
         date_str_correct = '2823-03-04T12:01:23.000252'
         self.assertEqual(date_str_correct, date_str)
-    
+
     def test_from_jd_to_cdm_datetime_str(self):
         jd_date = 2906000.73344
         date_str = kessler.util.from_jd_to_cdm_datetime_str(jd_date)
         date_str_correct = '3244-04-04T05:36:09.216008'
         self.assertEqual(date_str_correct, date_str)
-    
+
     def test_from_TEME_to_ITRF(self):
         state_TEME = np.array([[5094.18016210*1e3, 6127.64465950*1e3, 6380.34453270*1e3], [-4.746131487*1e3, 0.785818041*1e3, 5.531931288*1e3]])
 
