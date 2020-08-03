@@ -46,7 +46,8 @@ def tle(satnum, classification, international_designator, epoch_year, epoch_days
     return line1, line2
 
 
-def from_cartesian_to_tle_elements(r, v):
+def from_cartesian_to_tle_elements(state):
+    r, v = state[0], state[1]
     kepl_el = pykep.ic2par(r, v, pykep.MU_EARTH)
     # these are returned as (a,e,i,W,w,E) --> [m], [-], [rad], [rad], [rad], [rad]
     mean_motion         = np.sqrt(pykep.MU_EARTH/((kepl_el[0])**(3.0)))
@@ -66,11 +67,17 @@ def uvw_matrix(r, v):
     return np.vstack((u, v, w))
 
 
-def from_cartesian_to_RTN(r, v):
+def from_cartesian_to_rtn(state):
+    r, v = state[0], state[1]
     T = uvw_matrix(r, v)
     r_rtn = np.dot(T, r)
     v_rtn = np.dot(T, v)
-    return r_rtn, v_rtn
+    return np.stack([r_rtn, v_rtn])
+
+
+def from_rtn_to_cartesian(state):
+    raise NotImplementedError()
+
 
 def from_TEME_to_ITRF(state, time):
     r, v = state[0], state[1]
@@ -82,6 +89,7 @@ def from_TEME_to_ITRF(state, time):
     v_new = v_new / 86400.
     state = np.stack([r_new,v_new])
     return state
+
 
 def find_closest(values, t):
     indx = np.argmin(abs(values-t))

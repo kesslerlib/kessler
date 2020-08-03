@@ -53,6 +53,7 @@ class ConjunctionDataMessage():
         self.set_object(0, 'COVARIANCE_METHOD', 'CALCULATED')
         self.set_object(0, 'MANEUVERABLE', 'N/A')
         self.set_object(0, 'REF_FRAME', 'ITRF')
+        self.set_object(0, 'ORBIT_CENTER', 'EARTH')
 
         self.set_object(1, 'OBJECT', 'OBJECT2')
         self.set_object(1, 'INTERNATIONAL_DESIGNATOR', 'UNKNOWN')
@@ -62,6 +63,7 @@ class ConjunctionDataMessage():
         self.set_object(1, 'COVARIANCE_METHOD', 'CALCULATED')
         self.set_object(1, 'MANEUVERABLE', 'N/A')
         self.set_object(1, 'REF_FRAME', 'ITRF')
+        self.set_object(1, 'ORBIT_CENTER', 'EARTH')
 
     def copy(self):
         ret = ConjunctionDataMessage()
@@ -145,7 +147,7 @@ class ConjunctionDataMessage():
         if np.isnan(state_object2.sum()):
             warnings.warn('state_object2 has NaN')
 
-        miss_distance = np.linalg.norm(state_object1[0]-state_object2[0])
+        miss_distance = np.linalg.norm(state_object1[0] - state_object2[0])
         self.set_relative_metadata('MISS_DISTANCE', miss_distance)
 
     def _update_state_relative(self):
@@ -181,6 +183,7 @@ class ConjunctionDataMessage():
         self.set_relative_metadata('RELATIVE_VELOCITY_R', relative_state[1, 0])
         self.set_relative_metadata('RELATIVE_VELOCITY_T', relative_state[1, 1])
         self.set_relative_metadata('RELATIVE_VELOCITY_N', relative_state[1, 2])
+        self.set_relative_metadata('RELATIVE_SPEED', np.linalg.norm(relative_state[1]))
 
     def get_state_relative(self):
         relative_state = np.zeros([2, 3])
