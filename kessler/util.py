@@ -58,7 +58,6 @@ def from_cartesian_to_tle_elements(state):
     mean_anomaly        = kepl_el[5] - kepl_el[1]*np.sin(kepl_el[5])+np.pi
     return mean_motion, eccentricity, inclination, argument_of_perigee, raan, mean_anomaly
 
-
 def uvw_matrix(r, v):
     u = r / np.linalg.norm(r)
     w = np.cross(r, v)
@@ -69,10 +68,10 @@ def uvw_matrix(r, v):
 
 def from_cartesian_to_rtn(state):
     r, v = state[0], state[1]
-    T = uvw_matrix(r, v)
-    r_rtn = np.dot(T, r)
-    v_rtn = np.dot(T, v)
-    return np.stack([r_rtn, v_rtn])
+    rotation_matrix = uvw_matrix(r, v)
+    r_rtn = np.dot(rotation_matrix, r)
+    v_rtn = np.dot(rotation_matrix, v)
+    return np.stack([r_rtn, v_rtn]), rotation_matrix
 
 
 def from_rtn_to_cartesian(state):
