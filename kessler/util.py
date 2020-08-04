@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import math
+import os
 import pykep
 import skyfield
 from skyfield.api import load
@@ -169,3 +170,17 @@ def lpop_sequence_upsample(target_mjds, upsample_factor=1):
         ret = upsample(ret, len(target_mjds))
         ret = ret.view(ret.shape[0], 2, 3).cpu().numpy()
         return ret
+
+
+def create_path(path, directory=False):
+    if directory:
+        dir = path
+    else:
+        dir = os.path.dirname(path)
+    if not os.path.exists(dir):
+        print('{} does not exist, creating'.format(dir))
+        try:
+            os.makedirs(dir)
+        except Exception as e:
+            print(e)
+            print('Could not create path, potentiall created by another rank in multinode: {}'.format(path))
