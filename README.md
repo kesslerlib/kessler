@@ -25,5 +25,5 @@ docker build -t kessler .
 #### Run Jupyter inside Docker
 
 ```
-docker run --rm -it --net=host kessler jupyter notebook --allow-root
+docker run --rm -it -v $PWD:/workspace --net=host kessler jupyter notebook --allow-root
 ```
