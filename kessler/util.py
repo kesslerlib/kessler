@@ -58,7 +58,8 @@ def from_cartesian_to_tle_elements(state):
     mean_anomaly        = kepl_el[5] - kepl_el[1]*np.sin(kepl_el[5])+np.pi
     return mean_motion, eccentricity, inclination, argument_of_perigee, raan, mean_anomaly
 
-def uvw_matrix(r, v):
+def rotation_matrix(state):
+    r, v = state[0], state[1]
     u = r / np.linalg.norm(r)
     w = np.cross(r, v)
     w = w / np.linalg.norm(w)
@@ -66,17 +67,20 @@ def uvw_matrix(r, v):
     return np.vstack((u, v, w))
 
 
-def from_cartesian_to_rtn(state):
+def from_cartesian_to_rtn(state, cartesian_to_rtn_rotation_matrix=None):
+    # Use the supplied rotation matrix if available, otherwise compute it
+    if cartesian_to_rtn_rotation_matrix is None:
+        cartesian_to_rtn_rotation_matrix = rotation_matrix(state)
     r, v = state[0], state[1]
-    rotation_matrix = uvw_matrix(r, v)
-    r_rtn = np.dot(rotation_matrix, r)
-    v_rtn = np.dot(rotation_matrix, v)
-    return np.stack([r_rtn, v_rtn]), rotation_matrix
+    r_rtn = np.dot(cartesian_to_rtn_rotation_matrix, r)
+    v_rtn = np.dot(cartesian_to_rtn_rotation_matrix, v)
+    return np.stack([r_rtn, v_rtn]), cartesian_to_rtn_rotation_matrix
 
 
-def from_rtn_to_cartesian(state):
-    # raise NotImplementedError()
-    return state
+def from_rtn_to_cartesian(state_rtn, rtn_to_cartesian_rotation_matrix):
+    r_rtn, v_rtn = state_rtn[0], state_rtn[1]
+    state_xyz = np.stack([np.matmul(rtn_to_cartesian_rotation_matrix, r_rtn), np.matmul(rtn_to_cartesian_rotation_matrix, v_rtn)])
+    return state_xyz
 
 
 def from_TEME_to_ITRF(state, time):

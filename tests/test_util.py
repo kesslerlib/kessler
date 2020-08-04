@@ -95,5 +95,11 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(np.linalg.norm(state_xyz[0]), np.linalg.norm(state_rtn[0]))
         self.assertEqual(np.linalg.norm(state_xyz[1]), np.linalg.norm(state_rtn[1]))
 
+    def test_from_cartesian_to_rtn_2(self):
+        state_xyz = np.array([[1.0, 2.0, 3.4], [4.5, 6.2, 7.4]])
+        state_rtn, _ = kessler.util.from_cartesian_to_rtn(state_xyz)
+        self.assertEqual(np.linalg.norm(state_xyz[0]), np.linalg.norm(state_rtn[0]))
+        self.assertEqual(np.linalg.norm(state_xyz[1]), np.linalg.norm(state_rtn[1]))
+
             
 
