@@ -27,6 +27,6 @@ def generate_dataset(dataset_dir, num_events, *args, **kwargs):
         cdms = generate_event()
         for j, cdm in enumerate(cdms):
             file_name_suffix = '{}'.format(j).rjust(len('{}'.format(len(cdms))), '0')
-            file_name_cdm = file_name_event + '_{}'.format(file_name_suffix)
+            file_name_cdm = file_name_event + '_{}.cdm.kvn.txt'.format(file_name_suffix)
             print('Saving cdm: {}'.format(file_name_cdm))
             cdm.save(file_name_cdm)
