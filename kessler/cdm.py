@@ -79,22 +79,22 @@ class ConjunctionDataMessage():
             keys_data_covariance = map(lambda x: prefix+x, self._keys_data_covariance)
             
             data_metadata = dict.fromkeys(keys_metadata)
-            for key, value in self._values_object_metadata[0].items():
+            for key, value in self._values_object_metadata[i].items():
                 data_metadata[prefix+key] = value
             data.update(data_metadata)
             
             data_data_od = dict.fromkeys(keys_data_od)
-            for key, value in self._values_object_data_od[0].items():
+            for key, value in self._values_object_data_od[i].items():
                 data_data_od[prefix+key] = value
             data.update(data_data_od)
             
             data_data_state = dict.fromkeys(keys_data_state)
-            for key, value in self._values_object_data_state[0].items():
+            for key, value in self._values_object_data_state[i].items():
                 data_data_state[prefix+key] = value
             data.update(data_data_state)
             
             data_data_covariance = dict.fromkeys(keys_data_covariance)
-            for key, value in self._values_object_data_covariance[0].items():
+            for key, value in self._values_object_data_covariance[i].items():
                 data_data_covariance[prefix+key] = value
             data.update(data_data_covariance)
 
