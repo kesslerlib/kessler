@@ -2,6 +2,7 @@ import numpy as np
 import warnings
 import datetime
 import copy
+import pandas as pd
 
 from . import util
 
@@ -57,6 +58,51 @@ class ConjunctionDataMessage():
         ret._values_object_data_state = copy.deepcopy(self._values_object_data_state)
         ret._values_object_data_covariance = copy.deepcopy(self._values_object_data_covariance)
         return ret
+
+    def as_dict(self):
+        data={}
+        data_header = dict.fromkeys(self._keys_header)
+        for key, value in self._values_header.items():
+            data_header[key] = value
+        data.update(data_header)
+        
+        data_relative_metadata = dict.fromkeys(self._keys_relative_metadata)
+        for key, value in self._values_relative_metadata.items():
+            data_relative_metadata[key] = value
+        data.update(data_relative_metadata)
+        
+        for i in [0, 1]:
+            prefix = 'OBJECT{}_'.format(i+1)
+            keys_metadata = map(lambda x: prefix+x, self._keys_metadata)
+            keys_data_od = map(lambda x: prefix+x, self._keys_data_od)
+            keys_data_state = map(lambda x: prefix+x, self._keys_data_state)
+            keys_data_covariance = map(lambda x: prefix+x, self._keys_data_covariance)
+            
+            data_metadata = dict.fromkeys(keys_metadata)
+            for key, value in self._values_object_metadata[0].items():
+                data_metadata[prefix+key] = value
+            data.update(data_metadata)
+            
+            data_data_od = dict.fromkeys(keys_data_od)
+            for key, value in self._values_object_data_od[0].items():
+                data_data_od[prefix+key] = value
+            data.update(data_data_od)
+            
+            data_data_state = dict.fromkeys(keys_data_state)
+            for key, value in self._values_object_data_state[0].items():
+                data_data_state[prefix+key] = value
+            data.update(data_data_state)
+            
+            data_data_covariance = dict.fromkeys(keys_data_covariance)
+            for key, value in self._values_object_data_covariance[0].items():
+                data_data_covariance[prefix+key] = value
+            data.update(data_data_covariance)
+
+        return data
+    
+    def as_dataframe(self):
+        data = self.as_dict()
+        return pd.DataFrame(data, index=[0])
 
     def load(file_name):
         content = []
