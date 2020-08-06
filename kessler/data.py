@@ -9,14 +9,6 @@ from .cdm import ConjunctionDataMessage
 
 def generate_dataset(dataset_dir, num_events, *args, **kwargs):
     model = ConstellationPair(*args, **kwargs)
-    def generate_conjunction():
-        found = False
-        while not found:
-            trace = model.get_trace()
-            if trace['conj']:
-                found = True
-        print('Generated event with {} CDMs'.format(len(trace['cdms'])))
-        return trace
 
     print('Generating CDM dataset')
     print('Directory: {}'.format(dataset_dir))
@@ -25,7 +17,7 @@ def generate_dataset(dataset_dir, num_events, *args, **kwargs):
         print('Generating event {} / {}'.format(i+1, num_events))
         file_name_event = os.path.join(dataset_dir, 'event_{}'.format(str(uuid.uuid4())))
         
-        trace = generate_conjunction()
+        trace = model.get_conjunction()
         file_name_trace = file_name_event + '.trace'
         print('Saving trace: {}'.format(file_name_trace))
         torch.save(trace, file_name_trace)
