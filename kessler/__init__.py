@@ -1,3 +1,4 @@
-__version__ = '0.1.0.dev3'
+__version__ = '0.1.1.dev1'
 
 from .cdm import ConjunctionDataMessage
+from .event import Event
