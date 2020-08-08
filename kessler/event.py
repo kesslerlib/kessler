@@ -55,22 +55,29 @@ class Event():
             fig, ax = plt.subplots()
         ax.plot(data_x, data_y, marker='.', *args, **kwargs)
         # ax.scatter(data_x, data_y)
-        ax.set_xlim(max(data_x), min(data_x))
+        xmin, xmax = min(data_x), max(data_x)
+        if xmin == xmax:
+            xmax += 1e-6
+        ax.set_xlim(xmax, xmin)
         ax.set_xlabel('Time to TCA')
         ax.set_title(feature_name)
 
-    def plot_features(self, features, figsize=(10, 10), *args, **kwargs):
+    def plot_features(self, features, figsize=None, *args, **kwargs):
         if not isinstance(features, list):
             features = [features]
         rows, cols = util.tile_rows_cols(len(features))
+        if figsize is None:
+            figsize = (cols*20/7, rows*12/6)
         fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
 
         for i, ax in enumerate(axs.flat):
-            self.plot_feature(features[i], ax=ax, *args, **kwargs)
-            # ax.set_title(item)
+            if i < len(features):
+                self.plot_feature(features[i], ax=ax, *args, **kwargs)
+            else:
+                ax.axis('off')
         plt.tight_layout()
 
-    def plot_uncertainty(self, figsize=(20, 10), *args, **kwargs):
+    def plot_uncertainty(self, figsize=(20, 12), *args, **kwargs):
         covariance_features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
         features = list(map(lambda f: 'OBJECT1_'+f, covariance_features)) + list(map(lambda f: 'OBJECT2_'+f, covariance_features))
         return self.plot_features(features, figsize=figsize, *args, **kwargs)
@@ -129,18 +136,22 @@ class EventCollection():
             event.plot_feature(feature_name, ax=ax, *args, **kwargs)
         plt.tight_layout()
 
-    def plot_features(self, features, figsize=(10, 10), *args, **kwargs):
+    def plot_features(self, features, figsize=None, *args, **kwargs):
         if not isinstance(features, list):
             features = [features]
         rows, cols = util.tile_rows_cols(len(features))
+        if figsize is None:
+            figsize = (cols*20/7, rows*12/6)
         fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
 
         for i, ax in enumerate(axs.flat):
-            self.plot_feature(features[i], ax=ax, *args, **kwargs)
-            # ax.set_title(item)
+            if i < len(features):
+                self.plot_feature(features[i], ax=ax, *args, **kwargs)
+            else:
+                ax.axis('off')
         plt.tight_layout()
 
-    def plot_uncertainty(self, figsize=(20, 10), *args, **kwargs):
+    def plot_uncertainty(self, figsize=(20, 12), *args, **kwargs):
         covariance_features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
         features = list(map(lambda f: 'OBJECT1_'+f, covariance_features)) + list(map(lambda f: 'OBJECT2_'+f, covariance_features))
         return self.plot_features(features, figsize=figsize, *args, **kwargs)

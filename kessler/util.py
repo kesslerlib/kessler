@@ -196,9 +196,12 @@ def create_path(path, directory=False):
 
 
 def tile_rows_cols(num_items):
-    cols = math.ceil(math.sqrt(num_items))
-    rows = 0
-    while num_items > 0:
-        rows += 1
-        num_items -= cols
-    return rows, cols
+    if num_items < 5:
+        return 1, num_items
+    else:
+        cols = math.ceil(math.sqrt(num_items))
+        rows = 0
+        while num_items > 0:
+            rows += 1
+            num_items -= cols
+        return rows, cols
