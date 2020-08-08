@@ -35,10 +35,10 @@ class Event():
     def to_dataframe(self):
         if len(self) == 0:
             return pd.DataFrame()
-        list_cdms = []
+        cdm_dataframes = []
         for cdm in self._cdms:
-            list_cdms.append(cdm.to_dataframe())
-        return pd.concat(list_cdms, ignore_index=True)
+            cdm_dataframes.append(cdm.to_dataframe())
+        return pd.concat(cdm_dataframes, ignore_index=True)
 
     def plot_feature(self, feature_name, ax=None, *args, **kwargs):
         data_x = []
@@ -53,65 +53,113 @@ class Event():
         # Creating axes instance
         if ax is None:
             fig, ax = plt.subplots()
-        ax.plot(data_x, data_y)
-        ax.scatter(data_x, data_y, *args, **kwargs)
-        # ax.invert_xaxis()
+        ax.plot(data_x, data_y, marker='.', *args, **kwargs)
+        # ax.scatter(data_x, data_y)
         ax.set_xlim(max(data_x), min(data_x))
         ax.set_xlabel('Time to TCA')
         ax.set_title(feature_name)
 
-    def plot_features(self, features, figsize=(10, 10)):
+    def plot_features(self, features, figsize=(10, 10), *args, **kwargs):
+        if not isinstance(features, list):
+            features = [features]
         rows, cols = util.tile_rows_cols(len(features))
         fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
 
         for i, ax in enumerate(axs.flat):
-            self.plot_feature(features[i], ax=ax)
+            self.plot_feature(features[i], ax=ax, *args, **kwargs)
             # ax.set_title(item)
         plt.tight_layout()
 
-    def plot_uncertainty(self, figsize=(20, 10)):
+    def plot_uncertainty(self, figsize=(20, 10), *args, **kwargs):
         covariance_features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
         features = list(map(lambda f: 'OBJECT1_'+f, covariance_features)) + list(map(lambda f: 'OBJECT2_'+f, covariance_features))
-        self.plot_features(features, figsize=figsize)
+        return self.plot_features(features, figsize=figsize, *args, **kwargs)
 
     def __repr__(self):
         return 'Event(CDMs: {})'.format(len(self))
 
-    def __getitem__(self, i):
-        return self._cdms[i]
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return Event(cdms=self._cdms[index])
+        else:
+            return self._cdms[index]
 
     def __len__(self):
         return len(self._cdms)
 
 
 class EventCollection():
-    def __init__(self, cdms_dir=None, cdm_extension='.cdm.kvn.txt'):
-        self._events = []
-        if cdms_dir is not None:
-            print('Loading CDMS (with extension {}) from directory: {}'.format(cdm_extension, cdms_dir))
-            file_names = sorted(glob(os.path.join(cdms_dir, '*' + cdm_extension)))
-            regex = r"(.*)_([0-9]+{})".format(cdm_extension)
-            matches = re.finditer(regex, '\n'.join(file_names))
+    def __init__(self, cdms_dir=None, cdm_extension='.cdm.kvn.txt', events=None):
+        if events is None:
+            if cdms_dir is None:
+                self._events = []
+            else:
+                print('Loading CDMS (with extension {}) from directory: {}'.format(cdm_extension, cdms_dir))
+                file_names = sorted(glob(os.path.join(cdms_dir, '*' + cdm_extension)))
+                regex = r"(.*)_([0-9]+{})".format(cdm_extension)
+                matches = re.finditer(regex, '\n'.join(file_names))
 
-            event_prefixes = []
-            for m in matches:
-                m = m.groups()[0]
-                event_prefixes.append(m)
-            event_prefixes = set(event_prefixes)
-            len(event_prefixes)
+                event_prefixes = []
+                for m in matches:
+                    m = m.groups()[0]
+                    event_prefixes.append(m)
+                event_prefixes = sorted(set(event_prefixes))
 
-            event_file_names = []
-            for event_prefix in event_prefixes:
-                event_file_names.append(list(filter(lambda f: f.startswith(event_prefix), file_names)))
+                event_file_names = []
+                for event_prefix in event_prefixes:
+                    event_file_names.append(list(filter(lambda f: f.startswith(event_prefix), file_names)))
 
-            self._events = [Event(cdm_file_names=f) for f in event_file_names]
-            print('Loaded {} CDMs grouped into {} events'.format(len(file_names), len(self._events)))
+                self._events = [Event(cdm_file_names=f) for f in event_file_names]
+                print('Loaded {} CDMs grouped into {} events'.format(len(file_names), len(self._events)))
+        else:
+            self._events = events
 
-    def __getitem__(self, i):
-        return self._events[i]
+    def to_dataframe(self):
+        if len(self) == 0:
+            return pd.DataFrame()
+        event_dataframes = []
+        for event in self._events:
+            event_dataframes.append(event.to_dataframe())
+        return pd.concat(event_dataframes, ignore_index=True)
+
+    def plot_feature(self, feature_name, ax=None, *args, **kwargs):
+        if ax is None:
+            fig, ax = plt.subplots()
+        for event in self:
+            event.plot_feature(feature_name, ax=ax, *args, **kwargs)
+        plt.tight_layout()
+
+    def plot_features(self, features, figsize=(10, 10), *args, **kwargs):
+        if not isinstance(features, list):
+            features = [features]
+        rows, cols = util.tile_rows_cols(len(features))
+        fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
+
+        for i, ax in enumerate(axs.flat):
+            self.plot_feature(features[i], ax=ax, *args, **kwargs)
+            # ax.set_title(item)
+        plt.tight_layout()
+
+    def plot_uncertainty(self, figsize=(20, 10), *args, **kwargs):
+        covariance_features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
+        features = list(map(lambda f: 'OBJECT1_'+f, covariance_features)) + list(map(lambda f: 'OBJECT2_'+f, covariance_features))
+        return self.plot_features(features, figsize=figsize, *args, **kwargs)
+
+    def __getitem__(self, index):
+        if isinstance(index, slice):
+            return EventCollection(events=self._events[index])
+        else:
+            return self._events[index]
 
     def __len__(self):
         return len(self._events)
 
     def __repr__(self):
-        return 'EventCollection({})'.format(self._events)
+        if len(self) == 0:
+            return 'EventCollection()'
+        else:
+            event_lengths = list(map(len, self._events))
+            event_lengths_min = min(event_lengths)
+            event_lengths_max = max(event_lengths)
+            event_lengths_mean = sum(event_lengths)/len(event_lengths)
+            return 'EventCollection(Events:{}, number of CDMs per event: {} (min), {} (max), {:.2f} (mean))'.format(len(self._events), event_lengths_min, event_lengths_max, event_lengths_mean)

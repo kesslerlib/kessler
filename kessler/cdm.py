@@ -3,6 +3,7 @@ import warnings
 import datetime
 import copy
 import pandas as pd
+import functools
 
 from . import util
 
@@ -67,6 +68,7 @@ class ConjunctionDataMessage():
         self._values_object_data_state = copy.deepcopy(other_cdm._values_object_data_state)
         self._values_object_data_covariance = copy.deepcopy(other_cdm._values_object_data_covariance)
 
+    @functools.lru_cache(maxsize=None)
     def to_dict(self):
         data = {}
         data_header = dict.fromkeys(self._keys_header)
