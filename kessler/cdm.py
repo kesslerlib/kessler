@@ -10,17 +10,14 @@ from . import util
 # Based on CCSDS 508.0-B-1
 # https://public.ccsds.org/Pubs/508x0b1e2c1.pdf
 class ConjunctionDataMessage():
-    def __init__(self, set_defaults=True):
-        self._obligatory = {}
-        self._optional = {}
-
+    def __init__(self, file_name=None, set_defaults=True):
         # Header
         # Relative metadata
         # Object 1
         #  Metadata, OD, State, Covariance
         # Object 2
         #  Metadata, OD, State, Covariance
-        # Optional comments
+        # Comments are optional and not currently supported by this class
 
         self._keys_header = ['CCSDS_CDM_VERS', 'CREATION_DATE', 'ORIGINATOR', 'MESSAGE_FOR', 'MESSAGE_ID']
         self._keys_relative_metadata = ['TCA', 'MISS_DISTANCE', 'RELATIVE_SPEED', 'RELATIVE_POSITION_R', 'RELATIVE_POSITION_T', 'RELATIVE_POSITION_N', 'RELATIVE_VELOCITY_R', 'RELATIVE_VELOCITY_T', 'RELATIVE_VELOCITY_N', 'START_SCREEN_PERIOD', 'STOP_SCREEN_PERIOD', 'SCREEN_VOLUME_FRAME', 'SCREEN_VOLUME_SHAPE', 'SCREEN_VOLUME_X', 'SCREEN_VOLUME_Y', 'SCREEN_VOLUME_Z', 'SCREEN_ENTRY_TIME', 'SCREEN_EXIT_TIME', 'COLLISION_PROBABILITY', 'COLLISION_PROBABILITY_METHOD']
@@ -49,6 +46,9 @@ class ConjunctionDataMessage():
             self.set_object(0, 'OBJECT', 'OBJECT1')
             self.set_object(1, 'OBJECT', 'OBJECT2')
 
+        if file_name:
+            self.set(ConjunctionDataMessage.load(file_name))
+
     def copy(self):
         ret = ConjunctionDataMessage()
         ret._values_header = copy.deepcopy(self._values_header)
@@ -59,49 +59,57 @@ class ConjunctionDataMessage():
         ret._values_object_data_covariance = copy.deepcopy(self._values_object_data_covariance)
         return ret
 
-    def as_dict(self):
-        data={}
+    def set(self, other_cdm):
+        self._values_header = copy.deepcopy(other_cdm._values_header)
+        self._values_relative_metadata = copy.deepcopy(other_cdm._values_relative_metadata)
+        self._values_object_metadata = copy.deepcopy(other_cdm._values_object_metadata)
+        self._values_object_data_od = copy.deepcopy(other_cdm._values_object_data_od)
+        self._values_object_data_state = copy.deepcopy(other_cdm._values_object_data_state)
+        self._values_object_data_covariance = copy.deepcopy(other_cdm._values_object_data_covariance)
+
+    def to_dict(self):
+        data = {}
         data_header = dict.fromkeys(self._keys_header)
         for key, value in self._values_header.items():
             data_header[key] = value
         data.update(data_header)
-        
+
         data_relative_metadata = dict.fromkeys(self._keys_relative_metadata)
         for key, value in self._values_relative_metadata.items():
             data_relative_metadata[key] = value
         data.update(data_relative_metadata)
-        
+
         for i in [0, 1]:
             prefix = 'OBJECT{}_'.format(i+1)
             keys_metadata = map(lambda x: prefix+x, self._keys_metadata)
             keys_data_od = map(lambda x: prefix+x, self._keys_data_od)
             keys_data_state = map(lambda x: prefix+x, self._keys_data_state)
             keys_data_covariance = map(lambda x: prefix+x, self._keys_data_covariance)
-            
+
             data_metadata = dict.fromkeys(keys_metadata)
             for key, value in self._values_object_metadata[i].items():
                 data_metadata[prefix+key] = value
             data.update(data_metadata)
-            
+
             data_data_od = dict.fromkeys(keys_data_od)
             for key, value in self._values_object_data_od[i].items():
                 data_data_od[prefix+key] = value
             data.update(data_data_od)
-            
+
             data_data_state = dict.fromkeys(keys_data_state)
             for key, value in self._values_object_data_state[i].items():
                 data_data_state[prefix+key] = value
             data.update(data_data_state)
-            
+
             data_data_covariance = dict.fromkeys(keys_data_covariance)
             for key, value in self._values_object_data_covariance[i].items():
                 data_data_covariance[prefix+key] = value
             data.update(data_data_covariance)
 
         return data
-    
-    def as_dataframe(self):
-        data = self.as_dict()
+
+    def to_dataframe(self):
+        data = self.to_dict()
         return pd.DataFrame(data, index=[0])
 
     def load(file_name):
@@ -387,3 +395,6 @@ class ConjunctionDataMessage():
 
     def __repr__(self):
         return self.kvn()
+
+    def __getitem__(self, key):
+        return self.to_dict()[key]

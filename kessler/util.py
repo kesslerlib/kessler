@@ -143,6 +143,15 @@ def from_mjd_to_epoch_days_after_1_jan(mjd_date):
     return days + days_fraction
 
 
+def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975'):
+    date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f')
+    date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
+    dd = date-date0
+    days = dd.days
+    days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
+    return days + days_fraction
+
+
 pykep_satellite = None
 
 
@@ -183,4 +192,13 @@ def create_path(path, directory=False):
             os.makedirs(dir)
         except Exception as e:
             print(e)
-            print('Could not create path, potentiall created by another rank in multinode: {}'.format(path))
+            print('Could not create path, potentially created by another process in the meantime: {}'.format(path))
+
+
+def tile_rows_cols(num_items):
+    cols = math.ceil(math.sqrt(num_items))
+    rows = 0
+    while num_items > 0:
+        rows += 1
+        num_items -= cols
+    return rows, cols
