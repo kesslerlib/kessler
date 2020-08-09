@@ -42,7 +42,9 @@ class Event():
             cdm_dataframes.append(cdm.to_dataframe())
         return pd.concat(cdm_dataframes, ignore_index=True)
 
-    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, *args, **kwargs):
+    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, apply_func=None, *args, **kwargs):
+        if apply_func is None:
+            apply_func = lambda x: x
         data_x = []
         data_y = []
         for i, cdm in enumerate(self._cdms):
@@ -52,7 +54,7 @@ class Event():
                 raise RuntimeError('CDM {} in event does not have CREATION_DATE'.format(i))
             time_to_tca = util.from_date_str_to_days(cdm['TCA'], date0=cdm['CREATION_DATE'])
             data_x.append(time_to_tca)
-            data_y.append(cdm[feature_name])
+            data_y.append(apply_func(cdm[feature_name]))
         # Creating axes instance
         if ax is None:
             if figsize is None:
@@ -87,9 +89,12 @@ class Event():
         if return_axs:
             return axs
 
-    def plot_uncertainty(self, figsize=(20, 12), *args, **kwargs):
-        covariance_features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
-        features = list(map(lambda f: 'OBJECT1_'+f, covariance_features)) + list(map(lambda f: 'OBJECT2_'+f, covariance_features))
+    def plot_uncertainty(self, figsize=(20, 12), diagonal=True, *args, **kwargs):
+        if diagonal:
+            features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
+        else:
+            features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
+        features = list(map(lambda f: 'OBJECT1_'+f, features)) + list(map(lambda f: 'OBJECT2_'+f, features))
         return self.plot_features(features, figsize=figsize, *args, **kwargs)
 
     def __repr__(self):
@@ -170,9 +175,12 @@ class EventSet():
         if return_axs:
             return axs
 
-    def plot_uncertainty(self, figsize=(20, 12), *args, **kwargs):
-        covariance_features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
-        features = list(map(lambda f: 'OBJECT1_'+f, covariance_features)) + list(map(lambda f: 'OBJECT2_'+f, covariance_features))
+    def plot_uncertainty(self, figsize=(20, 12), diagonal=True, *args, **kwargs):
+        if diagonal:
+            features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
+        else:
+            features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
+        features = list(map(lambda f: 'OBJECT1_'+f, features)) + list(map(lambda f: 'OBJECT2_'+f, features))
         return self.plot_features(features, figsize=figsize, *args, **kwargs)
 
     def __getitem__(self, index):
@@ -201,16 +209,38 @@ def kelvins_to_events(file_name, num_events=2, date_tca=None, drop_features=['c_
     print('{} entries'.format(len(kelvins)))
     print('Dropping features: {}'.format(drop_features))
     kelvins = kelvins.drop(drop_features, axis=1)
-    print('Dropping rows with NANs')
+    print('Dropping rows with NaNs')
     kelvins = kelvins.dropna()
     print('{} entries'.format(len(kelvins)))
+
+    outlier_features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
+    outlier_features = ['t_sigma_r', 't_sigma_t', 't_sigma_n', 't_sigma_rdot', 't_sigma_tdot', 't_sigma_ndot']
+    print('Removing outliers for features: {}'.format(outlier_features))
+    for feature in outlier_features:
+        # Q1 = kelvins[feature].quantile(0.25)
+        # Q3 = kelvins[feature].quantile(0.75)
+        # IQR = Q3 - Q1
+        # limit = 1.5 * IQR
+        # kelvins = kelvins[~((kelvins[feature] < (Q1 - limit)) | (kelvins[feature] > (Q3 + limit)))]
+        kelvins = kelvins[kelvins[feature].between(kelvins[feature].quantile(.001), kelvins[feature].quantile(.75))]  # without outliers
+    kelvins = kelvins.reset_index()
+    print('{} entries'.format(len(kelvins)))
+
+    # print('Removing outliers')
+    # Q1 = kelvins.quantile(0.25)
+    # Q3 = kelvins.quantile(0.75)
+    # IQR = Q3 - Q1
+    # limit = 1.5 * IQR
+    # kelvins = kelvins[~((kelvins < (Q1 - limit)) | (kelvins > (Q3 + limit))).any(axis=1)]
+    # print('{} entries'.format(len(kelvins)))
+
     print('Shuffling')
-    kelvins = kelvins.sample(frac=1,axis=1).reset_index(drop=True)
+    kelvins = kelvins.sample(frac=1, axis=1).reset_index(drop=True)
     kelvins_events = kelvins.groupby('event_id').groups
     print('Grouped rows into {} events'.format(len(kelvins_events)))
     if date_tca is None:
         date_tca = datetime.now()
-    print('Taking TCA to be: {}'.format(date_tca))
+    print('Taking TCA as current time: {}'.format(date_tca))
     events = []
     num_events = min(num_events, len(kelvins_events))
     i = 0
