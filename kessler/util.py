@@ -4,6 +4,7 @@ import math
 import os
 import pykep
 import skyfield
+import skyfield.sgp4lib
 import datetime
 import functools
 

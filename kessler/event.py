@@ -42,7 +42,7 @@ class Event():
             cdm_dataframes.append(cdm.to_dataframe())
         return pd.concat(cdm_dataframes, ignore_index=True)
 
-    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, apply_func=None, file_name=None, legend=False, *args, **kwargs):
+    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, apply_func=None, file_name=None, legend=False, xlim=(-0.01, 7.01), ylims=None, *args, **kwargs):
         if apply_func is None:
             apply_func = lambda x: x
         data_x = []
@@ -64,8 +64,17 @@ class Event():
         # ax.scatter(data_x, data_y)
         ax.set_xlabel('Time to TCA')
         ax.set_title(feature_name)
+
         xmin, xmax = min(ax.get_xlim()), max(ax.get_xlim())
         ax.set_xlim(xmax, xmin)
+        if xlim is not None:
+            xmin, xmax = xlim
+            ax.set_xlim(xmax, xmin)
+
+        if ylims is not None:
+            if feature_name in ylims:
+                ymin, ymax = ylims[feature_name]
+                ax.set_ylim(ymin, ymax)
 
         if legend:
             ax.legend()
@@ -76,7 +85,7 @@ class Event():
         if return_ax:
             return ax
 
-    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, *args, **kwargs):
+    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, file_name=None, *args, **kwargs):
         if not isinstance(feature_names, list):
             feature_names = [feature_names]
         rows, cols = util.tile_rows_cols(len(feature_names))
@@ -94,6 +103,9 @@ class Event():
             else:
                 ax.axis('off')
         plt.tight_layout()
+
+        if file_name is not None:
+            plt.savefig(file_name)
 
         if return_axs:
             return axs
@@ -153,7 +165,7 @@ class EventSet():
             event_dataframes.append(event.to_dataframe())
         return pd.concat(event_dataframes, ignore_index=True)
 
-    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, *args, **kwargs):
+    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, file_name=None, *args, **kwargs):
         if ax is None:
             if figsize is None:
                 figsize = 5, 3
@@ -162,10 +174,14 @@ class EventSet():
             event.plot_feature(feature_name, ax=ax, *args, **kwargs)
             if 'label' in kwargs:
                 kwargs.pop('label')  # We want to label only the first Event in this EventSet, for not cluttering the legend
+
+        if file_name is not None:
+            plt.savefig(file_name)
+
         if return_ax:
             return ax
 
-    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, *args, **kwargs):
+    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, file_name=None, *args, **kwargs):
         if not isinstance(feature_names, list):
             feature_names = [feature_names]
         if axs is None:
@@ -183,6 +199,9 @@ class EventSet():
             else:
                 ax.axis('off')
         plt.tight_layout()
+
+        if file_name is not None:
+            plt.savefig(file_name)
 
         if return_axs:
             return axs
@@ -215,7 +234,7 @@ class EventSet():
             return 'EventSet(Events:{}, number of CDMs per event: {} (min), {} (max), {:.2f} (mean))'.format(len(self._events), event_lengths_min, event_lengths_max, event_lengths_mean)
 
 
-def kelvins_to_events(file_name, num_events=2, date_tca=None, drop_features=['c_rcs_estimate', 't_rcs_estimate']):
+def kelvins_to_events(file_name, num_events=None, date_tca=None, remove_outliers=True, drop_features=['c_rcs_estimate', 't_rcs_estimate']):
     print('Loading Kelvins dataset from file name: {}'.format(file_name))
     kelvins = pd.read_csv(file_name)
     print('{} entries'.format(len(kelvins)))
@@ -225,26 +244,19 @@ def kelvins_to_events(file_name, num_events=2, date_tca=None, drop_features=['c_
     kelvins = kelvins.dropna()
     print('{} entries'.format(len(kelvins)))
 
-    outlier_features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
-    outlier_features = ['t_sigma_r', 't_sigma_t', 't_sigma_n', 't_sigma_rdot', 't_sigma_tdot', 't_sigma_ndot']
-    print('Removing outliers for features: {}'.format(outlier_features))
-    for feature in outlier_features:
-        # Q1 = kelvins[feature].quantile(0.25)
-        # Q3 = kelvins[feature].quantile(0.75)
-        # IQR = Q3 - Q1
-        # limit = 1.5 * IQR
-        # kelvins = kelvins[~((kelvins[feature] < (Q1 - limit)) | (kelvins[feature] > (Q3 + limit)))]
-        kelvins = kelvins[kelvins[feature].between(kelvins[feature].quantile(.001), kelvins[feature].quantile(.75))]  # without outliers
-    kelvins = kelvins.reset_index()
-    print('{} entries'.format(len(kelvins)))
-
-    # print('Removing outliers')
-    # Q1 = kelvins.quantile(0.25)
-    # Q3 = kelvins.quantile(0.75)
-    # IQR = Q3 - Q1
-    # limit = 1.5 * IQR
-    # kelvins = kelvins[~((kelvins < (Q1 - limit)) | (kelvins > (Q3 + limit))).any(axis=1)]
-    # print('{} entries'.format(len(kelvins)))
+    if remove_outliers:
+        # outlier_features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
+        outlier_features = ['t_sigma_r', 't_sigma_t', 't_sigma_n', 't_sigma_rdot', 't_sigma_tdot', 't_sigma_ndot']
+        print('Removing outliers for features: {}'.format(outlier_features))
+        for feature in outlier_features:
+            # Q1 = kelvins[feature].quantile(0.25)
+            # Q3 = kelvins[feature].quantile(0.75)
+            # IQR = Q3 - Q1
+            # limit = 1.5 * IQR
+            # kelvins = kelvins[~((kelvins[feature] < (Q1 - limit)) | (kelvins[feature] > (Q3 + limit)))]
+            kelvins = kelvins[kelvins[feature].between(kelvins[feature].quantile(.001), kelvins[feature].quantile(.75))]  # without outliers
+        kelvins = kelvins.reset_index()
+        print('{} entries'.format(len(kelvins)))
 
     print('Shuffling')
     kelvins = kelvins.sample(frac=1, axis=1).reset_index(drop=True)
@@ -254,6 +266,8 @@ def kelvins_to_events(file_name, num_events=2, date_tca=None, drop_features=['c_
         date_tca = datetime.now()
     print('Taking TCA as current time: {}'.format(date_tca))
     events = []
+    if num_events is None:
+        num_events = len(kelvins_events)
     num_events = min(num_events, len(kelvins_events))
     i = 0
     for k, v in kelvins_events.items():
