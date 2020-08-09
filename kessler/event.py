@@ -65,8 +65,8 @@ class Event():
         ax.set_xlabel('Time to TCA')
         ax.set_title(feature_name)
 
-        xmin, xmax = min(ax.get_xlim()), max(ax.get_xlim())
-        ax.set_xlim(xmax, xmin)
+        # xmin, xmax = min(ax.get_xlim()), max(ax.get_xlim())
+        # ax.set_xlim(xmax, xmin)
         if xlim is not None:
             xmin, xmax = xlim
             ax.set_xlim(xmax, xmin)
