@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from glob import glob
 import os
 import re
+import sys
+from datetime import datetime, timedelta
 
 from . import util
 from .cdm import ConjunctionDataMessage
@@ -48,7 +50,8 @@ class Event():
                 raise RuntimeError('CDM {} in event does not have TCA'.format(i))
             if cdm['CREATION_DATE'] is None:
                 raise RuntimeError('CDM {} in event does not have CREATION_DATE'.format(i))
-            data_x.append(util.from_date_str_to_days(cdm['TCA'], cdm['CREATION_DATE']))
+            time_to_tca = util.from_date_str_to_days(cdm['TCA'], date0=cdm['CREATION_DATE'])
+            data_x.append(time_to_tca)
             data_y.append(cdm[feature_name])
         # Creating axes instance
         if ax is None:
@@ -190,3 +193,123 @@ class EventSet():
             event_lengths_max = max(event_lengths)
             event_lengths_mean = sum(event_lengths)/len(event_lengths)
             return 'EventSet(Events:{}, number of CDMs per event: {} (min), {} (max), {:.2f} (mean))'.format(len(self._events), event_lengths_min, event_lengths_max, event_lengths_mean)
+
+
+def kelvins_to_events(file_name, num_events=2, date_tca=None, drop_features=['c_rcs_estimate', 't_rcs_estimate']):
+    print('Loading Kelvins dataset from file name: {}'.format(file_name))
+    kelvins = pd.read_csv(file_name)
+    print('{} entries'.format(len(kelvins)))
+    print('Dropping features: {}'.format(drop_features))
+    kelvins = kelvins.drop(drop_features, axis=1)
+    print('Dropping rows with NANs')
+    kelvins = kelvins.dropna()
+    print('{} entries'.format(len(kelvins)))
+    print('Shuffling')
+    kelvins = kelvins.sample(frac=1,axis=1).reset_index(drop=True)
+    kelvins_events = kelvins.groupby('event_id').groups
+    print('Grouped rows into {} events'.format(len(kelvins_events)))
+    if date_tca is None:
+        date_tca = datetime.now()
+    print('Taking TCA to be: {}'.format(date_tca))
+    events = []
+    num_events = min(num_events, len(kelvins_events))
+    i = 0
+    for k, v in kelvins_events.items():
+        i += 1
+        if i > num_events:
+            break
+        print('Converting event {} / {}'.format(i, num_events), end='\r')
+        sys.stdout.flush()
+        kelvins_event = kelvins.iloc[v]
+        cdms = []
+        for _, kelvins_cdm in kelvins_event.iterrows():
+            cdm = ConjunctionDataMessage()
+            time_to_tca = kelvins_cdm['time_to_tca']  # days
+            date_creation = date_tca - timedelta(days=time_to_tca)
+            cdm['CREATION_DATE'] = util.from_datetime_to_cdm_datetime_str(date_creation)
+            cdm['TCA'] = util.from_datetime_to_cdm_datetime_str(date_tca)
+            cdm['MISS_DISTANCE'] = kelvins_cdm['miss_distance']
+            cdm['RELATIVE_SPEED'] = kelvins_cdm['relative_speed']
+            cdm['RELATIVE_POSITION_R'] = kelvins_cdm['relative_position_r']
+            cdm['RELATIVE_POSITION_T'] = kelvins_cdm['relative_position_t']
+            cdm['RELATIVE_POSITION_N'] = kelvins_cdm['relative_position_n']
+            cdm['RELATIVE_VELOCITY_R'] = kelvins_cdm['relative_velocity_r']
+            cdm['RELATIVE_VELOCITY_T'] = kelvins_cdm['relative_velocity_t']
+            cdm['RELATIVE_VELOCITY_N'] = kelvins_cdm['relative_velocity_n']
+            cdm['OBJECT1_CR_R'] = kelvins_cdm['t_sigma_r']**2.
+            cdm['OBJECT1_CT_R'] = kelvins_cdm['t_ct_r']
+            cdm['OBJECT1_CT_T'] = kelvins_cdm['t_sigma_t']**2.
+            cdm['OBJECT1_CN_R'] = kelvins_cdm['t_cn_r']
+            cdm['OBJECT1_CN_T'] = kelvins_cdm['t_cn_t']
+            cdm['OBJECT1_CN_N'] = kelvins_cdm['t_sigma_n']**2.
+            cdm['OBJECT1_CRDOT_R'] = kelvins_cdm['t_crdot_r']
+            cdm['OBJECT1_CRDOT_T'] = kelvins_cdm['t_crdot_t']
+            cdm['OBJECT1_CRDOT_N'] = kelvins_cdm['t_crdot_n']
+            cdm['OBJECT1_CRDOT_RDOT'] = kelvins_cdm['t_sigma_rdot']**2.
+            cdm['OBJECT1_CTDOT_R'] = kelvins_cdm['t_ctdot_r']
+            cdm['OBJECT1_CTDOT_T'] = kelvins_cdm['t_ctdot_t']
+            cdm['OBJECT1_CTDOT_N'] = kelvins_cdm['t_ctdot_n']
+            cdm['OBJECT1_CTDOT_RDOT'] = kelvins_cdm['t_ctdot_rdot']
+            cdm['OBJECT1_CTDOT_TDOT'] = kelvins_cdm['t_sigma_tdot']**2.
+            cdm['OBJECT1_CNDOT_R'] = kelvins_cdm['t_cndot_r']
+            cdm['OBJECT1_CNDOT_T'] = kelvins_cdm['t_cndot_t']
+            cdm['OBJECT1_CNDOT_N'] = kelvins_cdm['t_cndot_n']
+            cdm['OBJECT1_CNDOT_RDOT'] = kelvins_cdm['t_cndot_rdot']
+            cdm['OBJECT1_CNDOT_TDOT'] = kelvins_cdm['t_cndot_tdot']
+            cdm['OBJECT1_CNDOT_NDOT'] = kelvins_cdm['t_sigma_ndot']**2.
+
+            cdm['OBJECT1_RECOMMENDED_OD_SPAN'] = kelvins_cdm['t_recommended_od_span']
+            cdm['OBJECT1_ACTUAL_OD_SPAN'] = kelvins_cdm['t_actual_od_span']
+            cdm['OBJECT1_OBS_AVAILABLE'] = kelvins_cdm['t_obs_available']
+            cdm['OBJECT1_OBS_USED'] = kelvins_cdm['t_obs_used']
+            cdm['OBJECT1_RESIDUALS_ACCEPTED'] = kelvins_cdm['t_residuals_accepted']
+            cdm['OBJECT1_WEIGHTED_RMS'] = kelvins_cdm['t_weighted_rms']
+            cdm['OBJECT1_SEDR'] = kelvins_cdm['t_sedr']
+            time_lastob_start = kelvins_cdm['t_time_lastob_start']  # days until CDM creation
+            time_lastob_start = date_creation - timedelta(days=time_lastob_start)
+            cdm['OBJECT1_TIME_LASTOB_START'] = util.from_datetime_to_cdm_datetime_str(time_lastob_start)
+            time_lastob_end = kelvins_cdm['t_time_lastob_end']  # days until CDM creation
+            time_lastob_end = date_creation - timedelta(days=time_lastob_end)
+            cdm['OBJECT1_TIME_LASTOB_END'] = util.from_datetime_to_cdm_datetime_str(time_lastob_end)
+
+            cdm['OBJECT2_CR_R'] = kelvins_cdm['c_sigma_r']**2.
+            cdm['OBJECT2_CT_R'] = kelvins_cdm['c_ct_r']
+            cdm['OBJECT2_CT_T'] = kelvins_cdm['c_sigma_t']**2.
+            cdm['OBJECT2_CN_R'] = kelvins_cdm['c_cn_r']
+            cdm['OBJECT2_CN_T'] = kelvins_cdm['c_cn_t']
+            cdm['OBJECT2_CN_N'] = kelvins_cdm['c_sigma_n']**2.
+            cdm['OBJECT2_CRDOT_R'] = kelvins_cdm['c_crdot_r']
+            cdm['OBJECT2_CRDOT_T'] = kelvins_cdm['c_crdot_t']
+            cdm['OBJECT2_CRDOT_N'] = kelvins_cdm['c_crdot_n']
+            cdm['OBJECT2_CRDOT_RDOT'] = kelvins_cdm['c_sigma_rdot']**2.
+            cdm['OBJECT2_CTDOT_R'] = kelvins_cdm['c_ctdot_r']
+            cdm['OBJECT2_CTDOT_T'] = kelvins_cdm['c_ctdot_t']
+            cdm['OBJECT2_CTDOT_N'] = kelvins_cdm['c_ctdot_n']
+            cdm['OBJECT2_CTDOT_RDOT'] = kelvins_cdm['c_ctdot_rdot']
+            cdm['OBJECT2_CTDOT_TDOT'] = kelvins_cdm['c_sigma_tdot']**2.
+            cdm['OBJECT2_CNDOT_R'] = kelvins_cdm['c_cndot_r']
+            cdm['OBJECT2_CNDOT_T'] = kelvins_cdm['c_cndot_t']
+            cdm['OBJECT2_CNDOT_N'] = kelvins_cdm['c_cndot_n']
+            cdm['OBJECT2_CNDOT_RDOT'] = kelvins_cdm['c_cndot_rdot']
+            cdm['OBJECT2_CNDOT_TDOT'] = kelvins_cdm['c_cndot_tdot']
+            cdm['OBJECT2_CNDOT_NDOT'] = kelvins_cdm['c_sigma_ndot']**2.
+
+            cdm['OBJECT2_OBJECT_TYPE'] = kelvins_cdm['c_object_type']
+            cdm['OBJECT2_RECOMMENDED_OD_SPAN'] = kelvins_cdm['c_recommended_od_span']
+            cdm['OBJECT2_ACTUAL_OD_SPAN'] = kelvins_cdm['c_actual_od_span']
+            cdm['OBJECT2_OBS_AVAILABLE'] = kelvins_cdm['c_obs_available']
+            cdm['OBJECT2_OBS_USED'] = kelvins_cdm['c_obs_used']
+            cdm['OBJECT2_RESIDUALS_ACCEPTED'] = kelvins_cdm['c_residuals_accepted']
+            cdm['OBJECT2_WEIGHTED_RMS'] = kelvins_cdm['c_weighted_rms']
+            cdm['OBJECT2_SEDR'] = kelvins_cdm['c_sedr']
+            time_lastob_start = kelvins_cdm['c_time_lastob_start']  # days until CDM creation
+            time_lastob_start = date_creation - timedelta(days=time_lastob_start)
+            cdm['OBJECT2_TIME_LASTOB_START'] = util.from_datetime_to_cdm_datetime_str(time_lastob_start)
+            time_lastob_end = kelvins_cdm['c_time_lastob_end']  # days until CDM creation
+            time_lastob_end = date_creation - timedelta(days=time_lastob_end)
+            cdm['OBJECT2_TIME_LASTOB_END'] = util.from_datetime_to_cdm_datetime_str(time_lastob_end)
+
+            cdms.append(cdm)
+        events.append(Event(cdms))
+
+    return EventSet(events=events)

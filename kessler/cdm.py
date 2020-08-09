@@ -48,7 +48,7 @@ class ConjunctionDataMessage():
             self.set_object(1, 'OBJECT', 'OBJECT2')
 
         if file_name:
-            self.set(ConjunctionDataMessage.load(file_name))
+            self.copy_from(ConjunctionDataMessage.load(file_name))
 
     def copy(self):
         ret = ConjunctionDataMessage()
@@ -60,7 +60,7 @@ class ConjunctionDataMessage():
         ret._values_object_data_covariance = copy.deepcopy(self._values_object_data_covariance)
         return ret
 
-    def set(self, other_cdm):
+    def copy_from(self, other_cdm):
         self._values_header = copy.deepcopy(other_cdm._values_header)
         self._values_relative_metadata = copy.deepcopy(other_cdm._values_relative_metadata)
         self._values_object_metadata = copy.deepcopy(other_cdm._values_object_metadata)
@@ -400,3 +400,17 @@ class ConjunctionDataMessage():
 
     def __getitem__(self, key):
         return self.to_dict()[key]
+
+    def __setitem__(self, key, value):
+        if key in self._keys_header:
+            self.set_header(key, value)
+        elif key in self._keys_relative_metadata:
+            self.set_relative_metadata(key, value)
+        elif key.startswith('OBJECT1_'):
+            key = key.split('OBJECT1_')[1]
+            self.set_object(0, key, value)
+        elif key.startswith('OBJECT2_'):
+            key = key.split('OBJECT2_')[1]
+            self.set_object(1, key, value)
+        else:
+            raise ValueError('Invalid key: {}'.format(key))
