@@ -42,7 +42,7 @@ class Event():
             cdm_dataframes.append(cdm.to_dataframe())
         return pd.concat(cdm_dataframes, ignore_index=True)
 
-    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, apply_func=None, *args, **kwargs):
+    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, apply_func=None, file_name=None, legend=False, *args, **kwargs):
         if apply_func is None:
             apply_func = lambda x: x
         data_x = []
@@ -67,6 +67,12 @@ class Event():
         xmin, xmax = min(ax.get_xlim()), max(ax.get_xlim())
         ax.set_xlim(xmax, xmin)
 
+        if legend:
+            ax.legend()
+
+        if file_name is not None:
+            plt.savefig(file_name)
+
         if return_ax:
             return ax
 
@@ -81,6 +87,9 @@ class Event():
 
         for i, ax in enumerate(axs.flat):
             if i < len(feature_names):
+                if i != 0 and 'legend' in kwargs:
+                    kwargs['legend'] = False
+
                 self.plot_feature(feature_names[i], ax=ax, *args, **kwargs)
             else:
                 ax.axis('off')
@@ -167,6 +176,9 @@ class EventSet():
 
         for i, ax in enumerate(axs.flat):
             if i < len(feature_names):
+                if i != 0 and 'legend' in kwargs:
+                    kwargs['legend'] = False
+
                 self.plot_feature(feature_names[i], ax=ax, *args, **kwargs)
             else:
                 ax.axis('off')
