@@ -40,7 +40,7 @@ class Event():
             cdm_dataframes.append(cdm.to_dataframe())
         return pd.concat(cdm_dataframes, ignore_index=True)
 
-    def plot_feature(self, feature_name, ax=None, return_ax=False, other_events=None, legend=True, label=None, *args, **kwargs):
+    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, *args, **kwargs):
         data_x = []
         data_y = []
         for i, cdm in enumerate(self._cdms):
@@ -52,51 +52,36 @@ class Event():
             data_y.append(cdm[feature_name])
         # Creating axes instance
         if ax is None:
-            fig, ax = plt.subplots()
-        if label is None:
-            label = 'Event 0'
-        ax.plot(data_x, data_y, marker='.', label=label, *args, **kwargs)
+            if figsize is None:
+                figsize = 5, 3
+            fig, ax = plt.subplots(figsize=figsize)
+        ax.plot(data_x, data_y, marker='.', *args, **kwargs)
+        # ax.scatter(data_x, data_y)
         ax.set_xlabel('Time to TCA')
         ax.set_title(feature_name)
         xmin, xmax = min(ax.get_xlim()), max(ax.get_xlim())
-
-        if other_events is not None:
-            if not isinstance(other_events, list):
-                if isinstance(other_events, EventCollection):
-                    other_events = list(other_events)
-                elif isinstance(other_events, Event):
-                    other_events = [other_events]
-                else:
-                    raise ValueError('Expecting other_events to be one of (Event, EventCollection, or a list of Events)')
-            for i, e in enumerate(other_events):
-                eax = e.plot_feature(feature_name, ax=ax, return_ax=True, label='Event {}'.format(i+1), *args, **kwargs)
-                exmin, exmax = min(eax.get_xlim()), max(eax.get_xlim())
-                xmin, xmax = min(xmin, exmin), max(xmax, exmax)
-            if legend:
-                ax.legend()
         ax.set_xlim(xmax, xmin)
 
         if return_ax:
             return ax
 
-    def plot_features(self, features, figsize=None, return_ax=False, other_events=None, legend=True, *args, **kwargs):
-        if not isinstance(features, list):
-            features = [features]
-        rows, cols = util.tile_rows_cols(len(features))
-        if figsize is None:
-            figsize = (cols*20/7, rows*12/6)
-        fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
+    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, *args, **kwargs):
+        if not isinstance(feature_names, list):
+            feature_names = [feature_names]
+        rows, cols = util.tile_rows_cols(len(feature_names))
+        if axs is None:
+            if figsize is None:
+                figsize = (cols*20/7, rows*12/6)
+            fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
 
         for i, ax in enumerate(axs.flat):
-            if i < len(features):
-                self.plot_feature(features[i], ax=ax, other_events=other_events, legend=legend, *args, **kwargs)
-                if i != 0 and ax.legend_ is not None:
-                    ax.legend_.remove()
+            if i < len(feature_names):
+                self.plot_feature(feature_names[i], ax=ax, *args, **kwargs)
             else:
                 ax.axis('off')
         plt.tight_layout()
 
-        if return_ax:
+        if return_axs:
             return axs
 
     def plot_uncertainty(self, figsize=(20, 12), *args, **kwargs):
@@ -151,24 +136,29 @@ class EventCollection():
             event_dataframes.append(event.to_dataframe())
         return pd.concat(event_dataframes, ignore_index=True)
 
-    def plot_feature(self, feature_name, ax=None, *args, **kwargs):
+    def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, *args, **kwargs):
         if ax is None:
-            fig, ax = plt.subplots()
+            if figsize is None:
+                figsize = 5, 3
+            fig, ax = plt.subplots(figsize=figsize)
         for event in self:
             event.plot_feature(feature_name, ax=ax, *args, **kwargs)
-        plt.tight_layout()
+            if 'label' in kwargs:
+                kwargs.pop('label')  # We want to label only the first Event in this EventCollection, for not cluttering the legend
+        if return_ax:
+            return ax
 
-    def plot_features(self, features, figsize=None, *args, **kwargs):
-        if not isinstance(features, list):
-            features = [features]
-        rows, cols = util.tile_rows_cols(len(features))
+    def plot_features(self, feature_names, figsize=None, *args, **kwargs):
+        if not isinstance(feature_names, list):
+            feature_names = [feature_names]
+        rows, cols = util.tile_rows_cols(len(feature_names))
         if figsize is None:
             figsize = (cols*20/7, rows*12/6)
         fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
 
         for i, ax in enumerate(axs.flat):
-            if i < len(features):
-                self.plot_feature(features[i], ax=ax, *args, **kwargs)
+            if i < len(feature_names):
+                self.plot_feature(feature_names[i], ax=ax, *args, **kwargs)
             else:
                 ax.axis('off')
         plt.tight_layout()
