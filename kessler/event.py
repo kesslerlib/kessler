@@ -102,7 +102,7 @@ class Event():
         return len(self._cdms)
 
 
-class EventCollection():
+class EventSet():
     def __init__(self, cdms_dir=None, cdm_extension='.cdm.kvn.txt', events=None):
         if events is None:
             if cdms_dir is None:
@@ -144,7 +144,7 @@ class EventCollection():
         for event in self:
             event.plot_feature(feature_name, ax=ax, *args, **kwargs)
             if 'label' in kwargs:
-                kwargs.pop('label')  # We want to label only the first Event in this EventCollection, for not cluttering the legend
+                kwargs.pop('label')  # We want to label only the first Event in this EventSet, for not cluttering the legend
         if return_ax:
             return ax
 
@@ -174,7 +174,7 @@ class EventCollection():
 
     def __getitem__(self, index):
         if isinstance(index, slice):
-            return EventCollection(events=self._events[index])
+            return EventSet(events=self._events[index])
         else:
             return self._events[index]
 
@@ -183,10 +183,10 @@ class EventCollection():
 
     def __repr__(self):
         if len(self) == 0:
-            return 'EventCollection()'
+            return 'EventSet()'
         else:
             event_lengths = list(map(len, self._events))
             event_lengths_min = min(event_lengths)
             event_lengths_max = max(event_lengths)
             event_lengths_mean = sum(event_lengths)/len(event_lengths)
-            return 'EventCollection(Events:{}, number of CDMs per event: {} (min), {} (max), {:.2f} (mean))'.format(len(self._events), event_lengths_min, event_lengths_max, event_lengths_mean)
+            return 'EventSet(Events:{}, number of CDMs per event: {} (min), {} (max), {:.2f} (mean))'.format(len(self._events), event_lengths_min, event_lengths_max, event_lengths_mean)
