@@ -148,13 +148,14 @@ class EventCollection():
         if return_ax:
             return ax
 
-    def plot_features(self, feature_names, figsize=None, *args, **kwargs):
+    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, *args, **kwargs):
         if not isinstance(feature_names, list):
             feature_names = [feature_names]
-        rows, cols = util.tile_rows_cols(len(feature_names))
-        if figsize is None:
-            figsize = (cols*20/7, rows*12/6)
-        fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
+        if axs is None:
+            rows, cols = util.tile_rows_cols(len(feature_names))
+            if figsize is None:
+                figsize = (cols*20/7, rows*12/6)
+            fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
 
         for i, ax in enumerate(axs.flat):
             if i < len(feature_names):
@@ -162,6 +163,9 @@ class EventCollection():
             else:
                 ax.axis('off')
         plt.tight_layout()
+
+        if return_axs:
+            return axs
 
     def plot_uncertainty(self, figsize=(20, 12), *args, **kwargs):
         covariance_features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
