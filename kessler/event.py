@@ -40,7 +40,7 @@ class Event():
             cdm_dataframes.append(cdm.to_dataframe())
         return pd.concat(cdm_dataframes, ignore_index=True)
 
-    def plot_feature(self, feature_name, ax=None, *args, **kwargs):
+    def plot_feature(self, feature_name, ax=None, return_ax=False, other_events=None, legend=True, label=None, *args, **kwargs):
         data_x = []
         data_y = []
         for i, cdm in enumerate(self._cdms):
@@ -53,16 +53,33 @@ class Event():
         # Creating axes instance
         if ax is None:
             fig, ax = plt.subplots()
-        ax.plot(data_x, data_y, marker='.', *args, **kwargs)
-        # ax.scatter(data_x, data_y)
-        xmin, xmax = min(data_x), max(data_x)
-        if xmin == xmax:
-            xmax += 1e-6
-        ax.set_xlim(xmax, xmin)
+        if label is None:
+            label = 'Event 0'
+        ax.plot(data_x, data_y, marker='.', label=label, *args, **kwargs)
         ax.set_xlabel('Time to TCA')
         ax.set_title(feature_name)
+        xmin, xmax = min(ax.get_xlim()), max(ax.get_xlim())
 
-    def plot_features(self, features, figsize=None, *args, **kwargs):
+        if other_events is not None:
+            if not isinstance(other_events, list):
+                if isinstance(other_events, EventCollection):
+                    other_events = list(other_events)
+                elif isinstance(other_events, Event):
+                    other_events = [other_events]
+                else:
+                    raise ValueError('Expecting other_events to be one of (Event, EventCollection, or a list of Events)')
+            for i, e in enumerate(other_events):
+                eax = e.plot_feature(feature_name, ax=ax, return_ax=True, label='Event {}'.format(i+1), *args, **kwargs)
+                exmin, exmax = min(eax.get_xlim()), max(eax.get_xlim())
+                xmin, xmax = min(xmin, exmin), max(xmax, exmax)
+            if legend:
+                ax.legend()
+        ax.set_xlim(xmax, xmin)
+
+        if return_ax:
+            return ax
+
+    def plot_features(self, features, figsize=None, return_ax=False, other_events=None, legend=True, *args, **kwargs):
         if not isinstance(features, list):
             features = [features]
         rows, cols = util.tile_rows_cols(len(features))
@@ -72,10 +89,15 @@ class Event():
 
         for i, ax in enumerate(axs.flat):
             if i < len(features):
-                self.plot_feature(features[i], ax=ax, *args, **kwargs)
+                self.plot_feature(features[i], ax=ax, other_events=other_events, legend=legend, *args, **kwargs)
+                if i != 0 and ax.legend_ is not None:
+                    ax.legend_.remove()
             else:
                 ax.axis('off')
         plt.tight_layout()
+
+        if return_ax:
+            return axs
 
     def plot_uncertainty(self, figsize=(20, 12), *args, **kwargs):
         covariance_features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']

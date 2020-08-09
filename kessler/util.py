@@ -4,8 +4,8 @@ import math
 import os
 import pykep
 import skyfield
-from skyfield.api import load
 import datetime
+import functools
 
 
 # This function is from python-sgp4 released under MIT License, (c) 2012–2016 Brandon Rhodes
@@ -59,6 +59,7 @@ def from_cartesian_to_tle_elements(state):
     mean_anomaly        = kepl_el[5] - kepl_el[1]*np.sin(kepl_el[5])+np.pi
     return mean_motion, eccentricity, inclination, argument_of_perigee, raan, mean_anomaly
 
+
 def rotation_matrix(state):
     r, v = state[0], state[1]
     u = r / np.linalg.norm(r)
@@ -92,7 +93,7 @@ def from_TEME_to_ITRF(state, time):
     r_new, v_new = skyfield.sgp4lib.TEME_to_ITRF(time, r, v*86400.)
     # print(f'pos: {r_new}, vel: {v_new/86400.}')
     v_new = v_new / 86400.
-    state = np.stack([r_new,v_new])
+    state = np.stack([r_new, v_new])
     return state
 
 
@@ -143,6 +144,7 @@ def from_mjd_to_epoch_days_after_1_jan(mjd_date):
     return days + days_fraction
 
 
+@functools.lru_cache(maxsize=None)
 def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975'):
     date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f')
     date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
