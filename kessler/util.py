@@ -155,6 +155,12 @@ def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975'):
     return days + days_fraction
 
 
+def add_days_to_date_str(date0, days):
+    date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
+    date = date0 + datetime.timedelta(days=days)
+    return from_datetime_to_cdm_datetime_str(date)
+
+
 pykep_satellite = None
 
 
@@ -208,3 +214,14 @@ def tile_rows_cols(num_items):
             rows += 1
             num_items -= cols
         return rows, cols
+
+
+def has_nan_or_inf(value):
+    if torch.is_tensor(value):
+        value = torch.sum(value)
+        isnan = int(torch.isnan(value)) > 0
+        isinf = int(torch.isinf(value)) > 0
+        return isnan or isinf
+    else:
+        value = float(value)
+        return math.isnan(value) or math.isinf(value)

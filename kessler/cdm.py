@@ -3,7 +3,6 @@ import warnings
 import datetime
 import copy
 import pandas as pd
-import functools
 
 from . import util
 
@@ -40,6 +39,7 @@ class ConjunctionDataMessage():
         self._values_object_data_od = [dict.fromkeys(self._keys_data_od), dict.fromkeys(self._keys_data_od)]
         self._values_object_data_state = [dict.fromkeys(self._keys_data_state), dict.fromkeys(self._keys_data_state)]
         self._values_object_data_covariance = [dict.fromkeys(self._keys_data_covariance), dict.fromkeys(self._keys_data_covariance)]
+        self._values_extra = {}  # This holds extra key, value pairs associated with each CDM object, used internally by the Kessler codebase and not a part of the CDM standard
 
         if set_defaults:
             self.set_header('CCSDS_CDM_VERS', '1.0')
@@ -68,7 +68,6 @@ class ConjunctionDataMessage():
         self._values_object_data_state = copy.deepcopy(other_cdm._values_object_data_state)
         self._values_object_data_covariance = copy.deepcopy(other_cdm._values_object_data_covariance)
 
-    @functools.lru_cache(maxsize=None)
     def to_dict(self):
         data = {}
         data_header = dict.fromkeys(self._keys_header)
@@ -107,6 +106,8 @@ class ConjunctionDataMessage():
             for key, value in self._values_object_data_covariance[i].items():
                 data_data_covariance[prefix+key] = value
             data.update(data_data_covariance)
+
+        data.update(self._values_extra)
 
         return data
 

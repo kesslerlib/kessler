@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 
 from . import util
 from .cdm import ConjunctionDataMessage
+from .nn import LSTMPredictor
 
 mpl.rcParams['axes.unicode_minus'] = False
 plt_default_backend = plt.get_backend()
@@ -24,6 +25,14 @@ class Event():
             self._cdms = [ConjunctionDataMessage(file_name) for file_name in cdm_file_names]
         else:
             self._cdms = []
+        self._update_cdm_extra_features()
+
+    def _update_cdm_extra_features(self):
+        if len(self._cdms) > 0:
+            date0 = self._cdms[0]['CREATION_DATE']
+            for cdm in self._cdms:
+                cdm._values_extra['__CREATION_DATE'] = util.from_date_str_to_days(cdm['CREATION_DATE'], date0=date0)
+                cdm._values_extra['__TCA'] = util.from_date_str_to_days(cdm['TCA'], date0=date0)
 
     def add(self, cdm):
         if isinstance(cdm, ConjunctionDataMessage):
@@ -33,6 +42,7 @@ class Event():
                 self.add(c)
         else:
             raise ValueError('Expecting a single CDM or a list of CDMs')
+        self._update_cdm_extra_features()
 
     def to_dataframe(self):
         if len(self) == 0:
@@ -214,6 +224,84 @@ class EventSet():
         features = list(map(lambda f: 'OBJECT1_'+f, features)) + list(map(lambda f: 'OBJECT2_'+f, features))
         return self.plot_features(features, figsize=figsize, *args, **kwargs)
 
+    def train_predictor(self, features=None, device=None, lr=1e-3, epochs=10, batch_size=16, dropout=0.2, model=None):
+        if features is None:
+            features = ['__CREATION_DATE',
+                        '__TCA',
+                        'MISS_DISTANCE',
+                        'RELATIVE_SPEED',
+                        'RELATIVE_POSITION_R',
+                        'RELATIVE_POSITION_T',
+                        'RELATIVE_POSITION_N',
+                        'RELATIVE_VELOCITY_R',
+                        'RELATIVE_VELOCITY_T',
+                        'RELATIVE_VELOCITY_N',
+                        'OBJECT1_X',
+                        'OBJECT1_Y',
+                        'OBJECT1_Z',
+                        'OBJECT1_X_DOT',
+                        'OBJECT1_Y_DOT',
+                        'OBJECT1_Z_DOT',
+                        'OBJECT1_CR_R',
+                        'OBJECT1_CT_R',
+                        'OBJECT1_CT_T',
+                        'OBJECT1_CN_R',
+                        'OBJECT1_CN_T',
+                        'OBJECT1_CN_N',
+                        'OBJECT1_CRDOT_R',
+                        'OBJECT1_CRDOT_T',
+                        'OBJECT1_CRDOT_N',
+                        'OBJECT1_CRDOT_RDOT',
+                        'OBJECT1_CTDOT_R',
+                        'OBJECT1_CTDOT_T',
+                        'OBJECT1_CTDOT_N',
+                        'OBJECT1_CTDOT_RDOT',
+                        'OBJECT1_CTDOT_TDOT',
+                        'OBJECT1_CNDOT_R',
+                        'OBJECT1_CNDOT_T',
+                        'OBJECT1_CNDOT_N',
+                        'OBJECT1_CNDOT_RDOT',
+                        'OBJECT1_CNDOT_TDOT',
+                        'OBJECT1_CNDOT_NDOT',
+                        'OBJECT2_X',
+                        'OBJECT2_Y',
+                        'OBJECT2_Z',
+                        'OBJECT2_X_DOT',
+                        'OBJECT2_Y_DOT',
+                        'OBJECT2_Z_DOT',
+                        'OBJECT2_CR_R',
+                        'OBJECT2_CT_R',
+                        'OBJECT2_CT_T',
+                        'OBJECT2_CN_R',
+                        'OBJECT2_CN_T',
+                        'OBJECT2_CN_N',
+                        'OBJECT2_CRDOT_R',
+                        'OBJECT2_CRDOT_T',
+                        'OBJECT2_CRDOT_N',
+                        'OBJECT2_CRDOT_RDOT',
+                        'OBJECT2_CTDOT_R',
+                        'OBJECT2_CTDOT_T',
+                        'OBJECT2_CTDOT_N',
+                        'OBJECT2_CTDOT_RDOT',
+                        'OBJECT2_CTDOT_TDOT',
+                        'OBJECT2_CNDOT_R',
+                        'OBJECT2_CNDOT_T',
+                        'OBJECT2_CNDOT_N',
+                        'OBJECT2_CNDOT_RDOT',
+                        'OBJECT2_CNDOT_TDOT',
+                        'OBJECT2_CNDOT_NDOT']
+        if model is None:
+            model = LSTMPredictor(features=features, dropout=dropout, event_set=self)
+        model.learn(lr=lr, epochs=epochs, batch_size=batch_size, event_set=self, device=device)
+        return model
+
+    def filter(self, filter_func):
+        events = []
+        for event in self:
+            if filter_func(event):
+                events.append(event)
+        return EventSet(events=events)
+
     def __getitem__(self, index):
         if isinstance(index, slice):
             return EventSet(events=self._events[index])
@@ -246,16 +334,23 @@ def kelvins_to_events(file_name, num_events=None, date_tca=None, remove_outliers
 
     if remove_outliers:
         # outlier_features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
-        outlier_features = ['t_sigma_r', 't_sigma_t', 't_sigma_n', 't_sigma_rdot', 't_sigma_tdot', 't_sigma_ndot']
-        print('Removing outliers for features: {}'.format(outlier_features))
-        for feature in outlier_features:
-            # Q1 = kelvins[feature].quantile(0.25)
-            # Q3 = kelvins[feature].quantile(0.75)
-            # IQR = Q3 - Q1
-            # limit = 1.5 * IQR
-            # kelvins = kelvins[~((kelvins[feature] < (Q1 - limit)) | (kelvins[feature] > (Q3 + limit)))]
-            kelvins = kelvins[kelvins[feature].between(kelvins[feature].quantile(.001), kelvins[feature].quantile(.75))]  # without outliers
-        kelvins = kelvins.reset_index()
+        # outlier_features = ['t_sigma_r', 't_sigma_t', 't_sigma_n', 't_sigma_rdot', 't_sigma_tdot', 't_sigma_ndot']
+        print('Removing outliers')
+        kelvins = kelvins[kelvins['t_sigma_r'] <= 20]
+        kelvins = kelvins[kelvins['c_sigma_r'] <= 1000]
+        kelvins = kelvins[kelvins['t_sigma_t'] <= 2000]
+        kelvins = kelvins[kelvins['c_sigma_t'] <= 100000]
+        kelvins = kelvins[kelvins['t_sigma_n'] <= 10]
+        kelvins = kelvins[kelvins['c_sigma_n'] <= 450]
+
+        # for feature in outlier_features:
+        #     # Q1 = kelvins[feature].quantile(0.25)
+        #     # Q3 = kelvins[feature].quantile(0.75)
+        #     # IQR = Q3 - Q1
+        #     # limit = 1.5 * IQR
+        #     # kelvins = kelvins[~((kelvins[feature] < (Q1 - limit)) | (kelvins[feature] > (Q3 + limit)))]
+        #     kelvins = kelvins[kelvins[feature].between(kelvins[feature].quantile(.001), kelvins[feature].quantile(.75))]  # without outliers
+        # kelvins = kelvins.reset_index()
         print('{} entries'.format(len(kelvins)))
 
     print('Shuffling')
