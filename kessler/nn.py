@@ -31,16 +31,16 @@ class DatasetEventSet(Dataset):
 
 
 class LSTMPredictor(nn.Module):
-    def __init__(self, hidden_size=128, num_layers=2, dropout=None, features=None, event_set=None):
+    def __init__(self, lstm_size=256, lstm_depth=2, dropout=None, features=None, event_set=None):
         super().__init__()
 
         self.input_size = len(features)
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
+        self.lstm_size = lstm_size
+        self.lstm_depth = lstm_depth
         self.dropout = dropout
 
-        self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.hidden_size, num_layers=num_layers, batch_first=True, dropout=dropout if dropout else 0)
-        self.fc1 = nn.Linear(hidden_size, self.input_size)
+        self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.lstm_size, num_layers=lstm_depth, batch_first=True, dropout=dropout if dropout else 0)
+        self.fc1 = nn.Linear(lstm_size, self.input_size)
         if dropout is not None:
             self.dropout_layer = nn.Dropout(p=dropout)
 
@@ -48,9 +48,12 @@ class LSTMPredictor(nn.Module):
         self._features = features
         self._features_mean, self._features_stddev = train_set._features_mean, train_set._features_stddev
 
-    def learn(self, event_set, lr=1e-3, epochs=10, batch_size=4, device=None):
+    def learn(self, event_set, lr, epochs, batch_size, device):
         if device is None:
             device = torch.device('cpu')
+
+        num_params = sum(p.numel() for p in self.parameters())
+        print('LSTM predictor with params: {}'.format(num_params))
 
         self.to(device)
         optimizer = optim.Adam(self.parameters(), lr=lr)
@@ -107,8 +110,8 @@ class LSTMPredictor(nn.Module):
         return cdm
 
     def reset(self, batch_size):
-        h = torch.zeros(self.num_layers, batch_size, self.hidden_size)
-        c = torch.zeros(self.num_layers, batch_size, self.hidden_size)
+        h = torch.zeros(self.lstm_depth, batch_size, self.lstm_size)
+        c = torch.zeros(self.lstm_depth, batch_size, self.lstm_size)
         device = list(self.parameters())[0].device
         h = h.to(device)
         c = c.to(device)

@@ -224,7 +224,7 @@ class EventSet():
         features = list(map(lambda f: 'OBJECT1_'+f, features)) + list(map(lambda f: 'OBJECT2_'+f, features))
         return self.plot_features(features, figsize=figsize, *args, **kwargs)
 
-    def train_predictor(self, features=None, device=None, lr=1e-3, epochs=10, batch_size=16, dropout=0.2, model=None):
+    def train_predictor(self, lstm_size=256, lstm_depth=2, features=None, device=None, lr=1e-3, epochs=10, batch_size=16, dropout=0.2, predictor=None):
         if features is None:
             features = ['__CREATION_DATE',
                         '__TCA',
@@ -290,10 +290,10 @@ class EventSet():
                         'OBJECT2_CNDOT_RDOT',
                         'OBJECT2_CNDOT_TDOT',
                         'OBJECT2_CNDOT_NDOT']
-        if model is None:
-            model = LSTMPredictor(features=features, dropout=dropout, event_set=self)
-        model.learn(lr=lr, epochs=epochs, batch_size=batch_size, event_set=self, device=device)
-        return model
+        if predictor is None:
+            predictor = LSTMPredictor(lstm_size=lstm_size, lstm_depth=lstm_depth, features=features, dropout=dropout, event_set=self)
+        predictor.learn(lr=lr, epochs=epochs, batch_size=batch_size, event_set=self, device=device)
+        return predictor
 
     def filter(self, filter_func):
         events = []
