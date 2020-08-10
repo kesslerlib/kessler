@@ -2,20 +2,25 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
 
 from . import util
 
 
 class DatasetEventSet(Dataset):
-    def __init__(self, event_set, features, features_mean=None, features_stddev=None):
+    def __init__(self, event_set, features, features_stats=None):
         self._event_set = event_set
         self._max_event_length = max(map(len, self._event_set))
         self._features = features
         self._features_length = len(features)
-        df = event_set.to_dataframe()
-        features_numpy = df[features].to_numpy()
-        self._features_mean = features_numpy.mean(0) if features_mean is None else features_mean
-        self._features_stddev = features_numpy.std(0) if features_stddev is None else features_stddev
+        if features_stats is None:
+            df = event_set.to_dataframe()
+            features_numpy = df[features].to_numpy()
+            mean = features_numpy.mean(0)
+            stddev = features_numpy.std(0)
+            self._features_stats = {'mean': mean, 'stddev': stddev}
+        else:
+            self._features_stats = features_stats
 
     def __len__(self):
         return len(self._event_set)
@@ -26,12 +31,12 @@ class DatasetEventSet(Dataset):
         event = self._event_set[i]
         x = torch.zeros(self._max_event_length, self._features_length)
         for i, cdm in enumerate(event):
-            x[i] = torch.tensor([(cdm[feature]-self._features_mean[j])/(self._features_stddev[j]+1e-8) for j, feature in enumerate(self._features)])
+            x[i] = torch.tensor([(cdm[feature]-self._features_stats['mean'][j])/(self._features_stats['stddev'][j]+1e-8) for j, feature in enumerate(self._features)])
         return x, torch.tensor(len(event))
 
 
 class LSTMPredictor(nn.Module):
-    def __init__(self, lstm_size=256, lstm_depth=2, dropout=None, features=None, event_set=None):
+    def __init__(self, lstm_size=256, lstm_depth=2, dropout=None, features=None):
         super().__init__()
 
         self.input_size = len(features)
@@ -44,25 +49,46 @@ class LSTMPredictor(nn.Module):
         if dropout is not None:
             self.dropout_layer = nn.Dropout(p=dropout)
 
-        train_set = DatasetEventSet(event_set, features)
         self._features = features
-        self._features_mean, self._features_stddev = train_set._features_mean, train_set._features_stddev
+        self._features_stats = None
+        self._hist_train_loss = []
+        self._hist_train_loss_num_cdms = []
 
-    def learn(self, event_set, lr, epochs, batch_size, device):
+    def plot_loss(self):
+        fig, ax = plt.subplots()
+        ax.plot(self._hist_train_loss_num_cdms, self._hist_train_loss, label='Training')
+        ax.set_xlabel('Training CDMs')
+        ax.set_ylabel('Loss')
+        ax.legend()
+
+    def learn(self, event_set, lr, epochs, batch_size, device, valid_proportion=0.15, num_workers=4):
         if device is None:
             device = torch.device('cpu')
 
         num_params = sum(p.numel() for p in self.parameters())
         print('LSTM predictor with params: {}'.format(num_params))
 
+        if self._features_stats is None:
+            print('Computing feature statistics')
+            self._features_stats = DatasetEventSet(event_set, self._features)._features_stats
+
         self.to(device)
         optimizer = optim.Adam(self.parameters(), lr=lr)
 
         event_set = event_set.filter(lambda event: len(event) > 1)
-        train_set = DatasetEventSet(event_set, self._features)
 
-        train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+        valid_set_size = int(len(event_set) * valid_proportion)
+        train_set_size = len(event_set) - valid_set_size
+        train_set = DatasetEventSet(event_set[:train_set_size], self._features, self._features_stats)
+        valid_set = DatasetEventSet(event_set[train_set_size:], self._features, self._features_stats)
+
+        train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+        valid_loader = DataLoader(valid_set, batch_size=len(valid_set), shuffle=True, num_workers=num_workers)
         self.train()
+        if len(self._hist_train_loss_num_cdms) == 0:
+            num_cdms = 0
+        else:
+            num_cdms = self._hist_train_loss_num_cdms[-1]
         for epoch in range(epochs):
             for i_minibatch, (events, event_lengths) in enumerate(train_loader):
                 events, event_lengths = events.to(device), event_lengths.to(device)
@@ -76,7 +102,12 @@ class LSTMPredictor(nn.Module):
                 loss = nn.functional.mse_loss(output, target)
                 loss.backward()
                 optimizer.step()
-                print(float(loss))
+
+                num_cdms += batch_size
+                train_loss = float(loss)
+                self._hist_train_loss_num_cdms.append(num_cdms)
+                self._hist_train_loss.append(train_loss)
+                print(train_loss)
         return self
 
     def predict(self, event):
@@ -100,7 +131,7 @@ class LSTMPredictor(nn.Module):
         cdm = ConjunctionDataMessage()
         for i in range(len(self._features)):
             feature = self._features[i]
-            value = self._features_mean[i] + float(output_last[i].item()) * self._features_stddev[i]
+            value = self._features_stats['mean'][i] + float(output_last[i].item()) * self._features_stats['stddev'][i]
             if feature == '__CREATION_DATE':
                 cdm['CREATION_DATE'] = util.add_days_to_date_str(date0, value)
             elif feature == '__TCA':

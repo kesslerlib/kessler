@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from glob import glob
+import copy
 import os
 import re
 import sys
@@ -34,7 +35,7 @@ class Event():
                 cdm._values_extra['__CREATION_DATE'] = util.from_date_str_to_days(cdm['CREATION_DATE'], date0=date0)
                 cdm._values_extra['__TCA'] = util.from_date_str_to_days(cdm['TCA'], date0=date0)
 
-    def add(self, cdm):
+    def add(self, cdm, return_result=False):
         if isinstance(cdm, ConjunctionDataMessage):
             self._cdms.append(cdm)
         elif isinstance(cdm, list):
@@ -43,6 +44,11 @@ class Event():
         else:
             raise ValueError('Expecting a single CDM or a list of CDMs')
         self._update_cdm_extra_features()
+        if return_result:
+            return self
+
+    def copy(self):
+        return Event(cdms=copy.deepcopy(self._cdms))
 
     def to_dataframe(self):
         if len(self) == 0:
@@ -291,7 +297,7 @@ class EventSet():
                         'OBJECT2_CNDOT_TDOT',
                         'OBJECT2_CNDOT_NDOT']
         if predictor is None:
-            predictor = LSTMPredictor(lstm_size=lstm_size, lstm_depth=lstm_depth, features=features, dropout=dropout, event_set=self)
+            predictor = LSTMPredictor(lstm_size=lstm_size, lstm_depth=lstm_depth, features=features, dropout=dropout)
         predictor.learn(lr=lr, epochs=epochs, batch_size=batch_size, event_set=self, device=device)
         return predictor
 
