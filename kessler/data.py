@@ -6,13 +6,13 @@ import sys
 from datetime import datetime, timedelta
 
 from . import util
-from .models import ConstellationPair
+from .models import Conjunction
 from .cdm import CDM
 from .event import Event, EventDataset
 
 
 def generate_event_dataset(dataset_dir, num_events, save_traces=False, *args, **kwargs):
-    model = ConstellationPair(*args, **kwargs)
+    model = Conjunction(*args, **kwargs)
 
     print('Generating CDM dataset')
     print('Directory: {}'.format(dataset_dir))
