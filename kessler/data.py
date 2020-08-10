@@ -11,7 +11,7 @@ from .cdm import CDM
 from .event import Event, EventDataset
 
 
-def generate_event_dataset(dataset_dir, num_events, *args, **kwargs):
+def generate_event_dataset(dataset_dir, num_events, save_traces=False, *args, **kwargs):
     model = ConstellationPair(*args, **kwargs)
 
     print('Generating CDM dataset')
@@ -22,9 +22,10 @@ def generate_event_dataset(dataset_dir, num_events, *args, **kwargs):
         file_name_event = os.path.join(dataset_dir, 'event_{}'.format(str(uuid.uuid4())))
 
         trace = model.get_conjunction()
-        file_name_trace = file_name_event + '.trace'
-        print('Saving trace: {}'.format(file_name_trace))
-        torch.save(trace, file_name_trace)
+        if save_traces:
+            file_name_trace = file_name_event + '.trace'
+            print('Saving trace: {}'.format(file_name_trace))
+            torch.save(trace, file_name_trace)
 
         cdms = trace['cdms']
         for j, cdm in enumerate(cdms):
