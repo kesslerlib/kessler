@@ -415,3 +415,5 @@ class ConjunctionDataMessage():
             self.set_object(1, key, value)
         else:
             raise ValueError('Invalid key: {}'.format(key))
+
+CDM = ConjunctionDataMessage

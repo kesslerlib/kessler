@@ -1,6 +1,4 @@
-__version__ = '0.1.1.dev2'
+__version__ = '0.1.1.dev3'
 
-from .cdm import ConjunctionDataMessage
-from .event import Event, EventSet, kelvins_to_events
-
-CDM = ConjunctionDataMessage
+from .cdm import ConjunctionDataMessage, CDM
+from .event import Event, EventDataset

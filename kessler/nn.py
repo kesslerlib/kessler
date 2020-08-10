@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from . import util
 
 
-class DatasetEventSet(Dataset):
+class DatasetEventDataset(Dataset):
     def __init__(self, event_set, features, features_stats=None):
         self._event_set = event_set
         self._max_event_length = max(map(len, self._event_set))
@@ -70,7 +70,7 @@ class LSTMPredictor(nn.Module):
 
         if self._features_stats is None:
             print('Computing feature statistics')
-            self._features_stats = DatasetEventSet(event_set, self._features)._features_stats
+            self._features_stats = DatasetEventDataset(event_set, self._features)._features_stats
 
         self.to(device)
         optimizer = optim.Adam(self.parameters(), lr=lr)
@@ -79,8 +79,8 @@ class LSTMPredictor(nn.Module):
 
         valid_set_size = int(len(event_set) * valid_proportion)
         train_set_size = len(event_set) - valid_set_size
-        train_set = DatasetEventSet(event_set[:train_set_size], self._features, self._features_stats)
-        valid_set = DatasetEventSet(event_set[train_set_size:], self._features, self._features_stats)
+        train_set = DatasetEventDataset(event_set[:train_set_size], self._features, self._features_stats)
+        valid_set = DatasetEventDataset(event_set[train_set_size:], self._features, self._features_stats)
 
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         valid_loader = DataLoader(valid_set, batch_size=len(valid_set), shuffle=True, num_workers=num_workers)
@@ -112,10 +112,10 @@ class LSTMPredictor(nn.Module):
 
     def predict(self, event):
         from .cdm import ConjunctionDataMessage
-        from .event import EventSet
+        from .event import EventDataset
 
         self.to('cpu')
-        ds = DatasetEventSet(EventSet(events=[event]), features=self._features)
+        ds = DatasetEventDataset(EventDataset(events=[event]), features=self._features)
         input, input_length = ds[0]
         self.train()
         self.reset(1)
