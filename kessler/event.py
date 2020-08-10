@@ -226,7 +226,7 @@ class EventSet():
         if diagonal:
             features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
         else:
-            features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
+                features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
         features = list(map(lambda f: 'OBJECT1_'+f, features)) + list(map(lambda f: 'OBJECT2_'+f, features))
         return self.plot_features(features, figsize=figsize, *args, **kwargs)
 
@@ -394,25 +394,25 @@ def kelvins_to_events(file_name, num_events=None, date_tca=None, remove_outliers
             cdm['RELATIVE_VELOCITY_T'] = kelvins_cdm['relative_velocity_t']
             cdm['RELATIVE_VELOCITY_N'] = kelvins_cdm['relative_velocity_n']
             cdm['OBJECT1_CR_R'] = kelvins_cdm['t_sigma_r']**2.
-            cdm['OBJECT1_CT_R'] = kelvins_cdm['t_ct_r']
+            cdm['OBJECT1_CT_R'] = kelvins_cdm['t_ct_r'] * kelvins_cdm['t_sigma_r'] * kelvins_cdm['t_sigma_t']
             cdm['OBJECT1_CT_T'] = kelvins_cdm['t_sigma_t']**2.
-            cdm['OBJECT1_CN_R'] = kelvins_cdm['t_cn_r']
-            cdm['OBJECT1_CN_T'] = kelvins_cdm['t_cn_t']
+            cdm['OBJECT1_CN_R'] = kelvins_cdm['t_cn_r'] * kelvins_cdm['t_sigma_n'] * kelvins_cdm['t_sigma_r']
+            cdm['OBJECT1_CN_T'] = kelvins_cdm['t_cn_t'] * kelvins_cdm['t_sigma_n'] * kelvins_cdm['t_sigma_t']
             cdm['OBJECT1_CN_N'] = kelvins_cdm['t_sigma_n']**2.
-            cdm['OBJECT1_CRDOT_R'] = kelvins_cdm['t_crdot_r']
-            cdm['OBJECT1_CRDOT_T'] = kelvins_cdm['t_crdot_t']
-            cdm['OBJECT1_CRDOT_N'] = kelvins_cdm['t_crdot_n']
+            cdm['OBJECT1_CRDOT_R'] = kelvins_cdm['t_crdot_r'] * kelvins_cdm['t_sigma_rdot'] * kelvins_cdm['t_sigma_r']
+            cdm['OBJECT1_CRDOT_T'] = kelvins_cdm['t_crdot_t'] * kelvins_cdm['t_sigma_rdot'] * kelvins_cdm['t_sigma_t']
+            cdm['OBJECT1_CRDOT_N'] = kelvins_cdm['t_crdot_n'] * kelvins_cdm['t_sigma_rdot'] * kelvins_cdm['t_sigma_n']
             cdm['OBJECT1_CRDOT_RDOT'] = kelvins_cdm['t_sigma_rdot']**2.
-            cdm['OBJECT1_CTDOT_R'] = kelvins_cdm['t_ctdot_r']
-            cdm['OBJECT1_CTDOT_T'] = kelvins_cdm['t_ctdot_t']
-            cdm['OBJECT1_CTDOT_N'] = kelvins_cdm['t_ctdot_n']
-            cdm['OBJECT1_CTDOT_RDOT'] = kelvins_cdm['t_ctdot_rdot']
+            cdm['OBJECT1_CTDOT_R'] = kelvins_cdm['t_ctdot_r'] * kelvins_cdm['t_sigma_tdot'] * kelvins_cdm['t_sigma_r']
+            cdm['OBJECT1_CTDOT_T'] = kelvins_cdm['t_ctdot_t'] * kelvins_cdm['t_sigma_tdot'] * kelvins_cdm['t_sigma_t']
+            cdm['OBJECT1_CTDOT_N'] = kelvins_cdm['t_ctdot_n'] * kelvins_cdm['t_sigma_tdot'] * kelvins_cdm['t_sigma_n']
+            cdm['OBJECT1_CTDOT_RDOT'] = kelvins_cdm['t_ctdot_rdot'] * kelvins_cdm['t_sigma_tdot'] * kelvins_cdm['t_sigma_rdot']
             cdm['OBJECT1_CTDOT_TDOT'] = kelvins_cdm['t_sigma_tdot']**2.
-            cdm['OBJECT1_CNDOT_R'] = kelvins_cdm['t_cndot_r']
-            cdm['OBJECT1_CNDOT_T'] = kelvins_cdm['t_cndot_t']
-            cdm['OBJECT1_CNDOT_N'] = kelvins_cdm['t_cndot_n']
-            cdm['OBJECT1_CNDOT_RDOT'] = kelvins_cdm['t_cndot_rdot']
-            cdm['OBJECT1_CNDOT_TDOT'] = kelvins_cdm['t_cndot_tdot']
+            cdm['OBJECT1_CNDOT_R'] = kelvins_cdm['t_cndot_r'] * kelvins_cdm['t_sigma_ndot'] * kelvins_cdm['t_sigma_r']
+            cdm['OBJECT1_CNDOT_T'] = kelvins_cdm['t_cndot_t'] * kelvins_cdm['t_sigma_ndot'] * kelvins_cdm['t_sigma_t']
+            cdm['OBJECT1_CNDOT_N'] = kelvins_cdm['t_cndot_n'] * kelvins_cdm['t_sigma_ndot'] * kelvins_cdm['t_sigma_n']
+            cdm['OBJECT1_CNDOT_RDOT'] = kelvins_cdm['t_cndot_rdot'] * kelvins_cdm['t_sigma_ndot'] * kelvins_cdm['t_sigma_rdot']
+            cdm['OBJECT1_CNDOT_TDOT'] = kelvins_cdm['t_cndot_tdot'] * kelvins_cdm['t_sigma_ndot'] * kelvins_cdm['t_sigma_tdot']
             cdm['OBJECT1_CNDOT_NDOT'] = kelvins_cdm['t_sigma_ndot']**2.
 
             cdm['OBJECT1_RECOMMENDED_OD_SPAN'] = kelvins_cdm['t_recommended_od_span']
@@ -430,25 +430,25 @@ def kelvins_to_events(file_name, num_events=None, date_tca=None, remove_outliers
             cdm['OBJECT1_TIME_LASTOB_END'] = util.from_datetime_to_cdm_datetime_str(time_lastob_end)
 
             cdm['OBJECT2_CR_R'] = kelvins_cdm['c_sigma_r']**2.
-            cdm['OBJECT2_CT_R'] = kelvins_cdm['c_ct_r']
+            cdm['OBJECT2_CT_R'] = kelvins_cdm['c_ct_r'] * kelvins_cdm['c_sigma_r'] * kelvins_cdm['c_sigma_t']
             cdm['OBJECT2_CT_T'] = kelvins_cdm['c_sigma_t']**2.
-            cdm['OBJECT2_CN_R'] = kelvins_cdm['c_cn_r']
-            cdm['OBJECT2_CN_T'] = kelvins_cdm['c_cn_t']
+            cdm['OBJECT2_CN_R'] = kelvins_cdm['c_cn_r'] * kelvins_cdm['c_sigma_n'] * kelvins_cdm['c_sigma_r']
+            cdm['OBJECT2_CN_T'] = kelvins_cdm['c_cn_t'] * kelvins_cdm['c_sigma_n'] * kelvins_cdm['c_sigma_t']
             cdm['OBJECT2_CN_N'] = kelvins_cdm['c_sigma_n']**2.
-            cdm['OBJECT2_CRDOT_R'] = kelvins_cdm['c_crdot_r']
-            cdm['OBJECT2_CRDOT_T'] = kelvins_cdm['c_crdot_t']
-            cdm['OBJECT2_CRDOT_N'] = kelvins_cdm['c_crdot_n']
+            cdm['OBJECT2_CRDOT_R'] = kelvins_cdm['c_crdot_r'] * kelvins_cdm['c_sigma_rdot'] * kelvins_cdm['c_sigma_r']
+            cdm['OBJECT2_CRDOT_T'] = kelvins_cdm['c_crdot_t'] * kelvins_cdm['c_sigma_rdot'] * kelvins_cdm['c_sigma_t']
+            cdm['OBJECT2_CRDOT_N'] = kelvins_cdm['c_crdot_n'] * kelvins_cdm['c_sigma_rdot'] * kelvins_cdm['c_sigma_n']
             cdm['OBJECT2_CRDOT_RDOT'] = kelvins_cdm['c_sigma_rdot']**2.
-            cdm['OBJECT2_CTDOT_R'] = kelvins_cdm['c_ctdot_r']
-            cdm['OBJECT2_CTDOT_T'] = kelvins_cdm['c_ctdot_t']
-            cdm['OBJECT2_CTDOT_N'] = kelvins_cdm['c_ctdot_n']
-            cdm['OBJECT2_CTDOT_RDOT'] = kelvins_cdm['c_ctdot_rdot']
+            cdm['OBJECT2_CTDOT_R'] = kelvins_cdm['c_ctdot_r'] * kelvins_cdm['c_sigma_tdot'] * kelvins_cdm['c_sigma_r']
+            cdm['OBJECT2_CTDOT_T'] = kelvins_cdm['c_ctdot_t'] * kelvins_cdm['c_sigma_tdot'] * kelvins_cdm['c_sigma_t']
+            cdm['OBJECT2_CTDOT_N'] = kelvins_cdm['c_ctdot_n'] * kelvins_cdm['c_sigma_tdot'] * kelvins_cdm['c_sigma_n']
+            cdm['OBJECT2_CTDOT_RDOT'] = kelvins_cdm['c_ctdot_rdot'] * kelvins_cdm['c_sigma_tdot'] * kelvins_cdm['c_sigma_rdot']
             cdm['OBJECT2_CTDOT_TDOT'] = kelvins_cdm['c_sigma_tdot']**2.
-            cdm['OBJECT2_CNDOT_R'] = kelvins_cdm['c_cndot_r']
-            cdm['OBJECT2_CNDOT_T'] = kelvins_cdm['c_cndot_t']
-            cdm['OBJECT2_CNDOT_N'] = kelvins_cdm['c_cndot_n']
-            cdm['OBJECT2_CNDOT_RDOT'] = kelvins_cdm['c_cndot_rdot']
-            cdm['OBJECT2_CNDOT_TDOT'] = kelvins_cdm['c_cndot_tdot']
+            cdm['OBJECT2_CNDOT_R'] = kelvins_cdm['c_cndot_r'] * kelvins_cdm['c_sigma_ndot'] * kelvins_cdm['c_sigma_r']
+            cdm['OBJECT2_CNDOT_T'] = kelvins_cdm['c_cndot_t'] * kelvins_cdm['c_sigma_ndot'] * kelvins_cdm['c_sigma_t']
+            cdm['OBJECT2_CNDOT_N'] = kelvins_cdm['c_cndot_n'] * kelvins_cdm['c_sigma_ndot'] * kelvins_cdm['c_sigma_n']
+            cdm['OBJECT2_CNDOT_RDOT'] = kelvins_cdm['c_cndot_rdot'] * kelvins_cdm['c_sigma_ndot'] * kelvins_cdm['c_sigma_rdot']
+            cdm['OBJECT2_CNDOT_TDOT'] = kelvins_cdm['c_cndot_tdot'] * kelvins_cdm['c_sigma_ndot'] * kelvins_cdm['c_sigma_tdot']
             cdm['OBJECT2_CNDOT_NDOT'] = kelvins_cdm['c_sigma_ndot']**2.
 
             cdm['OBJECT2_OBJECT_TYPE'] = kelvins_cdm['c_object_type']
