@@ -94,6 +94,7 @@ class Event():
             ax.legend()
 
         if file_name is not None:
+            print('Plotting to file: {}'.format(file_name))
             plt.savefig(file_name)
 
         if return_ax:
@@ -119,6 +120,7 @@ class Event():
         plt.tight_layout()
 
         if file_name is not None:
+            print('Plotting to file: {}'.format(file_name))
             plt.savefig(file_name)
 
         if return_axs:
@@ -190,6 +192,7 @@ class EventDataset():
                 kwargs.pop('label')  # We want to label only the first Event in this EventDataset, for not cluttering the legend
 
         if file_name is not None:
+            print('Plotting to file: {}'.format(file_name))
             plt.savefig(file_name)
 
         if return_ax:
@@ -215,6 +218,7 @@ class EventDataset():
         plt.tight_layout()
 
         if file_name is not None:
+            print('Plotting to file: {}'.format(file_name))
             plt.savefig(file_name)
 
         if return_axs:

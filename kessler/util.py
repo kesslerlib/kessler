@@ -225,3 +225,13 @@ def has_nan_or_inf(value):
     else:
         value = float(value)
         return math.isnan(value) or math.isinf(value)
+
+
+def trace_to_event(trace):
+    from .event import Event
+    return Event(cdms=trace['cdms'])
+
+
+def dist_to_event_dataset(dist):
+    from .event import EventDataset
+    return EventDataset(events=list(map(trace_to_event, dist)))
