@@ -5,6 +5,8 @@ from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
 
 from . import util
+from .cdm import ConjunctionDataMessage
+from .event import EventDataset
 
 
 class DatasetEventDataset(Dataset):
@@ -36,8 +38,73 @@ class DatasetEventDataset(Dataset):
 
 
 class LSTMPredictor(nn.Module):
-    def __init__(self, lstm_size=256, lstm_depth=2, dropout=None, features=None):
+    def __init__(self, lstm_size=256, lstm_depth=2, dropout=0.2, features=None):
         super().__init__()
+        if features is None:
+            features = ['__CREATION_DATE',
+                        '__TCA',
+                        'MISS_DISTANCE',
+                        'RELATIVE_SPEED',
+                        'RELATIVE_POSITION_R',
+                        'RELATIVE_POSITION_T',
+                        'RELATIVE_POSITION_N',
+                        'RELATIVE_VELOCITY_R',
+                        'RELATIVE_VELOCITY_T',
+                        'RELATIVE_VELOCITY_N',
+                        'OBJECT1_X',
+                        'OBJECT1_Y',
+                        'OBJECT1_Z',
+                        'OBJECT1_X_DOT',
+                        'OBJECT1_Y_DOT',
+                        'OBJECT1_Z_DOT',
+                        'OBJECT1_CR_R',
+                        'OBJECT1_CT_R',
+                        'OBJECT1_CT_T',
+                        'OBJECT1_CN_R',
+                        'OBJECT1_CN_T',
+                        'OBJECT1_CN_N',
+                        'OBJECT1_CRDOT_R',
+                        'OBJECT1_CRDOT_T',
+                        'OBJECT1_CRDOT_N',
+                        'OBJECT1_CRDOT_RDOT',
+                        'OBJECT1_CTDOT_R',
+                        'OBJECT1_CTDOT_T',
+                        'OBJECT1_CTDOT_N',
+                        'OBJECT1_CTDOT_RDOT',
+                        'OBJECT1_CTDOT_TDOT',
+                        'OBJECT1_CNDOT_R',
+                        'OBJECT1_CNDOT_T',
+                        'OBJECT1_CNDOT_N',
+                        'OBJECT1_CNDOT_RDOT',
+                        'OBJECT1_CNDOT_TDOT',
+                        'OBJECT1_CNDOT_NDOT',
+                        'OBJECT2_X',
+                        'OBJECT2_Y',
+                        'OBJECT2_Z',
+                        'OBJECT2_X_DOT',
+                        'OBJECT2_Y_DOT',
+                        'OBJECT2_Z_DOT',
+                        'OBJECT2_CR_R',
+                        'OBJECT2_CT_R',
+                        'OBJECT2_CT_T',
+                        'OBJECT2_CN_R',
+                        'OBJECT2_CN_T',
+                        'OBJECT2_CN_N',
+                        'OBJECT2_CRDOT_R',
+                        'OBJECT2_CRDOT_T',
+                        'OBJECT2_CRDOT_N',
+                        'OBJECT2_CRDOT_RDOT',
+                        'OBJECT2_CTDOT_R',
+                        'OBJECT2_CTDOT_T',
+                        'OBJECT2_CTDOT_N',
+                        'OBJECT2_CTDOT_RDOT',
+                        'OBJECT2_CTDOT_TDOT',
+                        'OBJECT2_CNDOT_R',
+                        'OBJECT2_CNDOT_T',
+                        'OBJECT2_CNDOT_N',
+                        'OBJECT2_CNDOT_RDOT',
+                        'OBJECT2_CNDOT_TDOT',
+                        'OBJECT2_CNDOT_NDOT']
 
         self.input_size = len(features)
         self.lstm_size = lstm_size
@@ -52,21 +119,24 @@ class LSTMPredictor(nn.Module):
         self._features = features
         self._features_stats = None
         self._hist_train_loss = []
-        self._hist_train_loss_num_cdms = []
+        self._hist_train_loss_iters = []
+        self._hist_valid_loss = []
+        self._hist_valid_loss_iters = []
 
     def plot_loss(self):
         fig, ax = plt.subplots()
-        ax.plot(self._hist_train_loss_num_cdms, self._hist_train_loss, label='Training')
-        ax.set_xlabel('Training CDMs')
+        ax.plot(self._hist_train_loss_iters, self._hist_train_loss, label='Training')
+        ax.plot(self._hist_valid_loss_iters, self._hist_valid_loss, label='Validation')
+        ax.set_xlabel('Iterations')
         ax.set_ylabel('Loss')
         ax.legend()
 
-    def learn(self, event_set, lr, epochs, batch_size, device, valid_proportion=0.15, num_workers=4):
+    def learn(self, event_set, epochs=2, lr=1e-3, batch_size=8, device='cpu', valid_proportion=0.15, num_workers=4):
         if device is None:
             device = torch.device('cpu')
 
         num_params = sum(p.numel() for p in self.parameters())
-        print('LSTM predictor with params: {}'.format(num_params))
+        print('LSTM predictor with params: {:,}'.format(num_params))
 
         if self._features_stats is None:
             print('Computing feature statistics')
@@ -85,12 +155,27 @@ class LSTMPredictor(nn.Module):
         train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
         valid_loader = DataLoader(valid_set, batch_size=len(valid_set), shuffle=True, num_workers=num_workers)
         self.train()
-        if len(self._hist_train_loss_num_cdms) == 0:
-            num_cdms = 0
+        if len(self._hist_train_loss_iters) == 0:
+            total_iters = 0
         else:
-            num_cdms = self._hist_train_loss_num_cdms[-1]
+            total_iters = self._hist_train_loss_iters[-1]
         for epoch in range(epochs):
+            with torch.no_grad():
+                for _, (events, event_lengths) in enumerate(valid_loader):
+                    events, event_lengths = events.to(device), event_lengths.to(device)
+                    batch_size = event_lengths.nelement()  # Can be smaller than batch_size for the last minibatch of an epoch
+                    input = events[:, :-1]
+                    target = events[:, 1:]
+                    event_lengths -= 1
+                    self.reset(batch_size)
+                    output = self(input, event_lengths)
+                    loss = nn.functional.mse_loss(output, target)
+                    valid_loss = float(loss)
+                    self._hist_valid_loss_iters.append(total_iters)
+                    self._hist_valid_loss.append(valid_loss)
+
             for i_minibatch, (events, event_lengths) in enumerate(train_loader):
+                total_iters += 1
                 events, event_lengths = events.to(device), event_lengths.to(device)
                 batch_size = event_lengths.nelement()  # Can be smaller than batch_size for the last minibatch of an epoch
                 input = events[:, :-1]
@@ -103,20 +188,19 @@ class LSTMPredictor(nn.Module):
                 loss.backward()
                 optimizer.step()
 
-                num_cdms += batch_size
                 train_loss = float(loss)
-                self._hist_train_loss_num_cdms.append(num_cdms)
+                self._hist_train_loss_iters.append(total_iters)
                 self._hist_train_loss.append(train_loss)
-                print(train_loss)
+
+                print('{} | {}/{} | {:.4e} | {:.4e}'.format(total_iters, epoch+1, epochs, train_loss, valid_loss), end='\r')
+
         return self
 
     def predict(self, event):
-        from .cdm import ConjunctionDataMessage
-        from .event import EventDataset
-
-        self.to('cpu')
-        ds = DatasetEventDataset(EventDataset(events=[event]), features=self._features)
+        ds = DatasetEventDataset(EventDataset(events=[event]), features=self._features, features_stats=self._features_stats)
         input, input_length = ds[0]
+        device = list(self.parameters())[0].device
+        input, input_length = input.to(device), input_length.to(device)
         self.train()
         self.reset(1)
         output = self.forward(input.unsqueeze(0), input_length.unsqueeze(0)).squeeze()
@@ -133,12 +217,47 @@ class LSTMPredictor(nn.Module):
             feature = self._features[i]
             value = self._features_stats['mean'][i] + float(output_last[i].item()) * self._features_stats['stddev'][i]
             if feature == '__CREATION_DATE':
+                if value < event[-1]['__CREATION_DATE']:
+                    value = event[-1]['__CREATION_DATE']
                 cdm['CREATION_DATE'] = util.add_days_to_date_str(date0, value)
             elif feature == '__TCA':
                 cdm['TCA'] = util.add_days_to_date_str(date0, value)
             else:
                 cdm[feature] = value
         return cdm
+
+    def predict_event_step(self, event, num_samples=1):
+        es = []
+        for i in range(num_samples):
+            e = event.copy()
+            cdm = self.predict(e)
+            e.add(cdm)
+            es.append(e)
+        if num_samples == 1:
+            return es[0]
+        else:
+            return EventDataset(events=es)
+
+    def predict_event(self, event, num_samples=1, max_length=22):
+        es = []
+        for i in range(num_samples):
+            e = event.copy()
+            while True:
+                cdm = self.predict(e)
+                e.add(cdm)
+    #             print('Next cdm {}, {}'.format(cdm['__CREATION_DATE'], cdm['__TCA']))
+                if cdm['__CREATION_DATE'] > cdm['__TCA']:
+                    break
+                if cdm['__TCA'] > 7:
+                    break
+                if len(e) > max_length:
+                    # print('Max length ({}) reached'.format(max_length))
+                    break
+            es.append(e)
+        if num_samples == 1:
+            return es[0]
+        else:
+            return EventDataset(events=es)
 
     def reset(self, batch_size):
         h = torch.zeros(self.lstm_depth, batch_size, self.lstm_size)

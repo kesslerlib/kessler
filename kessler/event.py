@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from glob import glob
@@ -8,7 +9,6 @@ import re
 
 from . import util
 from .cdm import ConjunctionDataMessage
-from .nn import LSTMPredictor
 
 mpl.rcParams['axes.unicode_minus'] = False
 plt_default_backend = plt.get_backend()
@@ -32,6 +32,7 @@ class Event():
             for cdm in self._cdms:
                 cdm._values_extra['__CREATION_DATE'] = util.from_date_str_to_days(cdm['CREATION_DATE'], date0=date0)
                 cdm._values_extra['__TCA'] = util.from_date_str_to_days(cdm['TCA'], date0=date0)
+                cdm._values_extra['__DAYS_TO_TCA'] = cdm._values_extra['__TCA'] - cdm._values_extra['__CREATION_DATE']
 
     def add(self, cdm, return_result=False):
         if isinstance(cdm, ConjunctionDataMessage):
@@ -109,6 +110,8 @@ class Event():
                 figsize = (cols*20/7, rows*12/6)
             fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
 
+        if not isinstance(axs, np.ndarray):
+            axs = np.array(axs)
         for i, ax in enumerate(axs.flat):
             if i < len(feature_names):
                 if i != 0 and 'legend' in kwargs:
@@ -181,6 +184,52 @@ class EventDataset():
             event_dataframes.append(event.to_dataframe())
         return pd.concat(event_dataframes, ignore_index=True)
 
+    def dates(self):
+        print('CDM| CREATION_DATE (mean)       | Days (mean, std)  | Days to TCA (mean, std)')
+        for i in range(self.event_lengths_max):
+            creation_date_days = []
+            days_to_tca = []
+            for event in self:
+                if i < len(event):
+                    creation_date_days.append(event[i]['__CREATION_DATE'])
+                    days_to_tca.append(event[i]['__DAYS_TO_TCA'])
+            creation_date_days = np.array(creation_date_days)
+            creation_date_days_mean, creation_date_days_stddev = creation_date_days.mean(), creation_date_days.std()
+            days_to_tca = np.array(days_to_tca)
+            days_to_tca_mean, days_to_tca_stddev = days_to_tca.mean(), days_to_tca.std()
+            date0 = self[0][0]['CREATION_DATE']
+            creation_date_days_mean_str = util.add_days_to_date_str(date0, creation_date_days_mean)
+            print('{:02d} | {} | {:.6f} {:.6f} | {:.6f} {:.6f}'.format(i+1, creation_date_days_mean_str, creation_date_days_mean, creation_date_days_stddev, days_to_tca_mean, days_to_tca_stddev))
+
+    @property
+    def event_lengths(self):
+        return list(map(len, self._events))
+
+    @property
+    def event_lengths_min(self):
+        return min(self.event_lengths)
+
+    @property
+    def event_lengths_max(self):
+        return max(self.event_lengths)
+
+    @property
+    def event_lengths_mean(self):
+        return np.array(self.event_lengths).mean()
+
+    @property
+    def event_lengths_stddev(self):
+        return np.array(self.event_lengths).std()
+
+    def plot_event_lengths(self, figsize=(6, 4), file_name=None, *args, **kwargs):
+        fig, ax = plt.subplots(figsize=figsize)
+        event_lengths = self.event_lengths()
+        ax.hist(event_lengths, *args, **kwargs)
+        ax.set_xlabel('Event length (number of CDMs)')
+        if file_name is not None:
+            print('Plotting to file: {}'.format(file_name))
+            plt.savefig(file_name)
+
     def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, file_name=None, *args, **kwargs):
         if ax is None:
             if figsize is None:
@@ -207,6 +256,8 @@ class EventDataset():
                 figsize = (cols*20/7, rows*12/6)
             fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
 
+        if not isinstance(axs, np.ndarray):
+            axs = np.array(axs)
         for i, ax in enumerate(axs.flat):
             if i < len(feature_names):
                 if i != 0 and 'legend' in kwargs:
@@ -231,77 +282,6 @@ class EventDataset():
                 features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
         features = list(map(lambda f: 'OBJECT1_'+f, features)) + list(map(lambda f: 'OBJECT2_'+f, features))
         return self.plot_features(features, figsize=figsize, *args, **kwargs)
-
-    def train_predictor(self, lstm_size=256, lstm_depth=2, features=None, device=None, lr=1e-3, epochs=10, batch_size=16, dropout=0.2, predictor=None):
-        if features is None:
-            features = ['__CREATION_DATE',
-                        '__TCA',
-                        'MISS_DISTANCE',
-                        'RELATIVE_SPEED',
-                        'RELATIVE_POSITION_R',
-                        'RELATIVE_POSITION_T',
-                        'RELATIVE_POSITION_N',
-                        'RELATIVE_VELOCITY_R',
-                        'RELATIVE_VELOCITY_T',
-                        'RELATIVE_VELOCITY_N',
-                        'OBJECT1_X',
-                        'OBJECT1_Y',
-                        'OBJECT1_Z',
-                        'OBJECT1_X_DOT',
-                        'OBJECT1_Y_DOT',
-                        'OBJECT1_Z_DOT',
-                        'OBJECT1_CR_R',
-                        'OBJECT1_CT_R',
-                        'OBJECT1_CT_T',
-                        'OBJECT1_CN_R',
-                        'OBJECT1_CN_T',
-                        'OBJECT1_CN_N',
-                        'OBJECT1_CRDOT_R',
-                        'OBJECT1_CRDOT_T',
-                        'OBJECT1_CRDOT_N',
-                        'OBJECT1_CRDOT_RDOT',
-                        'OBJECT1_CTDOT_R',
-                        'OBJECT1_CTDOT_T',
-                        'OBJECT1_CTDOT_N',
-                        'OBJECT1_CTDOT_RDOT',
-                        'OBJECT1_CTDOT_TDOT',
-                        'OBJECT1_CNDOT_R',
-                        'OBJECT1_CNDOT_T',
-                        'OBJECT1_CNDOT_N',
-                        'OBJECT1_CNDOT_RDOT',
-                        'OBJECT1_CNDOT_TDOT',
-                        'OBJECT1_CNDOT_NDOT',
-                        'OBJECT2_X',
-                        'OBJECT2_Y',
-                        'OBJECT2_Z',
-                        'OBJECT2_X_DOT',
-                        'OBJECT2_Y_DOT',
-                        'OBJECT2_Z_DOT',
-                        'OBJECT2_CR_R',
-                        'OBJECT2_CT_R',
-                        'OBJECT2_CT_T',
-                        'OBJECT2_CN_R',
-                        'OBJECT2_CN_T',
-                        'OBJECT2_CN_N',
-                        'OBJECT2_CRDOT_R',
-                        'OBJECT2_CRDOT_T',
-                        'OBJECT2_CRDOT_N',
-                        'OBJECT2_CRDOT_RDOT',
-                        'OBJECT2_CTDOT_R',
-                        'OBJECT2_CTDOT_T',
-                        'OBJECT2_CTDOT_N',
-                        'OBJECT2_CTDOT_RDOT',
-                        'OBJECT2_CTDOT_TDOT',
-                        'OBJECT2_CNDOT_R',
-                        'OBJECT2_CNDOT_T',
-                        'OBJECT2_CNDOT_N',
-                        'OBJECT2_CNDOT_RDOT',
-                        'OBJECT2_CNDOT_TDOT',
-                        'OBJECT2_CNDOT_NDOT']
-        if predictor is None:
-            predictor = LSTMPredictor(lstm_size=lstm_size, lstm_depth=lstm_depth, features=features, dropout=dropout)
-        predictor.learn(lr=lr, epochs=epochs, batch_size=batch_size, event_set=self, device=device)
-        return predictor
 
     def filter(self, filter_func):
         events = []
