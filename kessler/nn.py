@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import matplotlib.pyplot as plt
+import sys
 
 from . import util
 from .cdm import ConjunctionDataMessage
@@ -134,7 +135,7 @@ class LSTMPredictor(nn.Module):
             print('Plotting to file: {}'.format(file_name))
             plt.savefig(file_name)
 
-    def learn(self, event_set, epochs=2, lr=1e-3, batch_size=8, device='cpu', valid_proportion=0.15, num_workers=4):
+    def learn(self, event_set, epochs=2, lr=1e-3, batch_size=8, device='cpu', valid_proportion=0.15, num_workers=4, event_samples_for_stats=250):
         if device is None:
             device = torch.device('cpu')
 
@@ -143,7 +144,7 @@ class LSTMPredictor(nn.Module):
 
         if self._features_stats is None:
             print('Computing normalization statistics')
-            self._features_stats = DatasetEventDataset(event_set, self._features)._features_stats
+            self._features_stats = DatasetEventDataset(event_set[:event_samples_for_stats], self._features)._features_stats
 
         self.to(device)
         optimizer = optim.Adam(self.parameters(), lr=lr)
@@ -195,7 +196,8 @@ class LSTMPredictor(nn.Module):
                 self._hist_train_loss_iters.append(total_iters)
                 self._hist_train_loss.append(train_loss)
 
-                print('{} | {}/{} | {:.4e} | {:.4e}'.format(total_iters, epoch+1, epochs, train_loss, valid_loss), end='\r')
+                print('{} | {}/{} | {}/{} | {:.4e} | {:.4e}'.format(total_iters, i_minibatch+1, len(train_loader), epoch+1, epochs, train_loss, valid_loss), end='\r')
+                sys.stdout.flush()
 
     def predict(self, event):
         ds = DatasetEventDataset(EventDataset(events=[event]), features=self._features, features_stats=self._features_stats)
