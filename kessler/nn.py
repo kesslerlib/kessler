@@ -123,13 +123,16 @@ class LSTMPredictor(nn.Module):
         self._hist_valid_loss = []
         self._hist_valid_loss_iters = []
 
-    def plot_loss(self):
+    def plot_loss(self, file_name=None):
         fig, ax = plt.subplots()
         ax.plot(self._hist_train_loss_iters, self._hist_train_loss, label='Training')
         ax.plot(self._hist_valid_loss_iters, self._hist_valid_loss, label='Validation')
         ax.set_xlabel('Iterations')
         ax.set_ylabel('Loss')
         ax.legend()
+        if file_name is not None:
+            print('Plotting to file: {}'.format(file_name))
+            plt.savefig(file_name)
 
     def learn(self, event_set, epochs=2, lr=1e-3, batch_size=8, device='cpu', valid_proportion=0.15, num_workers=4):
         if device is None:
