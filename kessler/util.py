@@ -61,6 +61,19 @@ def from_cartesian_to_tle_elements(state):
     return mean_motion, eccentricity, inclination, argument_of_perigee, raan, mean_anomaly
 
 
+def from_cartesian_to_keplerian(state):
+    r, v = state[0], state[1]
+    kepl_el = pykep.ic2par(r, v, pykep.MU_EARTH)
+    # these are returned as (a,e,i,W,w,E) --> [L], [-], [rad], [rad], [rad], [rad]
+    semi_major_axis     = kepl_el[0] # [0, inf)
+    eccentricity        = kepl_el[1] # (0, 1)
+    inclination         = kepl_el[2] # [0, pi]
+    argument_of_perigee = kepl_el[4]
+    raan                = kepl_el[3] #right ascension ascending node
+    E                   = kepl_el[5]  #eccentric anomaly
+    return semi_major_axis, eccentricity, inclination, argument_of_perigee, raan, E
+
+
 def rotation_matrix(state):
     r, v = state[0], state[1]
     u = r / np.linalg.norm(r)

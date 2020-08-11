@@ -129,7 +129,7 @@ class Event():
         if return_axs:
             return axs
 
-    def plot_uncertainty(self, figsize=(20, 12), diagonal=True, *args, **kwargs):
+    def plot_uncertainty(self, figsize=(20, 12), diagonal=False, *args, **kwargs):
         if diagonal:
             features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
         else:
@@ -275,7 +275,7 @@ class EventDataset():
         if return_axs:
             return axs
 
-    def plot_uncertainty(self, figsize=(20, 12), diagonal=True, *args, **kwargs):
+    def plot_uncertainty(self, figsize=(20, 12), diagonal=False, *args, **kwargs):
         if diagonal:
             features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
         else:
