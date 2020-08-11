@@ -114,7 +114,7 @@ class LSTMPredictor(nn.Module):
         self.lstm = nn.LSTM(input_size=self.input_size, hidden_size=self.lstm_size, num_layers=lstm_depth, batch_first=True, dropout=dropout if dropout else 0)
         self.fc1 = nn.Linear(lstm_size, self.input_size)
         if dropout is not None:
-            self.dropout_layer = nn.Dropout(p=dropout)
+            self.dropout1 = nn.Dropout(p=dropout)
 
         self._features = features
         self._features_stats = None
@@ -139,7 +139,7 @@ class LSTMPredictor(nn.Module):
         print('LSTM predictor with params: {:,}'.format(num_params))
 
         if self._features_stats is None:
-            print('Computing feature statistics')
+            print('Computing normalization statistics')
             self._features_stats = DatasetEventDataset(event_set, self._features)._features_stats
 
         self.to(device)
@@ -193,8 +193,6 @@ class LSTMPredictor(nn.Module):
                 self._hist_train_loss.append(train_loss)
 
                 print('{} | {}/{} | {:.4e} | {:.4e}'.format(total_iters, epoch+1, epochs, train_loss, valid_loss), end='\r')
-
-        return self
 
     def predict(self, event):
         ds = DatasetEventDataset(EventDataset(events=[event]), features=self._features, features_stats=self._features_stats)
@@ -259,6 +257,15 @@ class LSTMPredictor(nn.Module):
         else:
             return EventDataset(events=es)
 
+    def save(self, file_name):
+        print('Saving LSTM predictor to file: {}'.format(file_name))
+        torch.save(self, file_name)
+
+    @staticmethod
+    def load(file_name):
+        print('Loading LSTM predictor from file: {}'.format(file_name))
+        return torch.load(file_name)
+
     def reset(self, batch_size):
         h = torch.zeros(self.lstm_depth, batch_size, self.lstm_size)
         c = torch.zeros(self.lstm_depth, batch_size, self.lstm_size)
@@ -273,7 +280,7 @@ class LSTMPredictor(nn.Module):
         x, self.hidden = self.lstm(x, self.hidden)
         x, _ = torch.nn.utils.rnn.pad_packed_sequence(x, batch_first=True, total_length=x_length_max)
         if self.dropout:
-            x = self.dropout_layer(x)
+            x = self.dropout1(x)
         x = torch.relu(x)
         x = self.fc1(x)
         return x
