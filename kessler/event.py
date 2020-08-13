@@ -77,7 +77,7 @@ class Event():
             fig, ax = plt.subplots(figsize=figsize)
         ax.plot(data_x, data_y, marker='.', *args, **kwargs)
         # ax.scatter(data_x, data_y)
-        ax.set_xlabel('Time to TCA')
+        ax.set_xlabel('Time to TCA (days)')
         ax.set_title(feature_name)
 
         # xmin, xmax = min(ax.get_xlim()), max(ax.get_xlim())
@@ -101,14 +101,14 @@ class Event():
         if return_ax:
             return ax
 
-    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, file_name=None, *args, **kwargs):
+    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, file_name=None, sharex=True, *args, **kwargs):
         if not isinstance(feature_names, list):
             feature_names = [feature_names]
-        rows, cols = util.tile_rows_cols(len(feature_names))
         if axs is None:
+            rows, cols = util.tile_rows_cols(len(feature_names))
             if figsize is None:
                 figsize = (cols*20/7, rows*12/6)
-            fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
+            fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=sharex)
 
         if not isinstance(axs, np.ndarray):
             axs = np.array(axs)
@@ -247,14 +247,14 @@ class EventDataset():
         if return_ax:
             return ax
 
-    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, file_name=None, *args, **kwargs):
+    def plot_features(self, feature_names, figsize=None, axs=None, return_axs=False, file_name=None, sharex=True, *args, **kwargs):
         if not isinstance(feature_names, list):
             feature_names = [feature_names]
         if axs is None:
             rows, cols = util.tile_rows_cols(len(feature_names))
             if figsize is None:
                 figsize = (cols*20/7, rows*12/6)
-            fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=True)
+            fig, axs = plt.subplots(rows, cols, figsize=figsize, sharex=sharex)
 
         if not isinstance(axs, np.ndarray):
             axs = np.array(axs)
