@@ -11,27 +11,31 @@ from .cdm import CDM
 from .event import Event, EventDataset
 
 
-def generate_event_dataset(dataset_dir, num_events, save_traces=False, *args, **kwargs):
+def generate_event_dataset(dataset_dir, num_events, save_traces=False, *args, **kwargs,verbosity=True):
     model = Conjunction(*args, **kwargs)
+    if verbosity:
+        print('Generating CDM dataset')
+        print('Directory: {}'.format(dataset_dir))
 
-    print('Generating CDM dataset')
-    print('Directory: {}'.format(dataset_dir))
     util.create_path(dataset_dir, directory=True)
     for i in range(num_events):
-        print('Generating event {} / {}'.format(i+1, num_events))
+        if verbosity:
+            print('Generating event {} / {}'.format(i+1, num_events))
         file_name_event = os.path.join(dataset_dir, 'event_{}'.format(str(uuid.uuid4())))
 
         trace = model.get_conjunction()
         if save_traces:
             file_name_trace = file_name_event + '.trace'
-            print('Saving trace: {}'.format(file_name_trace))
+            if verbosity:
+                print('Saving trace: {}'.format(file_name_trace))
             torch.save(trace, file_name_trace)
 
         cdms = trace['cdms']
         for j, cdm in enumerate(cdms):
             file_name_suffix = '{}'.format(j).rjust(len('{}'.format(len(cdms))), '0')
             file_name_cdm = file_name_event + '_{}.cdm.kvn.txt'.format(file_name_suffix)
-            print('Saving cdm  : {}'.format(file_name_cdm))
+            if verbosity:
+                print('Saving cdm  : {}'.format(file_name_cdm))
             cdm.save(file_name_cdm)
 
 
