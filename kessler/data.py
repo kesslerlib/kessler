@@ -11,7 +11,7 @@ from .cdm import CDM
 from .event import Event, EventDataset
 
 
-def generate_event_dataset(dataset_dir, num_events, save_traces=False, *args, **kwargs,verbosity=True):
+def generate_event_dataset(dataset_dir, num_events, save_traces=False, verbosity=True, *args, **kwargs):
     model = Conjunction(*args, **kwargs)
     if verbosity:
         print('Generating CDM dataset')
