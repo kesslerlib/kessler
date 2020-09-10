@@ -18,6 +18,10 @@ class DatasetEventDataset(Dataset):
         self._features_length = len(features)
         if features_stats is None:
             df = event_set.to_dataframe()
+            null_features = df.columns[df.isnull().any()]
+            for feature in features:
+                if feature in null_features:
+                    raise RuntimeError('Feature {} is not present in the dataset'.format(feature))
             features_numpy = df[features].to_numpy()
             mean = features_numpy.mean(0)
             stddev = features_numpy.std(0)
