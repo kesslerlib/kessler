@@ -9,7 +9,7 @@ Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in col
 </div>
 
 
-### How to install
+### 1. How to install
 
 To install kessler, do the following:
 
@@ -19,7 +19,12 @@ cd kessler
 pip install -e .
 ```
 
-### How to run it in Docker
+### 2. Get started
+
+To get started, follow the Jupyter notebooks in the [notebooks](https://gitlab.com/frontierdevelopmentlab/fdl-europe-2020-constellations/kessler/-/tree/master/notebooks) folder.
+
+
+### Optional: how to run it in Docker
 
 #### Build the Docker image
 
