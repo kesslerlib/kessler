@@ -14,14 +14,14 @@ Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in col
 To install kessler, do the following:
 
 ```
-git clone https://gitlab.com/frontierdevelopmentlab/fdl-europe-2020-constellations/kessler.git
+git clone https://github.com/kesslerlib/kessler.git
 cd kessler
 pip install -e .
 ```
 
 ### 2. Get started
 
-To get started, follow the Jupyter notebooks in the [notebooks](https://gitlab.com/frontierdevelopmentlab/fdl-europe-2020-constellations/kessler/-/tree/master/notebooks) folder.
+To get started, follow the Jupyter notebooks in the [notebooks](https://github.com/kesslerlib/kessler/-/tree/master/notebooks) folder.
 
 
 ### Optional: how to run it in Docker
