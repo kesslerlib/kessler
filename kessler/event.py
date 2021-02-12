@@ -176,6 +176,11 @@ class EventDataset():
         else:
             self._events = events
 
+    # Proposed API for the pandas loader
+    @staticmethod
+    def from_pandas(self, dataframe, cdm_compatible_fields={'RELATIVE_SPEED': 'relative_speed'}, group_events_by='event_id', object_1_prefix='t_', object_2_prefix='c_') =
+        #  return an EventDataset()
+
     def to_dataframe(self):
         if len(self) == 0:
             return pd.DataFrame()
