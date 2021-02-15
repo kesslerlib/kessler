@@ -4,11 +4,13 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from glob import glob
 import copy
+import sys
 import os
 import re
 
 from . import util
 from .cdm import ConjunctionDataMessage
+from .cdm import CDM
 
 mpl.rcParams['axes.unicode_minus'] = False
 plt_default_backend = plt.get_backend()
@@ -178,8 +180,54 @@ class EventDataset():
 
     # Proposed API for the pandas loader
     @staticmethod
-    def from_pandas(self, dataframe, cdm_compatible_fields={'RELATIVE_SPEED': 'relative_speed'}, group_events_by='event_id', object_1_prefix='t_', object_2_prefix='c_') =
-        #  return an EventDataset()
+    def from_pandas(df, cdm_compatible_fields={'RELATIVE_SPEED': 'relative_speed'}, group_events_by='EVENT_ID', object_1_prefix='T_', object_2_prefix='C_'):
+        df.columns=[df.columns.tolist()[i].upper() for i in range(len(df.columns.tolist()))]
+
+        df_events = df.groupby(group_events_by).groups
+        num_events = len(df_events)
+        column_not_present=[]
+        column_not_present_counter=0
+        events=[]
+        i=0
+        for k,v in df_events.items():
+            i+=1
+            print('Converting event {} / {}'.format(i, num_events), end='\r')
+            sys.stdout.flush()
+            df_event = df.iloc[v]
+            cdms=[]
+            column_not_present_counter=0
+            for _, df_cdm in df_event.iterrows():
+                cdm = CDM()
+                for column in df.columns:
+                    column_name=column[2:]
+                    column_prefix=column[0:2]
+                    if (column_name in cdm._keys_header or  column_name in cdm._keys_relative_metadata or column_name in cdm._keys_metadata or column_name in cdm._keys_data_od or column_name in cdm._keys_data_state or column_name in cdm._keys_data_covariance):
+                        if column_prefix==object_1_prefix:
+                            cdm['OBJECT1_'+column_name]=df_cdm[column]
+                        elif column_prefix==object_2_prefix:
+                            cdm['OBJECT2_'+column_name]=df_cdm[column]
+                        else:
+                            if column_not_present_counter==0:
+                                column_not_present.append(column)
+
+                    elif (column in cdm._keys_header or  column in cdm._keys_relative_metadata or column in cdm._keys_metadata or column in cdm._keys_data_od or column in cdm._keys_data_state or column in cdm._keys_data_covariance):
+                        cdm[column]=df_cdm[column]
+                    else:
+                        if column=='JSPOC_PROBABILITY':
+                            cdm['COLLISION_PROBABILITY']=df_cdm[column]
+                        elif column=='T_SPAN':
+                            cdm['OBJECT1_ACTUAL_OD_SPAN']=df_cdm[column]
+                        elif column=='C_SPAN':
+                            cdm['OBJECT2_ACTUAL_OD_SPAN']=df_cdm[column]
+                        else:
+                            if column_not_present_counter==0:
+                                column_not_present.append(column)
+                if column_not_present_counter==0:
+                    column_not_present_counter+=1
+                    print(f'The following columns are not present:{column_not_present}')
+                cdms.append(cdm)
+            events.append(Event(cdms))
+        return EventDataset(events=events)
 
     def to_dataframe(self):
         if len(self) == 0:
