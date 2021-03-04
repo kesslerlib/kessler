@@ -132,7 +132,7 @@ def is_number(s):
 
 
 def from_datetime_to_cdm_datetime_str(datetime):
-    return datetime.strftime('%Y-%m-%d %H:%M:%S.%f')
+    return datetime.strftime('%Y-%m-%dT%H:%M:%S.%f')
 
 
 def from_jd_to_datetime(jd_date):
@@ -159,9 +159,9 @@ def from_mjd_to_epoch_days_after_1_jan(mjd_date):
 
 
 @functools.lru_cache(maxsize=None)
-def from_date_str_to_days(date, date0='2020-05-22 21:41:31.975'):
-    date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S.%f')
-    date0 = datetime.datetime.strptime(date0, '%Y-%m-%d %H:%M:%S.%f')
+def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975'):
+    date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f')
+    date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
     dd = date-date0
     days = dd.days
     days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
@@ -169,7 +169,7 @@ def from_date_str_to_days(date, date0='2020-05-22 21:41:31.975'):
 
 
 def add_days_to_date_str(date0, days):
-    date0 = datetime.datetime.strptime(date0, '%Y-%m-%d %H:%M:%S.%f')
+    date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
     date = date0 + datetime.timedelta(days=days)
     return from_datetime_to_cdm_datetime_str(date)
 
