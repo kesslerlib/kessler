@@ -180,8 +180,112 @@ class EventDataset():
 
     # Proposed API for the pandas loader
     @staticmethod
-    def from_pandas(df, cdm_compatible_fields={'RELATIVE_SPEED': 'relative_speed'}, group_events_by='EVENT_ID', object_1_prefix='T_', object_2_prefix='C_'):
-        df.columns=[df.columns.tolist()[i].upper() for i in range(len(df.columns.tolist()))]
+    def from_pandas(df, cdm_compatible_fields={
+        'relative_speed': 'RELATIVE_SPEED',
+        'ccds_cdm_vers': 'CCDS_CDM_VERS',
+        'creation_date': 'CREATION_DATE',
+        'originator':'ORIGINATOR',
+        'message_for':'MESSAGE_FOR',
+        'message_id':'MESSAGE_ID',
+        'tca':'TCA',
+        'miss_distance':'MISS_DISTANCE',
+        'relative_speed':'RELATIVE_SPEED',
+        'relative_position_r':'RELATIVE_POSITION_R',
+        'relative_position_t':'RELATIVE_POSITION_T',
+        'relative_position_n':'RELATIVE_POSITION_N',
+        'relative_velocity_r':'RELATIVE_VELOCITY_R',
+        'relative_velocity_t':'RELATIVE_VELOCITY_T',
+        'relative_velocity_n':'RELATIVE_VELOCITY_N',
+        'start_screen_period':'START_SCREEN_PERIOD',
+        'stop_screen_period':'STOP_SCREEN_PERIOD',
+        'screen_volume_frame':'SCREEN_VOLUME_FRAME',
+        'screen_volume_shape':'SCREEN_VOLUME_SHAPE',
+        'screen_volume_x':'SCREEN_VOLUME_X',
+        'screen_volume_y':'SCREEN_VOLUME_Y',
+        'screen_volume_z':'SCREEN_VOLUME_Z',
+        'screen_entry_time':'SCREEN_ENTRY_TIME',
+        'screen_exit_time':'SCREEN_EXIT_TIME',
+        'jspoc_probability':'COLLISION_PROBABILITY',
+        'object_designator':'OBJECT_DESIGNATOR',
+        'catalog_name':'CATALOG_NAME',
+        'object_name':'OBJECT_NAME',
+        'international_designator':'INTERNATIONAL_DESIGNATOR',
+        'object_type':'OBJECT_TYPE',
+        'ephemeris_name':'EPHEMERIS_NAME',
+        'covariance_method':'COVARIANCE_METHOD',
+        'maneuverable':'MANEUVERABLE',
+        'orbit_center':'ORBIT_CENTER',
+        'ref_frame':'REF_FRAME',
+        'gravity_model':'GRAVITY_MODEL',
+        'atmospheric_model':'ATMOSPHERIC_MODEL',
+        'n_body_perturbations':'N_BODY_PERTURBATIONS',
+        'solar_rad_pressure':'SOLAR_RAD_PRESSURE',
+        'earth_tides':'EARTH_TIDES',
+        'earth_tides':'INTRACK_THRUST',
+        'time_lastob_start':'TIME_LASTOB_START',
+        'time_lastob_end':'TIME_LASTOB_END',
+        'recommended_od_span':'RECOMMENDED_OD_SPAN',
+        'actual_od_span':'ACTUAL_OD_SPAN',
+        'obs_available':'OBS_AVAILABLE',
+        'obs_used':'OBS_USED','tracks_available':'TRACKS_AVAILABLE',
+        'tracks_used':'TRACKS_USED',
+        'residuals_accepted':'RESIDUALS_ACCEPTED',
+        'weighted_rms':'WEIGHTED_RMS',
+        'area_pc':'AREA_PC',
+        'area_drg':'AREA_DRG',
+        'area_srg':'AREA_SRP',
+        'mass':'MASS',
+        'cd_area_over_mass':'CD_AREA_OVER_MASS',
+        'cr_area_over_mass':'CR_AREA_OVER_MASS',
+        'thrust_acceleration':'THRUST_ACCELERATION',
+        'sedr':'SEDR',
+        'cr_r':'CR_R',
+        'ct_r':'CT_R',
+        'ct_t':'CT_T',
+        'cn_r':'CN_R',
+        'cn_t':'CN_T',
+        'cn_n':'CN_N',
+        'crdot_r':'CRDOT_R',
+        'crdot_t':'CRDOT_T',
+        'crdot_n':'CRDOT_N',
+        'crdot_rdot':'CRDOT_RDOT',
+        'ctdot_r':'CTDOT_R',
+        'ctdot_t':'CTDOT_T',
+        'ctdot_n':'CTDOT_N',
+        'ctdot_rdot':'CTDOT_RDOT',
+        'ctdot_tdot':'CTDOT_TDOT',
+        'cndot_r':'CNDOT_R',
+        'cndot_t':'CNDOT_T',
+        'cndot_n':'CNDOT_N',
+        'cndot_rdot':'CNDOT_RDOT',
+        'cndot_tdot':'CNDOT_TDOT',
+        'cndot_ndot':'CNDOT_NDOT',
+        'cdrg_r':'CDRG_R',
+        'cdrg_t':'CDRG_T',
+        'cdrg_n':'CDRG_N',
+        'cdrg_rdot':'CDRG_RDOT',
+        'cdrg_tdot':'CDRG_TDOT',
+        'cdrg_ndot':'CDRG_NDOT',
+        'cdrg_drg':'CDRG_DRG',
+        'csrp_r':'CSRP_R',
+        'csrp_t':'CSRP_T',
+        'csrp_n':'CSRP_N',
+        'csrp_rdot':'CSRP_RDOT',
+        'csrp_tdot':'CSRP_TDOT',
+        'csrp_ndot':'CSRP_NDOT',
+        'csrp_drg':'CSRP_DRG',
+        'csrp_srp':'CSRP_SRP',
+        'cthr_r':'CTHR_R',
+        'cthr_t':'CTHR_T',
+        'cthr_n':'CTHR_N',
+        'cthr_rdot':'CTHR_RDOT',
+        'cthr_tdot':'CTHR_TDOT',
+        'cthr_ndot':'CTHR_NDOT',
+        'cthr_drg':'CTHR_DRG',
+        'cthr_srp':'CTHR_SRP',
+        'cthr_thr':'CTHR_THR'}, group_events_by='event_id', object_1_prefix='t_', object_2_prefix='c_'):
+
+        #df.columns=[df.columns.tolist()[i].upper() for i in range(len(df.columns.tolist()))],
 
         df_events = df.groupby(group_events_by).groups
         num_events = len(df_events)
@@ -198,30 +302,23 @@ class EventDataset():
             column_not_present_counter=0
             for _, df_cdm in df_event.iterrows():
                 cdm = CDM()
-                for column in df.columns:
+                for key, column in cdm_compatible_fields.items():
                     column_name=column[2:]
                     column_prefix=column[0:2]
                     if (column_name in cdm._keys_header or  column_name in cdm._keys_relative_metadata or column_name in cdm._keys_metadata or column_name in cdm._keys_data_od or column_name in cdm._keys_data_state or column_name in cdm._keys_data_covariance):
                         if column_prefix==object_1_prefix:
-                            cdm['OBJECT1_'+column_name]=df_cdm[column]
+                            cdm['OBJECT1_'+column_name]=df_cdm[key]
                         elif column_prefix==object_2_prefix:
-                            cdm['OBJECT2_'+column_name]=df_cdm[column]
+                            cdm['OBJECT2_'+column_name]=df_cdm[key]
                         else:
                             if column_not_present_counter==0:
-                                column_not_present.append(column)
+                                column_not_present.append(key)
 
                     elif (column in cdm._keys_header or  column in cdm._keys_relative_metadata or column in cdm._keys_metadata or column in cdm._keys_data_od or column in cdm._keys_data_state or column in cdm._keys_data_covariance):
-                        cdm[column]=df_cdm[column]
+                        cdm[column]=df_cdm[key]
                     else:
-                        if column=='JSPOC_PROBABILITY':
-                            cdm['COLLISION_PROBABILITY']=df_cdm[column]
-                        elif column=='T_SPAN':
-                            cdm['OBJECT1_ACTUAL_OD_SPAN']=df_cdm[column]
-                        elif column=='C_SPAN':
-                            cdm['OBJECT2_ACTUAL_OD_SPAN']=df_cdm[column]
-                        else:
-                            if column_not_present_counter==0:
-                                column_not_present.append(column)
+                        if column_not_present_counter==0:
+                            column_not_present.append(column)
                 if column_not_present_counter==0:
                     column_not_present_counter+=1
                     print(f'The following columns are not present:{column_not_present}')
@@ -330,7 +427,7 @@ class EventDataset():
 
     def plot_uncertainty(self, figsize=(20, 12), diagonal=False, *args, **kwargs):
         if diagonal:
-            features = ['CR_R', 'CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
+            features = ['CR_R','CT_T', 'CN_N', 'CRDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_NDOT']
         else:
                 features = ['CR_R', 'CT_R', 'CT_T', 'CN_R', 'CN_T', 'CN_N', 'CRDOT_R', 'CRDOT_T', 'CRDOT_N', 'CRDOT_RDOT', 'CTDOT_R', 'CTDOT_T', 'CTDOT_N', 'CTDOT_RDOT', 'CTDOT_TDOT', 'CNDOT_R', 'CNDOT_T', 'CNDOT_N', 'CNDOT_RDOT', 'CNDOT_TDOT', 'CNDOT_NDOT']
         features = list(map(lambda f: 'OBJECT1_'+f, features)) + list(map(lambda f: 'OBJECT2_'+f, features))
