@@ -1,3 +1,6 @@
+<div align="left">
+  <a href="https://github.com/kesslerlib/kessler"> <img height="120px" src="docs/kessler_logo.png"></a>
+</div>
 
 -----------------------------------------
 [![Build Status](https://github.com/kesslerlib/kessler/workflows/build/badge.svg)](https://github.com/kesslerlib/kessler/actions)
@@ -6,9 +9,7 @@ Kessler is a Python package for simulation-based inference and machine learning 
 
 Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in collaboration with [European Space Operations Centre (ESOC)](http://www.esa.int/esoc) of the [European Space Agency (ESA)](http://www.esa.int).
 
-<div align="left">
-  <img height="200px" src="docs/Space_Debris_Low_Earth_Orbit.png">
-</div>
+
 
 
 ### 1. How to install
