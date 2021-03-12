@@ -377,6 +377,10 @@ class EventDataset():
         'c_cthr_srp':'OBJECT2_CTHR_SRP',
         'c_cthr_thr':'OBJECT2_CTHR_THR'}, group_events_by='event_id', date_format='%Y-%m-%d %H:%M:%S.%f'):
 
+        # Dropping columns with NaNs
+        df = df.dropna(axis=1)
+        pandas_column_names_after_dropping = list(df.columns)
+
         df_events = df.groupby(group_events_by).groups
         num_events = len(df_events)
         events = []
@@ -390,11 +394,12 @@ class EventDataset():
             for _, df_cdm in df_event.iterrows():
                 cdm = CDM()
                 for pandas_name, cdm_name in cdm_compatible_fields.items():
-                    value = df_cdm[pandas_name]
-                    # Check if the field is a date, if so transform to the correct date string format expected in the CCSDS 508.0-B-1 standard
-                    if util.is_date(value, date_format):
-                        value = util.transform_date_str(value, date_format, '%Y-%m-%dT%H:%M:%S.%f')
-                    cdm[cdm_name] = value
+                    if pandas_name in pandas_column_names_after_dropping:
+                        value = df_cdm[pandas_name]
+                        # Check if the field is a date, if so transform to the correct date string format expected in the CCSDS 508.0-B-1 standard
+                        if util.is_date(value, date_format):
+                            value = util.transform_date_str(value, date_format, '%Y-%m-%dT%H:%M:%S.%f')
+                        cdm[cdm_name] = value
                 cdms.append(cdm)
             events.append(Event(cdms))
         return EventDataset(events=events)

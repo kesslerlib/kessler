@@ -39,7 +39,6 @@ def generate_event_dataset(dataset_dir, num_events, save_traces=False, verbosity
             cdm.save(file_name_cdm)
 
 
-
 def kelvins_to_event_dataset(file_name, num_events=None, date_tca=None, remove_outliers=True, drop_features=['c_rcs_estimate', 't_rcs_estimate']):
     print('Loading Kelvins dataset from file name: {}'.format(file_name))
     kelvins = pd.read_csv(file_name)
