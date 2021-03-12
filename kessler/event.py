@@ -460,6 +460,13 @@ class EventDataset():
             df = df.select_dtypes(include=['int', 'float64', 'float32'])
         return list(df.columns)
 
+    def get_CDMs(self):
+        cdms = []
+        for event in self:
+            for cdm in event:
+                cdms.append(cdm)
+        return cdms
+
     def plot_event_lengths(self, figsize=(6, 4), file_name=None, *args, **kwargs):
         fig, ax = plt.subplots(figsize=figsize)
         event_lengths = self.event_lengths()
