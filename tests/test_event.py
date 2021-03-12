@@ -24,8 +24,4 @@ class EventDatasetTestCase(unittest.TestCase):
 
         df = pd.read_csv(file_name)  # Read the csv
         e = EventDataset.from_pandas(df)
-        print(e)
-        for event in e:
-            for cdm in event:
-                print(cdm)
-        self.assertTrue(True)
+        self.assertEqual(len(e), 3)
