@@ -377,8 +377,10 @@ class EventDataset():
         'c_cthr_srp':'OBJECT2_CTHR_SRP',
         'c_cthr_thr':'OBJECT2_CTHR_THR'}, group_events_by='event_id', date_format='%Y-%m-%d %H:%M:%S.%f'):
 
-        # Dropping columns with NaNs
+        print('Dataframe with {} rows and {} columns'.format(len(df), len(df.columns)))
+        print('Dropping columns with NaNs')
         df = df.dropna(axis=1)
+        print('Dataframe with {} rows and {} columns'.format(len(df), len(df.columns)))
         pandas_column_names_after_dropping = list(df.columns)
 
         df_events = df.groupby(group_events_by).groups
@@ -402,7 +404,9 @@ class EventDataset():
                         cdm[cdm_name] = value
                 cdms.append(cdm)
             events.append(Event(cdms))
-        return EventDataset(events=events)
+        event_dataset = EventDataset(events=events)
+        print('\n{}'.format(event_dataset))
+        return event_dataset
 
     def to_dataframe(self):
         if len(self) == 0:
@@ -448,6 +452,13 @@ class EventDataset():
     @property
     def event_lengths_stddev(self):
         return np.array(self.event_lengths).std()
+
+    def common_features(self, only_numeric=False):
+        df = self.to_dataframe()
+        df = df.dropna(axis=1)
+        if only_numeric:
+            df = df.select_dtypes(include=['int', 'float64', 'float32'])
+        return list(df.columns)
 
     def plot_event_lengths(self, figsize=(6, 4), file_name=None, *args, **kwargs):
         fig, ax = plt.subplots(figsize=figsize)

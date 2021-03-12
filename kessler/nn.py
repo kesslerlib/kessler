@@ -156,6 +156,8 @@ class LSTMPredictor(nn.Module):
         event_set = event_set.filter(lambda event: len(event) > 1)
 
         valid_set_size = int(len(event_set) * valid_proportion)
+        if valid_set_size == 0:
+            raise RuntimeError('Validation set size is 0 for the given valid_proportion ({}) and number of events ({})'.format(valid_proportion, len(event_set)))
         train_set_size = len(event_set) - valid_set_size
         train_set = DatasetEventDataset(event_set[:train_set_size], self._features, self._features_stats)
         valid_set = DatasetEventDataset(event_set[train_set_size:], self._features, self._features_stats)
