@@ -182,7 +182,7 @@ class EventDataset():
     @staticmethod
     def from_pandas(df, cdm_compatible_fields={
         'relative_speed': 'RELATIVE_SPEED',
-        'ccds_cdm_vers': 'CCDS_CDM_VERS',
+        'ccsds_cdm_vers': 'CCSDS_CDM_VERS',
         'creation_date': 'CREATION_DATE',
         'originator':'ORIGINATOR',
         'message_for':'MESSAGE_FOR',
@@ -375,43 +375,26 @@ class EventDataset():
         'c_cthr_ndot':'OBJECT2_CTHR_NDOT',
         'c_cthr_drg':'OBJECT2_CTHR_DRG',
         'c_cthr_srp':'OBJECT2_CTHR_SRP',
-        'c_cthr_thr':'OBJECT2_CTHR_THR'}, group_events_by='event_id', object_1_prefix='t_', object_2_prefix='c_'):
+        'c_cthr_thr':'OBJECT2_CTHR_THR'}, group_events_by='event_id', date_format='%Y-%m-%d %H:%M:%S.%f'):
 
         df_events = df.groupby(group_events_by).groups
         num_events = len(df_events)
-        column_not_present=[]
-        column_not_present_counter=0
-        events=[]
-        i=0
-        for k,v in df_events.items():
-            i+=1
+        events = []
+        i = 0
+        for k, v in df_events.items():
+            i += 1
             print('Converting event {} / {}'.format(i, num_events), end='\r')
             sys.stdout.flush()
             df_event = df.iloc[v]
-            cdms=[]
-            column_not_present_counter=0
+            cdms = []
             for _, df_cdm in df_event.iterrows():
                 cdm = CDM()
-                for key, column in cdm_compatible_fields.items():
-                    column_name=column[2:]
-                    column_prefix=column[0:2]
-                    if (column_name in cdm._keys_header or  column_name in cdm._keys_relative_metadata or column_name in cdm._keys_metadata or column_name in cdm._keys_data_od or column_name in cdm._keys_data_state or column_name in cdm._keys_data_covariance):
-                        if column_prefix==object_1_prefix:
-                            cdm['OBJECT1_'+column_name]=df_cdm[key]
-                        elif column_prefix==object_2_prefix:
-                            cdm['OBJECT2_'+column_name]=df_cdm[key]
-                        else:
-                            if column_not_present_counter==0:
-                                column_not_present.append(key)
-
-                    elif (column in cdm._keys_header or  column in cdm._keys_relative_metadata or column in cdm._keys_metadata or column in cdm._keys_data_od or column in cdm._keys_data_state or column in cdm._keys_data_covariance):
-                        cdm[column]=df_cdm[key]
-                    else:
-                        if column_not_present_counter==0:
-                            column_not_present.append(column)
-                if column_not_present_counter==0:
-                    column_not_present_counter+=1
-                    print(f'The following columns are not present:{column_not_present}')
+                for pandas_name, cdm_name in cdm_compatible_fields.items():
+                    value = df_cdm[pandas_name]
+                    # Check if the field is a date, if so transform to the correct date string format expected in the CCSDS 508.0-B-1 standard
+                    if util.is_date(value, date_format):
+                        value = util.transform_date_str(value, date_format, '%Y-%m-%dT%H:%M:%S.%f')
+                    cdm[cdm_name] = value
                 cdms.append(cdm)
             events.append(Event(cdms))
         return EventDataset(events=events)

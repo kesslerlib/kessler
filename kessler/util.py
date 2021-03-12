@@ -159,9 +159,9 @@ def from_mjd_to_epoch_days_after_1_jan(mjd_date):
 
 
 @functools.lru_cache(maxsize=None)
-def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975'):
-    date = datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%f')
-    date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
+def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975', date_format='%Y-%m-%dT%H:%M:%S.%f'):
+    date = datetime.datetime.strptime(date, date_format)
+    date0 = datetime.datetime.strptime(date0, date_format)
     dd = date-date0
     days = dd.days
     days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
@@ -172,6 +172,19 @@ def add_days_to_date_str(date0, days):
     date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
     date = date0 + datetime.timedelta(days=days)
     return from_datetime_to_cdm_datetime_str(date)
+
+
+def is_date(date_string, date_format):
+    try:
+        datetime.datetime.strptime(date_string, date_format)
+        return True
+    except:
+        return False
+
+
+def transform_date_str(date_string, date_format_from, date_format_to):
+    date = datetime.datetime.strptime(date_string, date_format_from)
+    return date.strftime(date_format_to)
 
 
 pykep_satellite = None

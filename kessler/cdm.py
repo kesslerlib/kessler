@@ -41,6 +41,8 @@ class ConjunctionDataMessage():
         self._values_object_data_covariance = [dict.fromkeys(self._keys_data_covariance), dict.fromkeys(self._keys_data_covariance)]
         self._values_extra = {}  # This holds extra key, value pairs associated with each CDM object, used internally by the Kessler codebase and not a part of the CDM standard
 
+        self._keys_with_dates = ['CREATION_DATE', 'TCA', 'SCREEN_ENTRY_TIME', 'START_SCREEN_PERIOD', 'STOP_SCREEN_PERIOD', 'SCREEN_EXIT_TIME', 'OBJECT1_TIME_LASTOB_START', 'OBJECT1_TIME_LASTOB_END', 'OBJECT2_TIME_LASTOB_START', 'OBJECT2_TIME_LASTOB_END']
+
         if set_defaults:
             self.set_header('CCSDS_CDM_VERS', '1.0')
             self.set_header('CREATION_DATE', datetime.datetime.utcnow().isoformat())
@@ -181,6 +183,12 @@ class ConjunctionDataMessage():
 
     def set_header(self, key, value):
         if key in self._keys_header:
+            if key in self._keys_with_dates:
+                # We have a field with a date string as the value. Check if the string is in the format needed by the CCSDS 508.0-B-1 standard
+                try:
+                    _ = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
+                except Exception as e:
+                    raise RuntimeError('{} ({}) is not in the expected format.\n{}'.format(key, value, str(e)))
             self._values_header[key] = value
         else:
             raise ValueError('Invalid key ({}) for header'.format(key))
