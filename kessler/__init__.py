@@ -1,4 +1,4 @@
-__version__ = '0.1.1.dev4'
+__version__ = '0.1.2.dev1'
 
 from .cdm import ConjunctionDataMessage, CDM
 from .event import Event, EventDataset
