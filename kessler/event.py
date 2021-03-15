@@ -27,6 +27,7 @@ class Event():
         else:
             self._cdms = []
         self._update_cdm_extra_features()
+        self._dataframe = None
 
     def _update_cdm_extra_features(self):
         if len(self._cdms) > 0:
@@ -52,12 +53,14 @@ class Event():
         return Event(cdms=copy.deepcopy(self._cdms))
 
     def to_dataframe(self):
-        if len(self) == 0:
-            return pd.DataFrame()
-        cdm_dataframes = []
-        for cdm in self._cdms:
-            cdm_dataframes.append(cdm.to_dataframe())
-        return pd.concat(cdm_dataframes, ignore_index=True)
+        if self._dataframe is None:
+            if len(self) == 0:
+                self._dataframe = pd.DataFrame()
+            cdm_dataframes = []
+            for cdm in self._cdms:
+                cdm_dataframes.append(cdm.to_dataframe())
+            self._dataframe = pd.concat(cdm_dataframes, ignore_index=True)
+        return self._dataframe
 
     def plot_feature(self, feature_name, figsize=None, ax=None, return_ax=False, apply_func=None, file_name=None, legend=False, xlim=(-0.01, 7.01), ylims=None, *args, **kwargs):
         if apply_func is None:
@@ -383,14 +386,15 @@ class EventDataset():
         print('Dataframe with {} rows and {} columns'.format(len(df), len(df.columns)))
         pandas_column_names_after_dropping = list(df.columns)
 
+        print('Grouping by {}'.format(group_events_by))
         df_events = df.groupby(group_events_by).groups
-        num_events = len(df_events)
+        print('Grouped into {} event(s)'.format(len(df_events)))
         events = []
+        util.progress_bar_init('Converting DataFrame to EventDataset', len(df_events), 'Events')
         i = 0
         for k, v in df_events.items():
+            util.progress_bar_update(i)
             i += 1
-            print('Converting event {} / {}'.format(i, num_events), end='\r')
-            sys.stdout.flush()
             df_event = df.iloc[v]
             cdms = []
             for _, df_cdm in df_event.iterrows():
@@ -404,6 +408,7 @@ class EventDataset():
                         cdm[cdm_name] = value
                 cdms.append(cdm)
             events.append(Event(cdms))
+        util.progress_bar_end()
         event_dataset = EventDataset(events=events)
         print('\n{}'.format(event_dataset))
         return event_dataset
@@ -412,8 +417,12 @@ class EventDataset():
         if len(self) == 0:
             return pd.DataFrame()
         event_dataframes = []
-        for event in self._events:
+
+        util.progress_bar_init('Converting EventDataset to DataFrame', len(self._events), 'Events')
+        for i, event in enumerate(self._events):
+            util.progress_bar_update(i)
             event_dataframes.append(event.to_dataframe())
+        util.progress_bar_end()
         return pd.concat(event_dataframes, ignore_index=True)
 
     def dates(self):
@@ -458,7 +467,10 @@ class EventDataset():
         df = df.dropna(axis=1)
         if only_numeric:
             df = df.select_dtypes(include=['int', 'float64', 'float32'])
-        return list(df.columns)
+        features = list(df.columns)
+        if '__DAYS_TO_TCA' in features:
+            features.remove('__DAYS_TO_TCA')
+        return features
 
     def get_CDMs(self):
         cdms = []

@@ -146,6 +146,9 @@ class LSTMPredictor(nn.Module):
         num_params = sum(p.numel() for p in self.parameters())
         print('LSTM predictor with params: {:,}'.format(num_params))
 
+        if event_samples_for_stats > len(event_set):
+            event_samples_for_stats = len(event_set)
+
         if self._features_stats is None:
             print('Computing normalization statistics')
             self._features_stats = DatasetEventDataset(event_set[:event_samples_for_stats], self._features)._features_stats
@@ -202,7 +205,7 @@ class LSTMPredictor(nn.Module):
                 self._hist_train_loss_iters.append(total_iters)
                 self._hist_train_loss.append(train_loss)
 
-                print('{} | {}/{} | {}/{} | {:.4e} | {:.4e}'.format(total_iters, i_minibatch+1, len(train_loader), epoch+1, epochs, train_loss, valid_loss), end='\r')
+                print('iter {} | minibatch {}/{} | epoch {}/{} | train loss {:.4e} | valid loss {:.4e}'.format(total_iters, i_minibatch+1, len(train_loader), epoch+1, epochs, train_loss, valid_loss), end='\r')
                 sys.stdout.flush()
 
     def predict(self, event):
@@ -249,7 +252,10 @@ class LSTMPredictor(nn.Module):
 
     def predict_event(self, event, num_samples=1, max_length=22):
         es = []
+
+        util.progress_bar_init('Predicting event evolution', num_samples, 'Samples')
         for i in range(num_samples):
+            util.progress_bar_update(i)
             e = event.copy()
             while True:
                 cdm = self.predict(e)
@@ -263,6 +269,7 @@ class LSTMPredictor(nn.Module):
                     # print('Max length ({}) reached'.format(max_length))
                     break
             es.append(e)
+        util.progress_bar_end()
         if num_samples == 1:
             return es[0]
         else:

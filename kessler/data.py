@@ -82,12 +82,12 @@ def kelvins_to_event_dataset(file_name, num_events=None, date_tca=None, remove_o
         num_events = len(kelvins_events)
     num_events = min(num_events, len(kelvins_events))
     i = 0
+    util.progress_bar_init('Converting Kelvins challenge data to EventDataset', num_events, 'Events')
     for k, v in kelvins_events.items():
+        util.progress_bar_update(i)
         i += 1
         if i > num_events:
             break
-        print('Converting event {} / {}'.format(i, num_events), end='\r')
-        sys.stdout.flush()
         kelvins_event = kelvins.iloc[v]
         cdms = []
         for _, kelvins_cdm in kelvins_event.iterrows():
@@ -180,4 +180,5 @@ def kelvins_to_event_dataset(file_name, num_events=None, date_tca=None, remove_o
             cdms.append(cdm)
         events.append(Event(cdms))
 
+    util.progress_bar_end()
     return EventDataset(events=events)
