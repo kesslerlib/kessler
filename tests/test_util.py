@@ -82,7 +82,7 @@ class UtilTestCase(unittest.TestCase):
         print('state_ITRF_correct', state_ITRF_correct)
         print('state_TEME', state_TEME)
         self.assertTrue(np.allclose(state_ITRF_correct, state_ITRF))
-        self.assertEqual(np.linalg.norm(state_TEME[0]), np.linalg.norm(state_ITRF[0]))
+        self.assertAlmostEqual(np.linalg.norm(state_TEME[0]), np.linalg.norm(state_ITRF[0]), places=1)
 
     def test_from_cartesian_to_rtn(self):
         state_xyz = np.array([[1.0, 2.0, 3.4], [4.5, 6.2, 7.4]])
@@ -92,14 +92,11 @@ class UtilTestCase(unittest.TestCase):
 
         self.assertTrue(np.allclose(state_xyz[0], r_xyz))
         self.assertTrue(np.allclose(state_xyz[1], v_xyz))
-        self.assertEqual(np.linalg.norm(state_xyz[0]), np.linalg.norm(state_rtn[0]))
-        self.assertEqual(np.linalg.norm(state_xyz[1]), np.linalg.norm(state_rtn[1]))
+        self.assertAlmostEqual(np.linalg.norm(state_xyz[0]), np.linalg.norm(state_rtn[0]), places=1)
+        self.assertAlmostEqual(np.linalg.norm(state_xyz[1]), np.linalg.norm(state_rtn[1]), places=1)
 
     def test_from_cartesian_to_rtn_2(self):
         state_xyz = np.array([[1.0, 2.0, 3.4], [4.5, 6.2, 7.4]])
         state_rtn, _ = kessler.util.from_cartesian_to_rtn(state_xyz)
-        self.assertEqual(np.linalg.norm(state_xyz[0]), np.linalg.norm(state_rtn[0]))
-        self.assertEqual(np.linalg.norm(state_xyz[1]), np.linalg.norm(state_rtn[1]))
-
-            
-
+        self.assertAlmostEqual(np.linalg.norm(state_xyz[0]), np.linalg.norm(state_rtn[0]), places=1)
+        self.assertAlmostEqual(np.linalg.norm(state_xyz[1]), np.linalg.norm(state_rtn[1]), places=1)
