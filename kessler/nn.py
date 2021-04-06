@@ -139,7 +139,7 @@ class LSTMPredictor(nn.Module):
             print('Plotting to file: {}'.format(file_name))
             plt.savefig(file_name)
 
-    def learn(self, event_set, epochs=2, lr=1e-3, batch_size=8, device='cpu', valid_proportion=0.15, num_workers=4, event_samples_for_stats=250):
+    def learn(self, event_set, epochs=2, lr=1e-3, batch_size=8, device='cpu', valid_proportion=0.15, num_workers=4, event_samples_for_stats=250, file_name_prefix=None):
         if device is None:
             device = torch.device('cpu')
 
@@ -207,6 +207,11 @@ class LSTMPredictor(nn.Module):
 
                 print('iter {} | minibatch {}/{} | epoch {}/{} | train loss {:.4e} | valid loss {:.4e}'.format(total_iters, i_minibatch+1, len(train_loader), epoch+1, epochs, train_loss, valid_loss), end='\r')
                 sys.stdout.flush()
+
+            if file_name_prefix is not None:
+                file_name = file_name_prefix + '_epoch_{}'.format(epoch+1)
+                print('Saving model checkpoint to file {}'.format(file_name))
+                self.save(file_name)
 
     def predict(self, event):
         ds = DatasetEventDataset(EventDataset(events=[event]), features=self._features, features_stats=self._features_stats)
