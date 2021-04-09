@@ -23,9 +23,10 @@ class EventDatasetTestCase(unittest.TestCase):
             f.write(file_content)
 
         df = pd.read_csv(file_name)  # Read the csv
+
+        # Make EventDataset from Pandas DataFrame
         e = EventDataset.from_pandas(df)
-        print(e)
-        for event in e:
-            for cdm in event:
-                print(cdm)
+
+        # Make Pandas DataFrame from EventDataset
+        df = e.to_dataframe()
         self.assertTrue(True)
