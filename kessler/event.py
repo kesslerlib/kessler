@@ -1,3 +1,14 @@
+# This code is part of Kessler, a machine learning library for spacecraft collision avoidance.
+#
+# Copyright (c) 2020-
+# University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
+# Trillium Technologies
+# Giacomo Acciarini
+# and other contributors, see README in root of repository.
+#
+# GNU General Public License version 3. See LICENSE in root of repository.
+
+
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
