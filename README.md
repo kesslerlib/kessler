@@ -9,9 +9,9 @@ Kessler is a Python package for simulation-based inference and machine learning 
 
 Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in collaboration with [European Space Operations Centre (ESOC)](http://www.esa.int/esoc) of the [European Space Agency (ESA)](http://www.esa.int).
 
-## License
+## Documentation
 
-Kessler is distributed under the GNU General Public License version 3.
+To get started, follow the Jupyter notebooks in the [notebooks](https://github.com/kesslerlib/kessler/-/tree/master/notebooks) folder.
 
 ## Authors
 
@@ -24,6 +24,10 @@ Kessler is distributed under the GNU General Public License version 3.
 Kessler was initially developed by the Constellations team at the Frontier Development Lab (FDL) Europe 2020, a public–private partnership between the European Space Agency (ESA), Trillium Technologies, and University of Oxford.
 
 Constellations team members: Giacomo Acciarini, Francesco Pinto, Sascha Metz, Sarah Boufelja, Sylvester Kaczmarek, Klaus Merz, José A. Martinez-Heras, Francesca Letizia, Christopher Bridges, Atılım Güneş Baydin
+
+## License
+
+Kessler is distributed under the GNU General Public License version 3. Get in touch with the authors for other licensing options.
 
 ## More info and how to cite
 
@@ -95,8 +99,3 @@ If you're using MacOS:
 ```
 docker run --rm -it -v $PWD:/workspace -p 8888:8888 kessler jupyter notebook --ip 0.0.0.0 --no-browser --allow-root
 ```
-
-## Documentation
-
-To get started, follow the Jupyter notebooks in the [notebooks](https://github.com/kesslerlib/kessler/-/tree/master/notebooks) folder.
-
