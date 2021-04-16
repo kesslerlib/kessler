@@ -10,9 +10,9 @@ Kessler is a Python package for simulation-based inference and machine learning 
 Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in collaboration with [European Space Operations Centre (ESOC)](http://www.esa.int/esoc) of the [European Space Agency (ESA)](http://www.esa.int).
 
 
-### 0. Prerequisities
+### 0. Prerequisites
 
-- Python 3.6, 3.7 or 3.8. 
+- Python 3.6, 3.7 or 3.8.
 
 Note: Python 3.9 is currently not supported due to one of our dependencies (pykep) not supporting it. You might get things working with Python 3.9 if you install [pykep using conda](https://anaconda.org/conda-forge/pykep) (not tested).
 
