@@ -13,7 +13,6 @@ import uuid
 import os
 import torch
 import pandas as pd
-import sys
 from datetime import datetime, timedelta
 
 from . import util
