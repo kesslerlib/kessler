@@ -9,9 +9,12 @@ Kessler is a Python package for simulation-based inference and machine learning 
 
 Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in collaboration with [European Space Operations Centre (ESOC)](http://www.esa.int/esoc) of the [European Space Agency (ESA)](http://www.esa.int).
 
-## Documentation
+## Documentation and roadmap
 
 To get started, follow the Jupyter notebooks in the [notebooks](https://github.com/kesslerlib/kessler/-/tree/master/notebooks) folder.
+
+The upcoming version of Kessler will inclue the probabilistic programming model of conjunctions, which is excluded from this initial release. 
+
 
 ## Authors
 
