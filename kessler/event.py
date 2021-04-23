@@ -19,7 +19,6 @@ import os
 import re
 
 from . import util
-from .cdm import ConjunctionDataMessage
 from .cdm import CDM
 
 mpl.rcParams['axes.unicode_minus'] = False
@@ -33,7 +32,7 @@ class Event():
                 raise RuntimeError('Expecting only one of cdms, cdm_file_names, not both')
             self._cdms = cdms
         elif cdm_file_names is not None:
-            self._cdms = [ConjunctionDataMessage(file_name) for file_name in cdm_file_names]
+            self._cdms = [CDM(file_name) for file_name in cdm_file_names]
         else:
             self._cdms = []
         self._update_cdm_extra_features()
@@ -48,7 +47,7 @@ class Event():
                 cdm._values_extra['__DAYS_TO_TCA'] = cdm._values_extra['__TCA'] - cdm._values_extra['__CREATION_DATE']
 
     def add(self, cdm, return_result=False):
-        if isinstance(cdm, ConjunctionDataMessage):
+        if isinstance(cdm, CDM):
             self._cdms.append(cdm)
         elif isinstance(cdm, list):
             for c in cdm:

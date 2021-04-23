@@ -216,7 +216,7 @@ class LSTMPredictor(nn.Module):
                 self._hist_train_loss_iters.append(total_iters)
                 self._hist_train_loss.append(train_loss)
 
-                print('iter {} | minibatch {}/{} | epoch {}/{} | train loss {:.4e} | valid loss {:.4e}'.format(total_iters, i_minibatch+1, len(train_loader), epoch+1, epochs, train_loss, valid_loss), end='\r')
+                print('iter {} | minibatch {}/{} | epoch {}/{} | train loss {:.4e} | valid loss {:.4e}  '.format(total_iters, i_minibatch+1, len(train_loader), epoch+1, epochs, train_loss, valid_loss), end='\r')
                 sys.stdout.flush()
 
             if file_name_prefix is not None:
@@ -233,7 +233,7 @@ class LSTMPredictor(nn.Module):
         self.reset(1)
         output = self.forward(input.unsqueeze(0), input_length.unsqueeze(0)).squeeze()
         if util.has_nan_or_inf(output):
-            raise RuntimeError('Network output has nan or inf:\n'.format(output))
+            raise RuntimeError('Network output has nan or inf: {}\n'.format(output))
         if output.ndim == 1:
             output_last = output
         else:

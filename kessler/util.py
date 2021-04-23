@@ -20,9 +20,25 @@ import skyfield
 import skyfield.sgp4lib
 import datetime
 import functools
+import random
 
 
 _print_refresh_rate = 0.25  #
+
+
+def seed(seed=None):
+    if seed is None:
+        seed = int((time.time()*1e6) % 1e8)
+    global _random_seed
+    _random_seed = seed
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+
+
+seed()
 
 
 # This function is from python-sgp4 released under MIT License, (c) 2012–2016 Brandon Rhodes

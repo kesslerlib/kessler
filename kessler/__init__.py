@@ -9,7 +9,8 @@
 # GNU General Public License version 3. See LICENSE in root of repository.
 
 
-__version__ = '0.1.2.dev2'
+__version__ = '0.1.2.dev3'
 
+from .util import seed
 from .cdm import ConjunctionDataMessage, CDM
 from .event import Event, EventDataset
