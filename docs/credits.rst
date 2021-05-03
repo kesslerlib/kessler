@@ -5,4 +5,4 @@ Kessler was initially developed by the Constellations team at the `Frontier Deve
 
 Constellations team members: Giacomo Acciarini (University of Strathclyde), Francesco Pinto (University of Oxford), Sascha Metz (TU Darmstadt), Sarah Boufelja (IBM), Sylvester Kaczmarek (Imperial College London), Klaus Merz (European Space Agency), José A. Martinez-Heras (European Space Agency), Francesca Letizia (European Space Agency), Christopher Bridges (University of Surrey), Atılım Güneş Baydin (University of Oxford).
 
-The main developers are: Giacomo Acciarini, Francesco Pinto, Atılım Güneş Baydin.
+The main developers are: Giacomo Acciarini ( giacomo.acciarini@gmail.com ), Francesco Pinto ( francesco1.pinto@gmail.com ), Atılım Güneş Baydin.

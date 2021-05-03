@@ -1,7 +1,7 @@
 Kessler
 =======
 
-Kessler is a Python package for simulation-based inference and machine learning for space collision avoidance and assessment. It is named in honor of NASA space scientist `Donald J. Kessler <https://en.wikipedia.org/wiki/Donald_J._Kessler>`_ known for proposing the `Kessler syndrome <https://en.wikipedia.org/wiki/Kessler_syndrome>`.
+Kessler is a Python package for simulation-based inference and machine learning for space collision avoidance and assessment. It is named in honor of NASA space scientist `Donald J. Kessler <https://en.wikipedia.org/wiki/Donald_J._Kessler>`_ known for proposing the `Kessler syndrome <https://en.wikipedia.org/wiki/Kessler_syndrome>`_.
 
 Developed by the `FDL <https://frontierdevelopmentlab.org/>`_ Europe Constellations team in collaboration with `European Space Operations Centre (ESOC) <https://www.esa.int/About_Us/ESOC>`_ of the `European Space Agency (ESA) <https://www.esa.int/>`_.
 

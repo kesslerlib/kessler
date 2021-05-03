@@ -8,7 +8,7 @@ Currently supported Python versions:
 
 - Python 3.6, 3.7, 3.8.
 
-Note: Python 3.9 is currently not supported due to one of our dependencies (pykep) not supporting it. You might get things working with Python 3.9 if you install `pykep using conda <https://anaconda.org/conda-forge/pykep>` (not tested).
+Note: Python 3.9 is currently not supported due to one of our dependencies (pykep) not supporting it. You might get things working with Python 3.9 if you install `pykep using conda <https://anaconda.org/conda-forge/pykep>`_ (not tested).
 
 Dependencies
 ------------
