@@ -10,15 +10,14 @@ The documentation is currently a work in progress.
    :caption: Getting started
 
    install
-   modeling
-   inference
+   capabilities
 
 
 .. toctree::
    :maxdepth: 1
-   :caption: Examples
+   :caption: Tutorials
 
-   examples/gaussian_unknown_mean
+   tutorials/basics
 
 
 .. toctree::
