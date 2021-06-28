@@ -36,7 +36,7 @@ Kessler is distributed under the GNU General Public License version 3. Get in to
 
 If you would like to learn more about or cite the techniques Kessler uses, please see the following papers:
 
-* Giacomo Acciarini, Francesco Pinto, Francesca Letizia, José A. Martinez-Heras, Klaus Merz, Christopher Bridges, and Atılım Güneş Baydin. 2021. [“Kessler: a Machine Learning Library for Space Collision Avoidance.”] (https://conference.sdo.esoc.esa.int/proceedings/sdc8/paper/226) In 8th European Conference on Space Debris.
+* Giacomo Acciarini, Francesco Pinto, Francesca Letizia, José A. Martinez-Heras, Klaus Merz, Christopher Bridges, and Atılım Güneş Baydin. 2021. [“Kessler: a Machine Learning Library for Space Collision Avoidance.”](https://conference.sdo.esoc.esa.int/proceedings/sdc8/paper/226) In 8th European Conference on Space Debris.
 ```
 @inproceedings{acciarini-2020-kessler,
   title = {Kessler: a Machine Learning Library for Spacecraft Collision Avoidance},
