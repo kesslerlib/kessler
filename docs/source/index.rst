@@ -1,5 +1,5 @@
 kessler reference documentation
-==============================
+================================
 
 kessler is a probabilistic programming system designed for use with existing simulators and high-performance computing. It is based on PyTorch.
 
@@ -11,6 +11,7 @@ The documentation is currently a work in progress.
 
    install
    capabilities
+   credits
 
 
 .. toctree::
@@ -18,6 +19,9 @@ The documentation is currently a work in progress.
    :caption: Tutorials
 
    tutorials/basics
+   tutorials/cdms_analysis_and_plotting
+   tutorials/LSTM_training
+   tutorials/probabilistic_programming_module
 
 
 .. toctree::
