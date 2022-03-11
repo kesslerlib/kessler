@@ -1,5 +1,5 @@
 <div align="left">
-  <a href="https://github.com/kesslerlib/kessler"> <img height="120px" src="docs/kessler_logo.png"></a>
+  <a href="https://github.com/kesslerlib/kessler"> <img height="120px" src="docs/source/_static/kessler_logo.png"></a>
 </div>
 
 -----------------------------------------
