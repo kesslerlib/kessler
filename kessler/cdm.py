@@ -192,8 +192,6 @@ class ConjunctionDataMessage():
             return hash(self) == hash(other)
         return False
     
-    
-
     def set_header(self, key, value):
         if key in self._keys_header:
             if key in self._keys_with_dates:
