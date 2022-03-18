@@ -14,7 +14,7 @@ import warnings
 import datetime
 import copy
 import pandas as pd
-
+from . import time_utils
 from . import util
 
 
@@ -191,11 +191,18 @@ class ConjunctionDataMessage():
         if isinstance(other, ConjunctionDataMessage):
             return hash(self) == hash(other)
         return False
+    
+    
 
     def set_header(self, key, value):
         if key in self._keys_header:
             if key in self._keys_with_dates:
                 # We have a field with a date string as the value. Check if the string is in the format needed by the CCSDS 508.0-B-1 standard
+                timeFormat = time_utils.getCcsdsTimeFormat(value)
+                idx = timeFormat.find('DDD')
+                if idx!=-1:
+                    [DateNum, DateVec] = time_utils.DOY2Date(value[idx:idx+3], value[0:4])
+                    value = str(DateVec[0]) +'-' + str(DateVec[1]) + '-' + str(DateVec[2]) + 'T' + value[idx+4:-1] #figure this out!!!
                 try:
                     _ = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
                 except Exception as e:
