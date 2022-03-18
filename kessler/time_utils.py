@@ -1,11 +1,9 @@
 import datetime
 def getCcsdsTimeFormat(timeString):
-
     '''
     Adapted by Andrew Ng, 18/3/2022.
     Original MATLAB source code found at: https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/getCcsdsTimeFormat.m
     The CCSDS time format is required to be of the general form
-
     yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]
     (1) The date and time fields are separated by a "T".
     (2) The date field has a four digit year followed by either a two digit 
