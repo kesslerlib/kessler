@@ -25,15 +25,16 @@ jobs:
     - name: Test
       run: |
         pytest -n auto -x -rA
-    # - name: Codecov
-    #   uses: codecov/codecov-action@v1
-    #   with:
-    #     token: ${{ secrets.CODECOV_TOKEN }}
-    #     files: ./coverage1.xml,./coverage2.xml
-    #     directory: ./coverage/reports/
-    #     flags: unittests
-    #     env_vars: OS,PYTHON
-    #     name: codecov-umbrella
-    #     fail_ci_if_error: true
-    #     path_to_write_report: ./coverage/codecov_report.txt
-    #     verbose: true
+    - name: Codecov
+      uses: actions/checkout@master
+      uses: codecov/codecov-action@v2
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        files: ./coverage1.xml,./coverage2.xml
+        directory: ./coverage/reports/
+        flags: unittests
+        env_vars: OS,PYTHON
+        name: codecov-umbrella
+        fail_ci_if_error: true
+        path_to_write_report: ./coverage/codecov_report.txt
+        verbose: true
