@@ -24,7 +24,7 @@ jobs:
         pip install .[dev]
     - name: Test
       run: |
-        pytest -n auto -x -rA
+        pytest -n auto -x -rA --cov=./ --cov-report xml
     - name: Codecov
       uses: codecov/codecov-action@v2
       with:
