@@ -26,7 +26,6 @@ jobs:
       run: |
         pytest -n auto -x -rA
     - name: Codecov
-      uses: actions/checkout@master
       uses: codecov/codecov-action@v2
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
