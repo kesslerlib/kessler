@@ -1,7 +1,11 @@
-kessler reference documentation
+Kessler Reference Documentation
 ================================
 
-kessler is a probabilistic programming system designed for use with existing simulators and high-performance computing. It is based on PyTorch.
+Kessler is a Python package for machine learning applied to spacecraft collision avoidance. It provides functionalities to import, export, analyze, and plot conjunction data messages (CDMs) in their standard format and predict the evolution of satellite conjunction events based on explainable machine learning models. 
+
+The package comprises a Deep Learning module, where a Bayesian recurrent neural network can be trained with existing collections of CDM data and then deployed in order to predict the contents of future CDMs received up to now, with associated uncertainty estimates about all predictions.
+
+Kessler also includes a novel generative model of conjunction events and CDM sequences implemented using probabilistic programming and simulating the CDM generation process, which we will soon release to the public: stay tuned!
 
 The documentation is currently a work in progress.
 
