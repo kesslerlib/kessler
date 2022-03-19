@@ -5,6 +5,7 @@
 -----------------------------------------
 [![Build Status](https://github.com/kesslerlib/kessler/workflows/build/badge.svg)](https://github.com/kesslerlib/kessler/actions)
 [![Documentation Status](https://readthedocs.org/projects/kessler/badge/?version=latest)](https://kessler.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/kesslerlib/kessler/branch/main/graph/badge.svg?token=EQ9CLXD909)](https://codecov.io/gh/kesslerlib/kessler)
 
 Kessler is a Python package for simulation-based inference and machine learning for space collision avoidance and assessment. It is named in honor of NASA scientist [Donald J. Kessler](https://en.wikipedia.org/wiki/Donald_J._Kessler) known for proposing the [Kessler syndrome](https://en.wikipedia.org/wiki/Kessler_syndrome).
 
