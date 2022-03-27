@@ -348,3 +348,88 @@ def progress_bar_end(message=None):
     print()
     if message is not None:
         print(message)
+
+def getCcsdsTimeFormat(time_string):
+    '''
+    Adapted by Andrew Ng, 18/3/2022.
+    Original MATLAB source code found at: https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/getCcsdsTimeFormat.m
+    The CCSDS time format is required to be of the general form
+    yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]
+    (1) The date and time fields are separated by a "T".
+    (2) The date field has a four digit year followed by either a two digit 
+        month and two digit day, or a three digit day-of-year.  
+    (3) The year, month, day, and day-of-year fields are separated by a dash.
+    (4) The hours, minutes and seconds fields are each two digits separated 
+        by colons.
+    (5) The fraction of seconds is optional and can have any number of
+        digits.
+    (6) If a fraction of seconds is provided, it is separated from the two
+        digit seconds by a period.
+    (7) The time string can end with an optional "Z" time zone indicator
+    
+    Args:
+        - time)
+    '''
+    time_format = []
+    numT = time_string.count('T')
+    if numT == -1:
+        # Case when this is 'T' does not exist in time_string
+        raise RuntimeError(f"*** Error -- Invalid CCSDS time string: {time_string}\nNo 'T' separator found between date and time portions of the string")
+    elif numT > 1:
+        raise RuntimeError(f"*** Error -- Invalid CCSDS time string: {time_string} \nMore than one 'T' separator found between date and time portions of the string")
+    idx_T = time_string.find('T')
+    if idx_T ==10:
+        time_format = "yyyy-mm-ddTHH:MM:SS"
+    elif idx_T ==8:
+        time_format = "yyyy-DDDTHH:MM:SS"
+    else: 
+        raise RuntimeError(f"*** Error -- Invalid CCSDS time string: {time_string} \nDate format not one of yyyy-mm-dd or yyyy-DDD.\n")
+    # % Check if 'Z' time zone indicator appended to the string
+    if time_string[-1]=='Z':
+        zOpt = True
+    else:
+        zOpt = False
+    # % Find location of the fraction of seconds decimal separator
+    num_decimal = time_string.count('.')
+    if num_decimal > 1:
+        #time_format = []
+        raise RuntimeError(f"*** Error -- Invalid CCSDS time string: {time_string}\nMore than one fraction of seconds decimal separator ('.') found.\n")
+    idx_decimal = time_string.find('.')
+    nfrac = 0
+    if num_decimal != 0:
+        if zOpt:
+            nfrac = len(time_string) - 1 - idx_decimal -1
+        else: 
+            nfrac = len(time_string) - 1 - idx_decimal
+    if nfrac > 0:
+        frac_str = '.' + ('F'*nfrac)
+    else:
+        frac_str = ""
+    if zOpt:
+        frac_str = frac_str+'Z'
+    time_format = time_format + frac_str
+    return time_format
+
+def DOY2Date(value,DOY, YEAR, idx):
+    '''
+    Written by Andrew Ng, 18/03/2022, 
+    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/DOY2Date.m
+    Use the datetime python package. 
+    DOY2DATE  - Converts Day of Year (DOY) date format to date format.
+    
+    Args:
+        - value(``str``): Original date time string with day of year format "YYYY-DDDTHH:MM:SS.ff"
+        - DOY  (``str``): The day of year in the DOY format. 
+        - YEAR (``str``): The year.
+        - idx  (``int``): Index of the start of the original "value" string at which characters 'DDD' are found. 
+    Returns: 
+        -value (``str``): Transformed date in traditional date format. i.e.: "YYYY-mm-ddTHH:MM:SS.ff"
+
+    '''
+    # Calculate datetime format
+    date_num = datetime.datetime(int(YEAR), 1, 1) + datetime.timedelta(int(DOY) - 1)
+    # Split datetime object into a date list
+    date_vec = [date_num.year, date_num.month, date_num.day, date_num.hour, date_num.minute]
+    value = str(date_vec[0]) +'-' + str(date_vec[1]) + '-' + str(date_vec[2]) + 'T' + value[idx+4:-1] 
+                
+    return value
