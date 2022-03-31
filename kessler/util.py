@@ -349,10 +349,11 @@ def progress_bar_end(message=None):
     if message is not None:
         print(message)
 
-def getCcsdsTimeFormat(time_string):
+def get_ccsds_time_format(time_string):
     '''
     Adapted by Andrew Ng, 18/3/2022.
     Original MATLAB source code found at: https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/getCcsdsTimeFormat.m
+    get_ccsds_time_format  -  process and outputs the format of the time string extracted from the CDM. 
     The CCSDS time format is required to be of the general form
     yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]
     (1) The date and time fields are separated by a "T".
@@ -366,9 +367,12 @@ def getCcsdsTimeFormat(time_string):
     (6) If a fraction of seconds is provided, it is separated from the two
         digit seconds by a period.
     (7) The time string can end with an optional "Z" time zone indicator
-    
+
     Args:
-        - time)
+        - time_string(``str``): Original time string stored in CDM.
+    Returns: 
+        - time_format(``str``): Outputs the format of the time string. It must be of the form yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z], otherwise it is invalid and a RuntimeError is raised.
+
     '''
     time_format = []
     numT = time_string.count('T')
@@ -410,12 +414,12 @@ def getCcsdsTimeFormat(time_string):
     time_format = time_format + frac_str
     return time_format
 
-def DOY2Date(value,DOY, YEAR, idx):
+def DOY_2_date(value, DOY, YEAR, idx):
     '''
     Written by Andrew Ng, 18/03/2022, 
     Based on source code @ https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/DOY2Date.m
     Use the datetime python package. 
-    DOY2DATE  - Converts Day of Year (DOY) date format to date format.
+    DOY_2_date  - Converts Day of Year (DOY) date format to date format.
     
     Args:
         - value(``str``): Original date time string with day of year format "YYYY-DDDTHH:MM:SS.ff"

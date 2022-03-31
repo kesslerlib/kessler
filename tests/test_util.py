@@ -112,7 +112,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertAlmostEqual(np.linalg.norm(state_xyz[0]), np.linalg.norm(state_rtn[0]), places=1)
         self.assertAlmostEqual(np.linalg.norm(state_xyz[1]), np.linalg.norm(state_rtn[1]), places=1)
 
-    def test_getCcsdsTimeFormat(self):
+    def test_get_ccsds_time_format(self):
         # This test is written by Andrew Ng, 19/03/22. It makes use of example CDMs provided by the NASA CARA
         # analysis repo at https://github.com/nasa/CARA_Analysis_Tools/tree/master/two-dimension_Pc/UnitTest/InputFiles.
         test_case1 = "2000-01-01T00:00:00.000" #From AlfanoTestCase11.cdm
@@ -120,9 +120,9 @@ class UtilTestCase(unittest.TestCase):
         test_case1_correct = "yyyy-mm-ddTHH:MM:SS.FFF"
         test_case2_correct = "yyyy-DDDTHH:MM:SS.FFF"
 
-        self.assertEqual(kessler.util.getCcsdsTimeFormat(test_case1), test_case1_correct)
-        self.assertEqual(kessler.util.getCcsdsTimeFormat(test_case2), test_case2_correct) 
-    def test_DOY2Date(self):
+        self.assertEqual(kessler.util.get_ccsds_time_format(test_case1), test_case1_correct)
+        self.assertEqual(kessler.util.get_ccsds_time_format(test_case2), test_case2_correct) 
+    def test_DOY_2_date(self):
         # This test is written by Andrew Ng, 19/03/22. It makes use of example CDMs provided by the NASA CARA
         # analysis repo at https://github.com/nasa/CARA_Analysis_Tools/tree/master/two-dimension_Pc/UnitTest/InputFiles.
         example1 = "2010-202T12:25:19.000" # From SingleCovTestCase1-4.cdm
@@ -133,6 +133,6 @@ class UtilTestCase(unittest.TestCase):
         Year_2= example2[0:4]
         test_case1_correct = "2010-7-21T12:25:19.00"
         test_case2_correct = "2018-8-17T13:56:33.00"
-        self.assertEqual(kessler.util.DOY2Date(example1, DOY_1, Year_1, 5), test_case1_correct)
-        self.assertEqual(kessler.util.DOY2Date(example2, DOY_2, Year_2, 5), test_case2_correct) 
+        self.assertEqual(kessler.util.DOY_2_date(example1, DOY_1, Year_1, 5), test_case1_correct)
+        self.assertEqual(kessler.util.DOY_2_date(example2, DOY_2, Year_2, 5), test_case2_correct) 
 

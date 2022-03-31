@@ -14,7 +14,6 @@ import warnings
 import datetime
 import copy
 import pandas as pd
-from . import time_utils
 from . import util
 
 
@@ -196,10 +195,10 @@ class ConjunctionDataMessage():
         if key in self._keys_header:
             if key in self._keys_with_dates:
                 # We have a field with a date string as the value. Check if the string is in the format needed by the CCSDS 508.0-B-1 standard
-                timeFormat = util.getCcsdsTimeFormat(value)
+                timeFormat = util.get_ccsds_time_format(value)
                 idx = timeFormat.find('DDD')
                 if idx!=-1:
-                    value = util.DOY2Date(value, value[idx:idx+3], value[0:4], idx)
+                    value = util.DOY_2_date(value, value[idx:idx+3], value[0:4], idx)
                 try:
                     _ = datetime.datetime.strptime(value, '%Y-%m-%dT%H:%M:%S.%f')
                 except Exception as e:
