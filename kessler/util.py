@@ -390,9 +390,9 @@ def get_ccsds_time_format(time_string):
         raise RuntimeError(f"*** Error -- Invalid CCSDS time string: {time_string} \nDate format not one of yyyy-mm-dd or yyyy-DDD.\n")
     # % Check if 'Z' time zone indicator appended to the string
     if time_string[-1]=='Z':
-        zOpt = True
+        z_opt = True
     else:
-        zOpt = False
+        z_opt = False
     # % Find location of the fraction of seconds decimal separator
     num_decimal = time_string.count('.')
     if num_decimal > 1:
@@ -401,7 +401,7 @@ def get_ccsds_time_format(time_string):
     idx_decimal = time_string.find('.')
     nfrac = 0
     if num_decimal != 0:
-        if zOpt:
+        if z_opt:
             nfrac = len(time_string) - 1 - idx_decimal -1
         else: 
             nfrac = len(time_string) - 1 - idx_decimal
@@ -409,29 +409,29 @@ def get_ccsds_time_format(time_string):
         frac_str = '.' + ('F'*nfrac)
     else:
         frac_str = ""
-    if zOpt:
+    if z_opt:
         frac_str = frac_str+'Z'
     time_format = time_format + frac_str
     return time_format
 
-def DOY_2_date(value, DOY, YEAR, idx):
+def doy_2_date(value, doy, year, idx):
     '''
     Written by Andrew Ng, 18/03/2022, 
     Based on source code @ https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/DOY2Date.m
     Use the datetime python package. 
-    DOY_2_date  - Converts Day of Year (DOY) date format to date format.
+    doy_2_date  - Converts Day of Year (DOY) date format to date format.
     
     Args:
         - value(``str``): Original date time string with day of year format "YYYY-DDDTHH:MM:SS.ff"
-        - DOY  (``str``): The day of year in the DOY format. 
-        - YEAR (``str``): The year.
+        - doy  (``str``): The day of year in the DOY format. 
+        - year (``str``): The year.
         - idx  (``int``): Index of the start of the original "value" string at which characters 'DDD' are found. 
     Returns: 
         -value (``str``): Transformed date in traditional date format. i.e.: "YYYY-mm-ddTHH:MM:SS.ff"
 
     '''
     # Calculate datetime format
-    date_num = datetime.datetime(int(YEAR), 1, 1) + datetime.timedelta(int(DOY) - 1)
+    date_num = datetime.datetime(int(year), 1, 1) + datetime.timedelta(int(doy) - 1)
     # Split datetime object into a date list
     date_vec = [date_num.year, date_num.month, date_num.day, date_num.hour, date_num.minute]
     value = str(date_vec[0]) +'-' + str(date_vec[1]) + '-' + str(date_vec[2]) + 'T' + value[idx+4:-1] 
