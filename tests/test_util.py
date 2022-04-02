@@ -122,17 +122,36 @@ class UtilTestCase(unittest.TestCase):
 
         self.assertEqual(kessler.util.get_ccsds_time_format(test_case1), test_case1_correct)
         self.assertEqual(kessler.util.get_ccsds_time_format(test_case2), test_case2_correct) 
+
     def test_doy_2_date(self):
         # This test is written by Andrew Ng, 19/03/22. It makes use of example CDMs provided by the NASA CARA
         # analysis repo at https://github.com/nasa/CARA_Analysis_Tools/tree/master/two-dimension_Pc/UnitTest/InputFiles.
         example1 = "2010-202T12:25:19.000" # From SingleCovTestCase1-4.cdm
         example2 = "2018-229T13:56:33.000" # From DensityDecorrelationTestCaseCDM.txt
-        DOY_1 = example1[5:5+3] 
-        Year_1= example1[0:4]
-        DOY_2 = example2[5:5+3]
-        Year_2= example2[0:4]
-        test_case1_correct = "2010-7-21T12:25:19.00"
-        test_case2_correct = "2018-8-17T13:56:33.00"
-        self.assertEqual(kessler.util.doy_2_date(example1, DOY_1, Year_1, 5), test_case1_correct)
-        self.assertEqual(kessler.util.doy_2_date(example2, DOY_2, Year_2, 5), test_case2_correct) 
+        example3 = "2010-365T00:00:00.000" # Check that works at the final day of a non leap year
+        example4 = "2010-001T00:00:00.000" # Check that works at the first day of a year
+        example5 = "2012-366T00:00:00.000" # Check that works at the final day of a leap year
+        
+        doy_1 = example1[5:5+3] 
+        year_1= example1[0:4]
+        doy_2 = example2[5:5+3]
+        year_2= example2[0:4]
+        doy_3 = example3[5:5+3] 
+        year_3= example3[0:4]
+        doy_4 = example4[5:5+3]
+        year_4= example4[0:4]
+        doy_5 = example5[5:5+3] 
+        year_5= example5[0:4]
+
+        test_case1_correct = "2010-07-21T12:25:19.00"
+        test_case2_correct = "2018-08-17T13:56:33.00"
+        test_case3_correct = "2010-12-31T00:00:00.00"
+        test_case4_correct = "2010-01-01T00:00:00.00"
+        test_case5_correct = "2012-12-31T00:00:00.00"
+        
+        self.assertEqual(kessler.util.doy_2_date(example1, doy_1, year_1, 5), test_case1_correct)
+        self.assertEqual(kessler.util.doy_2_date(example2, doy_2, year_2, 5), test_case2_correct) 
+        self.assertEqual(kessler.util.doy_2_date(example3, doy_3, year_3, 5), test_case3_correct)
+        self.assertEqual(kessler.util.doy_2_date(example4, doy_4, year_4, 5), test_case4_correct) 
+        self.assertEqual(kessler.util.doy_2_date(example5, doy_5, year_5, 5), test_case5_correct) 
 

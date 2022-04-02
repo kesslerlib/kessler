@@ -432,8 +432,9 @@ def doy_2_date(value, doy, year, idx):
     '''
     # Calculate datetime format
     date_num = datetime.datetime(int(year), 1, 1) + datetime.timedelta(int(doy) - 1)
+
     # Split datetime object into a date list
     date_vec = [date_num.year, date_num.month, date_num.day, date_num.hour, date_num.minute]
-    value = str(date_vec[0]) +'-' + str(date_vec[1]) + '-' + str(date_vec[2]) + 'T' + value[idx+4:-1] 
-                
+    # Extract final date string. Use zfill() to pad year, month and day fields with zeroes if not filling up sufficient spaces. 
+    value = str(date_vec[0]).zfill(4) +'-' + str(date_vec[1]).zfill(2) + '-' + str(date_vec[2]).zfill(2) + 'T' + value[idx+4:-1] 
     return value
