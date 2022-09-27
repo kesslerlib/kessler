@@ -20,7 +20,7 @@ The upcoming version of Kessler will inclue the probabilistic programming model 
 
 ## Authors
 
-* Giacomo Acciarini, University of Oxford
+* Giacomo Acciarini, University of Surrey
 * Francesco Pinto, University of Oxford
 * Francesca Letizia, European Space Agency
 * Chris Bridges, University of Surrey
