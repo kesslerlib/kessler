@@ -46,7 +46,7 @@ If you would like to learn more about or cite the techniques Kessler uses, pleas
   booktitle = {2nd NEO and Debris Detection Conference},
   year = {2023}
 }
-
+```
 * Giacomo Acciarini, Francesco Pinto, Francesca Letizia, José A. Martinez-Heras, Klaus Merz, Christopher Bridges, and Atılım Güneş Baydin. 2021. [“Kessler: a Machine Learning Library for Spacecraft Collision Avoidance.”](https://conference.sdo.esoc.esa.int/proceedings/sdc8/paper/226) In 8th European Conference on Space Debris.
 ```
 @inproceedings{acciarini-2020-kessler,
