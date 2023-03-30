@@ -38,6 +38,15 @@ Kessler is distributed under the GNU General Public License version 3. Get in to
 
 If you would like to learn more about or cite the techniques Kessler uses, please see the following papers:
 
+* Giacomo Acciarini, Nicola Baresi, Christopher Bridges, Leonard Felicetti, Stephen Hobbs, Atılım Güneş Baydin. 2023. [“Observation Strategies and Megaconstellations Impact on Current LEO Population.”](https://conference.sdo.esoc.esa.int/proceedings/neosst2/paper/88) In 2nd NEO and Debris Detection Conference.
+```
+@inproceedings{acciarini-2023-observation,
+  title = {Observation Strategies and Megaconstellations Impact on Current LEO Population},
+  author = {Acciarini, Giacomo and Baresi, Nicola and Bridges, Christopher and Felicetti, Leonard and Hobbs, Stephen and Baydin, Atılım Güneş},
+  booktitle = {2nd NEO and Debris Detection Conference},
+  year = {2023}
+}
+
 * Giacomo Acciarini, Francesco Pinto, Francesca Letizia, José A. Martinez-Heras, Klaus Merz, Christopher Bridges, and Atılım Güneş Baydin. 2021. [“Kessler: a Machine Learning Library for Spacecraft Collision Avoidance.”](https://conference.sdo.esoc.esa.int/proceedings/sdc8/paper/226) In 8th European Conference on Space Debris.
 ```
 @inproceedings{acciarini-2020-kessler,
