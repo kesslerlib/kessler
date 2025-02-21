@@ -42,7 +42,7 @@ extensions = ["myst_nb", "sphinx.ext.autodoc", "sphinx.ext.doctest", "sphinx.ext
 
 # build the templated autosummary files
 autosummary_generate = True
-autosummary_imported_members = True
+autosummary_imported_members = False
 napoleon_google_docstring = True
 numpydoc_show_class_members = False
 panels_add_bootstrap_css = False

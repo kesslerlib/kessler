@@ -1,8 +1,21 @@
-..
-   this file is used to generate the API documentation
+.. _api:
+
+API
+#########
+
+Kessler API
+
+.. currentmodule:: kessler
 
 .. autosummary::
-   :toctree: _autosummary
+   :toctree: _autosummary/
    :recursive:
 
-   kessler
+   cdm
+   data
+   event
+   model
+   nn
+   observation_model
+   plot
+   util
