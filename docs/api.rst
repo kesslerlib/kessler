@@ -5,17 +5,15 @@ API
 
 Kessler API
 
-.. currentmodule:: kessler
+.. toctree::
+   :maxdepth: 2
+   :caption: API Documentation
 
-.. autosummary::
-   :toctree: _autosummary/
-   :recursive:
-
-   cdm
-   data
-   event
-   model
-   nn
-   observation_model
-   plot
-   util
+   _autosummary/kessler.cdm
+   _autosummary/kessler.data
+   _autosummary/kessler.event
+   _autosummary/kessler.model
+   _autosummary/kessler.nn
+   _autosummary/kessler.observation_model
+   _autosummary/kessler.plot
+   _autosummary/kessler.util

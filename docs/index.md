@@ -11,16 +11,14 @@ For more details on the model and results, check out our publications listed in 
 
 The authors are [Giacomo Acciarini](https://www.esa.int/gsp/ACT/team/giacomo_acciarini/), [Atılım Güneş Baydin](https://gbaydin.github.io/), [Dario Izzo](https://www.esa.int/gsp/ACT/team/dario_izzo/). The main developer is Giacomo Acciarini (giacomo.acciarini@gmail.com).
 
-.. toctree::
    :maxdepth: 1
    :caption: Getting started
 
-   install
+   install.rst
    capabilities
    credits
 
 
-.. toctree::
    :maxdepth: 1
    :caption: Tutorials
 
@@ -30,11 +28,10 @@ The authors are [Giacomo Acciarini](https://www.esa.int/gsp/ACT/team/giacomo_acc
    notebooks/probabilistic_programming_module
 
 
-.. toctree::
    :maxdepth: 1
    :caption: API documentation
 
-   kessler package <_autosummary/kessler>
+   api
 
 Indices and tables
 ==================
