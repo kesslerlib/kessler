@@ -10,13 +10,6 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import os
-import sys
-sys.path.insert(0, os.path.abspath('../../kessler'))
-
-
-# -- Project information -----------------------------------------------------
-
 project = 'Kessler'
 copyright = "2020, 2021, 2022, 2023, 2024, 2025, Kessler contributors"
 author = 'Giacomo Acciarini, Atılım Güneş Baydin, Francesco Pinto'
