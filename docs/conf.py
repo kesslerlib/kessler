@@ -103,7 +103,7 @@ html_theme_options = {
 
 nb_execution_mode = "force"
 
-#nb_execution_excludepatterns = ['']
+nb_execution_excludepatterns = ['basics.ipynb','cdms_analysis_and_plotting.ipynb','LSTM_training.ipynb']
 #autosummary_ignore_module = ['']
 
 latex_engine = "xelatex"
