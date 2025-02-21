@@ -14,9 +14,6 @@ __version__ = '1.0.0'
 from .util import seed
 from .cdm import ConjunctionDataMessage, CDM
 from .event import Event, EventDataset
-
-from .cdm import ConjunctionDataMessage, CDM
-from .event import Event, EventDataset
 from .observation_model import GNSS, Radar
 from . import plot, model
 from . import util
