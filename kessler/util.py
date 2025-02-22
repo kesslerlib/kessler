@@ -444,7 +444,7 @@ def get_ccsds_time_format(time_string):
     """
     Adapted by Andrew Ng, 18/3/2022.  
     Original MATLAB source code:  
-    `NASA CARA Analysis Tools <https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/getCcsdsTimeFormat.m>`_  
+    `NASA CARA Analysis Tools <https://github.com/nasa/CARA_Analysis_Tools>`_  
 
     Processes and outputs the format of the time string extracted from the CDM.  
     The CCSDS time format is required to be of the general form:  
