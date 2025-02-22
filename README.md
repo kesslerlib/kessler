@@ -1,7 +1,7 @@
 ## ⚠️ We are in the process of updating Kessler. Because of this, Kessler is now in maintenance mode and not all functionalities might be working for a few days ⚠️
 
 <div align="left">
-  <a href="https://github.com/kesslerlib/kessler"> <img height="120px" src="docs/source/_static/kessler_logo.png"></a>
+  <a href="https://github.com/kesslerlib/kessler"> <img height="120px" src="docs/_static/kessler_logo.png"></a>
 </div>
 
 -----------------------------------------
