@@ -11,27 +11,23 @@ For more details on the model and results, check out our publications listed in 
 
 The authors are [Giacomo Acciarini](https://www.esa.int/gsp/ACT/team/giacomo_acciarini/), [Atılım Güneş Baydin](https://gbaydin.github.io/), [Dario Izzo](https://www.esa.int/gsp/ACT/team/dario_izzo/). The main developer is Giacomo Acciarini (giacomo.acciarini@gmail.com).
 
-   :maxdepth: 1
-   :caption: Getting started
 
-   install.rst
-   capabilities
-   credits
+```{toctree}
+:maxdepth: 1
+:caption: Getting Started
 
+install
+capabilities
+credits
+```
 
-   :maxdepth: 1
-   :caption: Tutorials
+```{toctree}
+:maxdepth: 1
+:caption: Contents
 
-   notebooks/basics
-   notebooks/cdms_analysis_and_plotting
-   notebooks/LSTM_training
-   notebooks/probabilistic_programming_module
-
-
-   :maxdepth: 1
-   :caption: API documentation
-
-   api
+tutorials
+api
+```
 
 Indices and tables
 ==================
