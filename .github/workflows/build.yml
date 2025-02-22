@@ -35,7 +35,8 @@ jobs:
         pip install sphinx-book-theme
         pip install myst-nb
         cd docs
-        make html linkcheck    
+        sphinx-apidoc -o _autosummary ../kessler  # Generate API documentation
+        make html linkcheck 
     - name: Test
       run: |
         coverage run -m pytest
