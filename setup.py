@@ -2,7 +2,7 @@ import os
 import sys
 from setuptools import setup, find_packages
 PACKAGE_NAME = 'kessler'
-MINIMUM_PYTHON_VERSION = 3, 5
+MINIMUM_PYTHON_VERSION = 3, 9
 
 
 def check_python_version():
@@ -30,9 +30,8 @@ setup(
     author='ESA FDL Europe Constellations Team',
     # author_email='',
     packages=find_packages(),
-    install_requires=['numpy', 'matplotlib', 'torch>=1.5.1', 'pykep==2.5', 'skyfield>=1.26', 'kessler', 'pandas'],
-    extras_require={'dev': ['pytest', 'coverage', 'pytest-xdist'],
-                    'docs': ['sphinx==3.2.1', 'sphinx_rtd_theme==0.5.2', 'jupyter-sphinx==0.3.2', 'myst-nb==0.12.3']},
+    install_requires=['numpy', 'matplotlib', 'torch>=1.5.1', 'dsgp4', 'skyfield>=1.26', 'pyprob', 'pandas'],
+    extras_require={'dev': ['pytest', 'coverage', 'pytest-xdist', 'docker', 'sgp4>=2.20']},
     # url='https://github.com/kessler/kessler',
     classifiers=['License :: OSI Approved :: BSD License', 'Programming Language :: Python :: 3'],
     license='BSD'

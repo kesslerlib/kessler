@@ -5,37 +5,37 @@ Kessler is a Python package for machine learning applied to spacecraft collision
 
 The package comprises a Deep Learning module, where a Bayesian recurrent neural network can be trained with existing collections of CDM data and then deployed in order to predict the contents of future CDMs received up to now, with associated uncertainty estimates about all predictions.
 
-Kessler also includes a novel generative model of conjunction events and CDM sequences implemented using probabilistic programming and simulating the CDM generation process, which we will soon release to the public: stay tuned!
+Kessler also includes a novel generative model of conjunction events and CDM sequences implemented using probabilistic programming and simulating the CDM generation process.
 
-The documentation is currently a work in progress.
+For more details on the model and results, check out our publications listed in the README of the repository. 
 
-.. toctree::
+The authors are [Giacomo Acciarini](https://www.esa.int/gsp/ACT/team/giacomo_acciarini/), [Atılım Güneş Baydin](https://gbaydin.github.io/), [Dario Izzo](https://www.esa.int/gsp/ACT/team/dario_izzo/). The main developer is Giacomo Acciarini (giacomo.acciarini@gmail.com).
+
    :maxdepth: 1
    :caption: Getting started
 
-   install
+   install.rst
    capabilities
    credits
 
 
-.. toctree::
    :maxdepth: 1
    :caption: Tutorials
 
-   tutorials/basics
-   tutorials/cdms_analysis_and_plotting
-   tutorials/LSTM_training
-   tutorials/probabilistic_programming_module
+   notebooks/basics
+   notebooks/cdms_analysis_and_plotting
+   notebooks/LSTM_training
+   notebooks/probabilistic_programming_module
 
 
-.. toctree::
    :maxdepth: 1
    :caption: API documentation
 
-   kessler package <_autosummary/kessler>
+   api
 
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
+

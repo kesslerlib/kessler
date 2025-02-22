@@ -9,8 +9,11 @@
 # GNU General Public License version 3. See LICENSE in root of repository.
 
 
-__version__ = '0.1.2.dev3'
+__version__ = '1.0.0'
 
 from .util import seed
 from .cdm import ConjunctionDataMessage, CDM
 from .event import Event, EventDataset
+from .observation_model import GNSS, Radar
+from . import plot, model
+from . import util
