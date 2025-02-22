@@ -10,16 +10,13 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-project = 'Kessler'
-copyright = "2020, 2021, 2022, 2023, 2024, 2025, Kessler contributors"
+project = 'kessler'
+copyright = "2020-2025, Kessler contributors"
 author = 'Giacomo Acciarini, Atılım Güneş Baydin, Francesco Pinto'
 
 
 # The full version, including alpha/beta/rc tags
 import kessler
-import sys
-import os
-sys.path.insert(0, os.path.abspath('../'))  # Add the root directory of your repo
 
 release = kessler.__version__
 
@@ -30,24 +27,12 @@ release = kessler.__version__
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["myst_nb", "sphinx.ext.autodoc", "sphinx.ext.doctest", "sphinx.ext.intersphinx", "sphinx.ext.autosummary","sphinx.ext.napoleon"]
-
-
-# build the templated autosummary files
-autosummary_generate = True
-autosummary_imported_members = False
-napoleon_google_docstring = True
-numpydoc_show_class_members = False
-panels_add_bootstrap_css = False
-
-autosectionlabel_prefix_document = True
-
-# katex options
-#
-#
-katex_prerender = True
-
-napoleon_use_ivar = True
+extensions = ["myst_nb",
+              "sphinx.ext.intersphinx",
+              "sphinx.ext.autodoc",
+              "sphinx.ext.autosummary",
+              "sphinx.ext.doctest",
+              ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -64,7 +49,7 @@ autoclass_content = 'both'
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", ".DS_Store",'jupyter_execute/**/*.ipynb','jupyter_execute/*.ipynb']
+exclude_patterns = ["_build", ".DS_Store"]
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -97,7 +82,12 @@ html_theme_options = {
 nb_execution_mode = "force"
 
 nb_execution_excludepatterns = ['basics.ipynb','cdms_analysis_and_plotting.ipynb','LSTM_training.ipynb']
-#autosummary_ignore_module = ['']
+
+# Force printing traceback to stderr on execution error.
+nb_execution_show_tb = True
+
+# Set a longer timeout for notebook execution.
+nb_execution_timeout = 120
 
 latex_engine = "xelatex"
 
