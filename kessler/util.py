@@ -441,30 +441,37 @@ def progress_bar_end(message=None):
         print(message)
 
 def get_ccsds_time_format(time_string):
-    '''
-    Adapted by Andrew Ng, 18/3/2022.
-    Original MATLAB source code found at: https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/getCcsdsTimeFormat.m
-    get_ccsds_time_format  -  process and outputs the format of the time string extracted from the CDM. 
-    The CCSDS time format is required to be of the general form
-    yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]
-    (1) The date and time fields are separated by a "T".
-    (2) The date field has a four digit year followed by either a two digit 
-        month and two digit day, or a three digit day-of-year.  
-    (3) The year, month, day, and day-of-year fields are separated by a dash.
-    (4) The hours, minutes and seconds fields are each two digits separated 
-        by colons.
-    (5) The fraction of seconds is optional and can have any number of
-        digits.
-    (6) If a fraction of seconds is provided, it is separated from the two
-        digit seconds by a period.
-    (7) The time string can end with an optional "Z" time zone indicator
+    """
+    Adapted by Andrew Ng, 18/3/2022.  
+    Original MATLAB source code:  
+    `NASA CARA Analysis Tools <https://github.com/nasa/CARA_Analysis_Tools>`_  
+
+    Processes and outputs the format of the time string extracted from the CDM.  
+    The CCSDS time format is required to be of the general form:  
+
+    .. code-block:: none
+
+        yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]
+
+    Format Rules:
+        1. The date and time fields are separated by a **"T"**.
+        2. The date field consists of a **four-digit year**, followed by either:
+            - A two-digit month and a two-digit day, or  
+            - A three-digit day-of-year.
+        3. The year, month, day, and day-of-year fields are separated by a **dash ("-")**.
+        4. The hours, minutes, and seconds fields are **two-digit values** separated by **colons (":")**.
+        5. The fraction of seconds is optional and can have **any number of digits**.
+        6. If a fraction of seconds is provided, it is separated from the two-digit seconds by a **period (".")**.
+        7. The time string can end with an optional **"Z"** time zone indicator.
 
     Args:
-        - time_string(``str``): Original time string stored in CDM.
-    Returns: 
-        - time_format(``str``): Outputs the format of the time string. It must be of the form yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z], otherwise it is invalid and a RuntimeError is raised.
+        time_string (str): Original time string stored in CDM.
 
-    '''
+    Returns:
+        str: Outputs the format of the time string.  
+        Must be of the form **yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]**, otherwise a `RuntimeError` is raised.
+    """
+
     time_format = []
     numT = time_string.count('T')
     if numT == -1:
@@ -508,7 +515,7 @@ def get_ccsds_time_format(time_string):
 def doy_2_date(value, doy, year, idx):
     '''
     Written by Andrew Ng, 18/03/2022, 
-    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/DOY2Date.m
+    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools
     Use the datetime python package. 
     doy_2_date  - Converts Day of Year (DOY) date format to date format.
     
