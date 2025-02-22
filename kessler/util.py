@@ -515,7 +515,7 @@ def get_ccsds_time_format(time_string):
 def doy_2_date(value, doy, year, idx):
     '''
     Written by Andrew Ng, 18/03/2022, 
-    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools/blob/master/two-dimension_Pc/Main/TransformationCode/TimeTransformations/DOY2Date.m
+    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools
     Use the datetime python package. 
     doy_2_date  - Converts Day of Year (DOY) date format to date format.
     
