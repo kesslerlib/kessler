@@ -96,7 +96,8 @@ nb_execution_excludepatterns = [
     "LSTM_training.ipynb",
     "basics.ipynb",
     "probabilistic_programming_module.ipynb",
-    "plotting.ipynb"
+    "plotting.ipynb",
+    "kelvins_dataset.ipynb"
 ]
 
 latex_engine = "xelatex"
