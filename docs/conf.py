@@ -95,7 +95,8 @@ nb_execution_mode = "force"
 nb_execution_excludepatterns = [
     "LSTM_training.ipynb",
     "basics.ipynb",
-    "probabilistic_programming_module.ipynb"
+    "probabilistic_programming_module.ipynb",
+    "plotting.ipynb"
 ]
 
 latex_engine = "xelatex"
