@@ -29,7 +29,7 @@ Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in col
 
 ## Documentation and roadmap
 
-To get started, follow the documentation examples.
+To get started, follow the [documentation](https://kesslerlib.github.io/kessler/) examples.
 
 ## Authors
 
