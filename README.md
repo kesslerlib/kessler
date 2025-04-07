@@ -29,10 +29,7 @@ Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in col
 
 ## Documentation and roadmap
 
-To get started, follow the Jupyter notebooks in the [notebooks](https://github.com/kesslerlib/kessler/-/tree/master/notebooks) folder.
-
-The upcoming version of Kessler will inclue the probabilistic programming model of conjunctions, which is excluded from this initial release. 
-
+To get started, follow the documentation examples.
 
 ## Authors
 
