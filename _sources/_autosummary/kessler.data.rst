@@ -10,3 +10,13 @@
    
       kelvins_to_event_dataset
    
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      CDM
+      Event
+      EventDataset
+      datetime
+      timedelta
+   

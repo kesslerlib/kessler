@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Analyze and plot loaded CDMs &#8212; kessler 1.0.0 documentation</title>
+    <title>Plotting Functionalities &#8212; kessler 1.0.0 documentation</title>
   
   
   
@@ -41,11 +41,11 @@
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/cdms_analysis_and_plotting';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'notebooks/plotting';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Plotting Functionalities" href="plotting.html" />
-    <link rel="prev" title="Basics: loading CDMs" href="basics.html" />
+    <link rel="next" title="LSTM training" href="LSTM_training.html" />
+    <link rel="prev" title="Analyze and plot loaded CDMs" href="cdms_analysis_and_plotting.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -165,8 +165,8 @@
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="basics.html">Basics: loading CDMs</a></li>
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Analyze and plot loaded CDMs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="plotting.html">Plotting Functionalities</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cdms_analysis_and_plotting.html">Analyze and plot loaded CDMs</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Plotting Functionalities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="LSTM_training.html">LSTM training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="probabilistic_programming_module.html">Probabilistic Programming Module</a></li>
 </ul>
@@ -236,7 +236,7 @@
       
       
       
-      <li><a href="https://mybinder.org/v2/gh/kesslerlib/kessler/master?urlpath=lab/tree/doc/notebooks/cdms_analysis_and_plotting.ipynb" target="_blank"
+      <li><a href="https://mybinder.org/v2/gh/kesslerlib/kessler/master?urlpath=lab/tree/doc/notebooks/plotting.ipynb" target="_blank"
    class="btn btn-sm dropdown-item"
    title="Launch on Binder"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -284,7 +284,7 @@
       
       
       
-      <li><a href="https://github.com/kesslerlib/kessler/issues/new?title=Issue%20on%20page%20%2Fnotebooks/cdms_analysis_and_plotting.html&body=Your%20issue%20content%20here." target="_blank"
+      <li><a href="https://github.com/kesslerlib/kessler/issues/new?title=Issue%20on%20page%20%2Fnotebooks/plotting.html&body=Your%20issue%20content%20here." target="_blank"
    class="btn btn-sm btn-source-issues-button dropdown-item"
    title="Open an issue"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -314,7 +314,7 @@
       
       
       
-      <li><a href="../_sources/notebooks/cdms_analysis_and_plotting.ipynb" target="_blank"
+      <li><a href="../_sources/notebooks/plotting.ipynb" target="_blank"
    class="btn btn-sm btn-download-source-button dropdown-item"
    title="Download source file"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -385,7 +385,9 @@ document.write(`
   </button>
 `);
 </script>
-
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
 </div></div>
       
     </div>
@@ -396,11 +398,22 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Analyze and plot loaded CDMs</h1>
+    <h1>Plotting Functionalities</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
             
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#imports">Imports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#first-let-s-load-the-population">First, let’s load the population</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotting-priors-from-tles">Plotting priors from TLEs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotting-orbit-from-trace">Plotting Orbit from Trace</a></li>
+</ul>
+            </nav>
         </div>
     </div>
 </div>
@@ -410,109 +423,134 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section class="tex2jax_ignore mathjax_ignore" id="analyze-and-plot-loaded-cdms">
-<h1>Analyze and plot loaded CDMs<a class="headerlink" href="#analyze-and-plot-loaded-cdms" title="Link to this heading">#</a></h1>
-<p>In this tutorial, we show how to analyze and plot CDM data.</p>
-<p>We assume that data has been loaded (see <code class="docutils literal notranslate"><span class="pre">Basics</span></code> on how to do it) and that events are stored in the <code class="docutils literal notranslate"><span class="pre">events</span></code> variable.</p>
+  <section class="tex2jax_ignore mathjax_ignore" id="plotting-functionalities">
+<h1>Plotting Functionalities<a class="headerlink" href="#plotting-functionalities" title="Link to this heading">#</a></h1>
+<p>In this tutorial, we shed some light on all the plotting functionalities of Kessler, and how to use them..</p>
+<p>We tackle the following:</p>
+<ul class="simple">
+<li><p>TLEs loading and plotting of their distributions</p></li>
+<li><p>plot distributions from synthetically generated CDMs (these are generated using the probabilistic programming module, see the related tutorial <code class="docutils literal notranslate"><span class="pre">probabilistic_programming_module.ipynb</span></code> for a guide on how to use it)</p></li>
+<li><p>plot orbits from trace of synthetic CDMs</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">**</span><span class="n">Note</span><span class="o">**</span><span class="p">:</span> <span class="n">A</span> <span class="n">probabilistic</span> <span class="n">program</span> <span class="s1">&#39;trace&#39;</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">record</span> <span class="n">of</span> <span class="nb">all</span> <span class="n">the</span> <span class="n">random</span> <span class="n">variables</span> <span class="n">sampled</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">program</span> <span class="n">execution</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>Let’s dive into these functionalities..</p>
+<section id="imports">
+<h2>Imports<a class="headerlink" href="#imports" title="Link to this heading">#</a></h2>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kessler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">kessler</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventDataset</span>
-<span class="n">path_to_cdms_folder</span><span class="o">=</span><span class="s1">&#39;synthetic_cdms&#39;</span>
-<span class="n">events</span><span class="o">=</span><span class="n">kessler</span><span class="o">.</span><span class="n">EventDataset</span><span class="p">(</span><span class="n">cdms_dir</span><span class="o">=</span><span class="n">path_to_cdms_folder</span><span class="p">,</span><span class="n">cdm_extension</span><span class="o">=</span><span class="s1">&#39;.kvn&#39;</span><span class="p">)</span>
-<span class="c1">#events=EventDataset(path_to_cdms_folder)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loading CDMS (with extension .kvn) from directory: synthetic_cdms
-Loaded 14 CDMs grouped into 2 events
+<span class="kn">import</span><span class="w"> </span><span class="nn">dsgp4</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
 </pre></div>
 </div>
 </div>
 </div>
-<p>Then, we can first inspect some descriptive statistics and save it to a file:</p>
+</section>
+<section id="first-let-s-load-the-population">
+<h2>First, let’s load the population<a class="headerlink" href="#first-let-s-load-the-population" title="Link to this heading">#</a></h2>
+<p>This is here a file of TLEs (e.g. from Space-Track or Celestrack).. we use <a class="reference external" href="https://github.com/esa/dSGP4"><code class="docutils literal notranslate"><span class="pre">dsgp4</span></code></a> to handle TLEs</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="n">events_stats</span><span class="o">=</span><span class="n">events</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">describe</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Converting EventDataset to DataFrame
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Time spent  | Time remain.| Progress             | Events | Events/sec
-0d:00:00:00 | 0d:00:00:00 | ##########---------- | 1/2 | 102.79       
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0d:00:00:00 | 0d:00:00:00 | #################### | 2/2 | 83.51       
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tles</span><span class="o">=</span><span class="n">dsgp4</span><span class="o">.</span><span class="n">tle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;tles_sample_population.txt&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 </div>
-<p>Now, we can proceed in plotting events features. First, we start by plotting a single feature of a specific event (e.g. the 31st one):</p>
+<p>Let’s plot the distribution of the TLE elements from the loaded file</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plot_feature</span><span class="p">(</span><span class="s1">&#39;OBJECT1_CT_T&#39;</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s1">&#39;single_feature_single_event.pdf&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_tles</span><span class="p">(</span><span class="n">tles</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Plotting to file: single_feature_single_event.pdf
-</pre></div>
-</div>
-<img alt="../_images/badf97690256dc1af50df4ffd523572cf3e6cf6a6d56e8ddcc5fbd87bf6ca526.png" src="../_images/badf97690256dc1af50df4ffd523572cf3e6cf6a6d56e8ddcc5fbd87bf6ca526.png" />
+<img alt="../_images/df996ae0e463739924a1db5e4705694dbc38a20c48fb5ec8208444d22b15328d.png" src="../_images/df996ae0e463739924a1db5e4705694dbc38a20c48fb5ec8208444d22b15328d.png" />
 </div>
 </div>
-<p>But we can also plot multiple features of multiple events in the same figure:</p>
+</section>
+<section id="plotting-priors-from-tles">
+<h2>Plotting priors from TLEs<a class="headerlink" href="#plotting-priors-from-tles" title="Link to this heading">#</a></h2>
+<p>We can fit mixtures to the prior distribution and for instance use them as priors in the probabilistic programming module.</p>
+<p>Here, we show how to display the prior :</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;OBJECT1_CT_T&#39;</span><span class="p">,</span> <span class="s1">&#39;OBJECT2_CT_T&#39;</span><span class="p">]</span>
-<span class="n">events</span><span class="o">.</span><span class="n">plot_features</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">file_name</span><span class="o">=</span><span class="s1">&#39;multi_features_multi_events.pdf&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">priors</span><span class="o">=</span><span class="n">kessler</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">create_priors_from_tles</span><span class="p">(</span><span class="n">tles</span><span class="p">,</span> <span class="n">mixture_components</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mean_motion&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;eccentricity&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;inclination&#39;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span> <span class="s1">&#39;b_star&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
+<span class="c1">#we also extract the mean motion alues from the TLEs, to then have the minimum and maximum values for the mean motion priors (else the priors will be wide and you cannot see anything)</span>
+<span class="n">mean_motions</span><span class="o">=</span><span class="p">[</span><span class="n">el</span><span class="o">.</span><span class="n">mean_motion</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">tles</span><span class="p">]</span>
 </pre></div>
 </div>
 </div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Plotting to file: multi_features_multi_events.pdf
-</pre></div>
 </div>
-<img alt="../_images/e9779726786ded903561fd976920a74137b87db8b437b8039be11139f4a4007d.png" src="../_images/e9779726786ded903561fd976920a74137b87db8b437b8039be11139f4a4007d.png" />
-</div>
-</div>
-<p>Furthermore, we can leverage a built-in function to plot the covariance matrix evolution of a specific event (all the covariance matrix elements will be plotted in multiple sub-figures):</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">events</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">plot_uncertainty</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="s1">&#39;uncertainties_single_event.pdf&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_mix</span><span class="p">(</span><span class="n">mix</span><span class="o">=</span><span class="n">priors</span><span class="p">[</span><span class="s1">&#39;mean_motion_prior&#39;</span><span class="p">],</span>              
+                      <span class="n">min_val</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span>
+                      <span class="n">max_val</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span>
+                      <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Mean Motion&#39;</span><span class="p">,</span>
+                      <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span>
+                      <span class="n">linewidth</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span>
+                      <span class="n">color</span><span class="o">=</span><span class="s1">&#39;dodgerblue&#39;</span><span class="p">,</span>
+                      <span class="n">resolution</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Plotting to file: uncertainties_single_event.pdf
+<img alt="../_images/10b021ceba9fe7526359a52fad77984841cae81dd53dd7f8ff34810db667c55b.png" src="../_images/10b021ceba9fe7526359a52fad77984841cae81dd53dd7f8ff34810db667c55b.png" />
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;Mean Motion&#39;, ylabel=&#39;Probability&#39;&gt;
 </pre></div>
 </div>
-<img alt="../_images/e73633fabf3ade5ff61c5d7b9657a7c678269678ce0841bf9622daac5fdacfc0.png" src="../_images/e73633fabf3ade5ff61c5d7b9657a7c678269678ce0841bf9622daac5fdacfc0.png" />
 </div>
 </div>
-<p>And we can do the same as above, but for all the events:</p>
+<p>Or in log-scale</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">events</span><span class="o">.</span><span class="n">plot_uncertainty</span><span class="p">(</span><span class="n">file_name</span><span class="o">=</span><span class="s1">&#39;uncertainties_multi_events.pdf&#39;</span><span class="p">)</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_mix</span><span class="p">(</span><span class="n">mix</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="s1">&#39;mean_motion_prior&#39;</span><span class="p">],</span> 
+                      <span class="n">min_val</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span> 
+                      <span class="n">max_val</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span> 
+                      <span class="n">log_yscale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Mean Motion&#39;</span><span class="p">,</span>
+                      <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span>
+                      <span class="n">linewidth</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span>
+                      <span class="n">color</span><span class="o">=</span><span class="s1">&#39;dodgerblue&#39;</span><span class="p">,</span>
+                      <span class="n">resolution</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Plotting to file: uncertainties_multi_events.pdf
+<img alt="../_images/f811b8c465d4e4773d69aa0881fedd87548e348471e050d9588284b17b5f7f5b.png" src="../_images/f811b8c465d4e4773d69aa0881fedd87548e348471e050d9588284b17b5f7f5b.png" />
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;Mean Motion&#39;, ylabel=&#39;Probability&#39;&gt;
 </pre></div>
 </div>
-<img alt="../_images/9694d28ded011b3fe35d955915ae2065282c4b3f8d58009ec4353f5cc6fc8ccb.png" src="../_images/9694d28ded011b3fe35d955915ae2065282c4b3f8d58009ec4353f5cc6fc8ccb.png" />
 </div>
 </div>
-<p>Note that all these plotting methods support an optional <code class="docutils literal notranslate"><span class="pre">apply_func</span></code> argument that allows to apply a custom lambda function to the data before plotting.</p>
+</section>
+<section id="plotting-orbit-from-trace">
+<h2>Plotting Orbit from Trace<a class="headerlink" href="#plotting-orbit-from-trace" title="Link to this heading">#</a></h2>
+<p>Let’s load the generated trace:</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;trace.pickle&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">trace</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_trace_orbit</span><span class="p">(</span><span class="n">trace</span><span class="o">=</span><span class="n">trace</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;y&#39;, ylabel=&#39;z&#39;&gt;
+</pre></div>
+</div>
+<img alt="../_images/0c0666f520a8811b6f7085a2dcdfc966aabbc8d4506ce652ec7bdf62e57a28e0.png" src="../_images/0c0666f520a8811b6f7085a2dcdfc966aabbc8d4506ce652ec7bdf62e57a28e0.png" />
+</div>
+</div>
+</section>
 </section>
 
 
@@ -527,20 +565,20 @@ Loaded 14 CDMs grouped into 2 events
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="basics.html"
+       href="cdms_analysis_and_plotting.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Basics: loading CDMs</p>
+        <p class="prev-next-title">Analyze and plot loaded CDMs</p>
       </div>
     </a>
     <a class="right-next"
-       href="plotting.html"
+       href="LSTM_training.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Plotting Functionalities</p>
+        <p class="prev-next-title">LSTM training</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -550,6 +588,24 @@ Loaded 14 CDMs grouped into 2 events
             </div>
             
             
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#imports">Imports</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#first-let-s-load-the-population">First, let’s load the population</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotting-priors-from-tles">Plotting priors from TLEs</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#plotting-orbit-from-trace">Plotting Orbit from Trace</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
               
             
           </div>

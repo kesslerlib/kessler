@@ -12,6 +12,8 @@ These tutorials include some basic examples on how to use kessler
   
   notebooks/basics.ipynb
   notebooks/cdms_analysis_and_plotting.ipynb
+  notebooks/plotting.ipynb
+
 
 Advanced
 ^^^^^^^^^^^

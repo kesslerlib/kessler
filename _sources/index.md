@@ -9,7 +9,7 @@ Kessler also includes a novel generative model of conjunction events and CDM seq
 
 For more details on the model and results, check out our publications listed in the README of the repository. 
 
-The authors are [Giacomo Acciarini](https://www.esa.int/gsp/ACT/team/giacomo_acciarini/), [Atılım Güneş Baydin](https://gbaydin.github.io/), [Dario Izzo](https://www.esa.int/gsp/ACT/team/dario_izzo/). The main developer is Giacomo Acciarini (giacomo.acciarini@gmail.com).
+The authors are [Giacomo Acciarini](https://www.esa.int/gsp/ACT/team/giacomo_acciarini/), [Atılım Güneş Baydin](https://gbaydin.github.io/), Francesco Pinto, and the FDL Europe Constellation team.
 
 
 ```{toctree}

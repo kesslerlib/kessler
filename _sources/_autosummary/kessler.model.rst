@@ -15,6 +15,15 @@
 
    .. autosummary::
    
+      Bernoulli
+      Categorical
       Conjunction
+      ConjunctionDataMessage
       ConjunctionSimplified
+      Mixture
+      Model
+      Normal
+      TLE
+      TruncatedNormal
+      Uniform
    

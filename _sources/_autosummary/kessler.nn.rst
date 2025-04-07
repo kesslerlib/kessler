@@ -8,6 +8,10 @@
 
    .. autosummary::
    
+      ConjunctionDataMessage
+      DataLoader
+      Dataset
       DatasetEventDataset
+      EventDataset
       LSTMPredictor
    

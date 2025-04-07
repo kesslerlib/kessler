@@ -166,6 +166,7 @@
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="basics.html">Basics: loading CDMs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="cdms_analysis_and_plotting.html">Analyze and plot loaded CDMs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="plotting.html">Plotting Functionalities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="LSTM_training.html">LSTM training</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">Probabilistic Programming Module</a></li>
 </ul>
@@ -235,7 +236,7 @@
       
       
       
-      <li><a href="https://mybinder.org/v2/gh/kesslerlib/kessler/master?urlpath=lab/tree/docs/notebooks/probabilistic_programming_module.ipynb" target="_blank"
+      <li><a href="https://mybinder.org/v2/gh/kesslerlib/kessler/master?urlpath=lab/tree/doc/notebooks/probabilistic_programming_module.ipynb" target="_blank"
    class="btn btn-sm dropdown-item"
    title="Launch on Binder"
    data-bs-placement="left" data-bs-toggle="tooltip"
@@ -411,7 +412,747 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="probabilistic-programming-module">
 <h1>Probabilistic Programming Module<a class="headerlink" href="#probabilistic-programming-module" title="Link to this heading">#</a></h1>
-<p>(Coming soon)</p>
+<p>Here, we discuss how to use the probabilistic programming module to synthetically generate CDMs.</p>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kessler</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pyprob</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">dsgp4</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#we seed everything for reproducibility</span>
+<span class="n">pyprob</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="c1">#we define the observing instruments</span>
+<span class="c1">#GNSS first:</span>
+<span class="n">gnss_cov_rtn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1.115849341564346</span><span class="p">,</span> <span class="mf">0.059309835843067</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span>
+<span class="n">instrument_characteristics_gnss</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;bias_xyz&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span>
+       <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]]),</span> <span class="s1">&#39;covariance_rtn&#39;</span><span class="p">:</span> <span class="n">gnss_cov_rtn</span><span class="p">}</span>
+<span class="n">gnss</span> <span class="o">=</span> <span class="n">kessler</span><span class="o">.</span><span class="n">GNSS</span><span class="p">(</span><span class="n">instrument_characteristics_gnss</span><span class="p">)</span>
+
+<span class="c1">#and then radar:</span>
+<span class="n">radar_cov_rtn</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.9628939405514678</span><span class="p">,</span> <span class="mf">2.2307686944695706</span><span class="p">,</span> <span class="mf">0.9660907831563862</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">,</span> <span class="mf">1e-9</span><span class="p">])</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">instrument_characteristics_radar</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;bias_xyz&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span>
+       <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]]),</span> <span class="s1">&#39;covariance_rtn&#39;</span><span class="p">:</span> <span class="n">radar_cov_rtn</span><span class="p">}</span>
+<span class="n">radar</span> <span class="o">=</span> <span class="n">kessler</span><span class="o">.</span><span class="n">Radar</span><span class="p">(</span><span class="n">instrument_characteristics_radar</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tles</span><span class="o">=</span><span class="n">dsgp4</span><span class="o">.</span><span class="n">tle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;tles_sample_population.txt&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;loaded </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">tles</span><span class="p">)</span><span class="si">}</span><span class="s2"> TLEs&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>loaded 20 TLEs
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># tles=dsgp4.tle.load(&#39;tles_sample_population.txt&#39;)</span>
+
+<span class="c1"># tles_filtered=[]</span>
+<span class="c1"># for tle in tqdm(tles):</span>
+<span class="c1">#     try: </span>
+<span class="c1">#         dsgp4.initialize_tle(tle)</span>
+<span class="c1">#         if tle.apogee_alt()&lt;560*1e3:</span>
+<span class="c1">#             tles_filtered.append(tle)</span>
+<span class="c1">#     except:</span>
+<span class="c1">#         continue</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">conjunction_model</span> <span class="o">=</span> <span class="n">kessler</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">ConjunctionSimplified</span><span class="p">(</span><span class="n">time0</span><span class="o">=</span><span class="mf">60727.13899462018</span><span class="p">,</span>
+                                                        <span class="c1"># max_duration_days=7.0,</span>
+                                                        <span class="c1"># time_resolution=600000.0,</span>
+                                                        <span class="c1"># time_upsample_factor=100,</span>
+                                                        <span class="n">miss_dist_threshold</span><span class="o">=</span><span class="mf">5000.0</span><span class="p">,</span>
+                                                        <span class="n">prior_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                                        <span class="n">t_prob_new_obs</span><span class="o">=</span><span class="mf">0.96</span><span class="p">,</span>
+                                                        <span class="n">c_prob_new_obs</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
+                                                        <span class="n">cdm_update_every_hours</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span>
+                                                        <span class="n">mc_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                                        <span class="n">mc_upsample_factor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                                        <span class="n">pc_method</span><span class="o">=</span><span class="s1">&#39;MC&#39;</span><span class="p">,</span>
+                                                        <span class="n">collision_threshold</span><span class="o">=</span><span class="mi">70</span><span class="p">,</span>
+                                                        <span class="c1"># likelihood_t_stddev=[371.068006, 0.0999999999, 0.172560879],</span>
+                                                        <span class="c1"># likelihood_c_stddev=[371.068006, 0.0999999999, 0.172560879],</span>
+                                                        <span class="n">likelihood_time_to_tca_stddev</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span>
+                                                        <span class="n">t_observing_instruments</span><span class="o">=</span><span class="p">[</span><span class="n">gnss</span><span class="p">],</span>
+                                                        <span class="n">c_observing_instruments</span><span class="o">=</span><span class="p">[</span><span class="n">radar</span><span class="p">],</span>
+                                                        <span class="n">tles</span><span class="o">=</span><span class="n">tles</span><span class="p">,)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trace</span><span class="o">=</span><span class="n">conjunction_model</span><span class="o">.</span><span class="n">get_conjunction</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>After 835 iterations, generated event with 7 CDMs
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">trace</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;cdms&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>[CCSDS_CDM_VERS                        = 1.0
+ CREATION_DATE                         = 2025-02-21T03:20:09.135184
+ ORIGINATOR                            = KESSLER_SOFTWARE
+ MESSAGE_ID                            = KESSLER_SOFTWARE_65189812-1387-11f0-a1a9-f2a9f71f7e19
+ TCA                                   = 2025-02-23T13:01:31.347952
+ MISS_DISTANCE                         = 620.5391897367289
+ RELATIVE_SPEED                        = 8.500887282727685
+ RELATIVE_POSITION_R                   = -30.90865879375995
+ RELATIVE_POSITION_T                   = -580.2512313942899
+ RELATIVE_POSITION_N                   = -217.76604252292663
+ RELATIVE_VELOCITY_R                   = -0.1061598754408795
+ RELATIVE_VELOCITY_T                   = -5.096198697553176
+ RELATIVE_VELOCITY_N                   = -6.803129684898339
+ COLLISION_PROBABILITY                 = 0.0
+ COLLISION_PROBABILITY_METHOD          = MC
+ OBJECT                                = OBJECT1
+ OBJECT_DESIGNATOR                     = 76126AP
+ CATALOG_NAME                          = 9827
+ OBJECT_NAME                           = COSMOS 886 DEB
+ INTERNATIONAL_DESIGNATOR              = 76126AP
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -3057.1658183321683
+ Y                                     = 5358.7253886045755
+ Z                                     = -3068.051977040681
+ X_DOT                                 = -4.151617390539343
+ Y_DOT                                 = 1.1640827544089714
+ Z_DOT                                 = 6.006628956628028
+ CR_R                                  = 1.000E-18
+ CT_R                                  = 0.0
+ CT_T                                  = 1.2451197530695846
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.0035176566277315556
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18
+ OBJECT                                = OBJECT2
+ OBJECT_DESIGNATOR                     = 65082PT
+ CATALOG_NAME                          = 3462
+ OBJECT_NAME                           = TITAN 3C TRANSTAGE DEB
+ INTERNATIONAL_DESIGNATOR              = 65082PT
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2873.0254251831598
+ Y                                     = 5114.827628051727
+ Z                                     = -3608.1214947949693
+ X_DOT                                 = -6.040577212554574
+ Y_DOT                                 = -3.8350893476292636
+ Z_DOT                                 = -0.6043614138577811
+ CR_R                                  = 46.757440226303586
+ CT_R                                  = -8957.86420553608
+ CT_T                                  = 1782174.497494517
+ CN_R                                  = 1.1154153322347222
+ CN_T                                  = -221.62762382182441
+ CN_N                                  = 0.02756389817328491
+ CRDOT_R                               = 9.887628183367848
+ CRDOT_T                               = -1966.8132587193988
+ CRDOT_N                               = 0.24459048138750927
+ CRDOT_RDOT                            = 2.1705829316989433
+ CTDOT_R                               = -0.020741444575423765
+ CTDOT_T                               = 3.7608189659674354
+ CTDOT_N                               = -0.00046942550119046883
+ CTDOT_RDOT                            = -0.004152329619211625
+ CTDOT_TDOT                            = 1.003E-05
+ CNDOT_R                               = -0.020420438341128506
+ CNDOT_T                               = 4.060465224359891
+ CNDOT_N                               = -0.0005049694708575033
+ CNDOT_RDOT                            = -0.00448115311942769
+ CNDOT_TDOT                            = 8.580E-06
+ CNDOT_NDOT                            = 9.251E-06,
+ CCSDS_CDM_VERS                        = 1.0
+ CREATION_DATE                         = 2025-02-21T11:21:11.190946
+ ORIGINATOR                            = KESSLER_SOFTWARE
+ MESSAGE_ID                            = KESSLER_SOFTWARE_6625ca9a-1387-11f0-a1a9-f2a9f71f7e19
+ TCA                                   = 2025-02-23T13:01:31.347952
+ MISS_DISTANCE                         = 508.99675100193383
+ RELATIVE_SPEED                        = 8.498488230564568
+ RELATIVE_POSITION_R                   = -21.006261581498034
+ RELATIVE_POSITION_T                   = -456.9140689176953
+ RELATIVE_POSITION_N                   = -223.3068810627428
+ RELATIVE_VELOCITY_R                   = -0.15315070756415647
+ RELATIVE_VELOCITY_T                   = -5.093202028621964
+ RELATIVE_VELOCITY_N                   = -6.801480733006467
+ COLLISION_PROBABILITY                 = 0.0
+ COLLISION_PROBABILITY_METHOD          = MC
+ OBJECT                                = OBJECT1
+ OBJECT_DESIGNATOR                     = 76126AP
+ CATALOG_NAME                          = 9827
+ OBJECT_NAME                           = COSMOS 886 DEB
+ INTERNATIONAL_DESIGNATOR              = 76126AP
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2983.775770553104
+ Y                                     = 5341.949445221998
+ Z                                     = -3166.275669086231
+ X_DOT                                 = -4.213317697027176
+ Y_DOT                                 = 1.2643825344524717
+ Z_DOT                                 = 5.943982757901735
+ CR_R                                  = 0.9871366461162197
+ CT_R                                  = 4.24530729267896
+ CT_T                                  = 47.13974840899963
+ CN_R                                  = 0.004528645728181294
+ CN_T                                  = 0.006987385309548018
+ CN_N                                  = 2.726E-05
+ CRDOT_R                               = -0.004046795750464248
+ CRDOT_T                               = -0.049152895893671306
+ CRDOT_N                               = -4.659E-06
+ CRDOT_RDOT                            = 5.152E-05
+ CTDOT_R                               = -0.0010586010360003984
+ CTDOT_T                               = -0.004214330220863674
+ CTDOT_N                               = -5.006E-06
+ CTDOT_RDOT                            = 3.967E-06
+ CTDOT_TDOT                            = 1.139E-06
+ CNDOT_R                               = 5.455E-06
+ CNDOT_T                               = 3.217E-05
+ CNDOT_N                               = 2.197E-08
+ CNDOT_RDOT                            = -3.183E-08
+ CNDOT_TDOT                            = -5.750E-09
+ CNDOT_NDOT                            = 3.324E-11
+ OBJECT                                = OBJECT2
+ OBJECT_DESIGNATOR                     = 65082PT
+ CATALOG_NAME                          = 3462
+ OBJECT_NAME                           = TITAN 3C TRANSTAGE DEB
+ INTERNATIONAL_DESIGNATOR              = 65082PT
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2873.0254251831598
+ Y                                     = 5114.827628051727
+ Z                                     = -3608.1214947949693
+ X_DOT                                 = -6.040577212554574
+ Y_DOT                                 = -3.8350893476292636
+ Z_DOT                                 = -0.6043614138577811
+ CR_R                                  = 46.757440226303586
+ CT_R                                  = -8957.86420553608
+ CT_T                                  = 1782174.497494517
+ CN_R                                  = 1.1154153322347222
+ CN_T                                  = -221.62762382182441
+ CN_N                                  = 0.02756389817328491
+ CRDOT_R                               = 9.887628183367848
+ CRDOT_T                               = -1966.8132587193988
+ CRDOT_N                               = 0.24459048138750927
+ CRDOT_RDOT                            = 2.1705829316989433
+ CTDOT_R                               = -0.020741444575423765
+ CTDOT_T                               = 3.7608189659674354
+ CTDOT_N                               = -0.00046942550119046883
+ CTDOT_RDOT                            = -0.004152329619211625
+ CTDOT_TDOT                            = 1.003E-05
+ CNDOT_R                               = -0.020420438341128506
+ CNDOT_T                               = 4.060465224359891
+ CNDOT_N                               = -0.0005049694708575033
+ CNDOT_RDOT                            = -0.00448115311942769
+ CNDOT_TDOT                            = 8.580E-06
+ CNDOT_NDOT                            = 9.251E-06,
+ CCSDS_CDM_VERS                        = 1.0
+ CREATION_DATE                         = 2025-02-21T19:21:30.910748
+ ORIGINATOR                            = KESSLER_SOFTWARE
+ MESSAGE_ID                            = KESSLER_SOFTWARE_66bcc472-1387-11f0-a1a9-f2a9f71f7e19
+ TCA                                   = 2025-02-23T13:01:31.347952
+ MISS_DISTANCE                         = 425.41426747529164
+ RELATIVE_SPEED                        = 8.496753716997185
+ RELATIVE_POSITION_R                   = -14.789698025923775
+ RELATIVE_POSITION_T                   = -358.18063770580744
+ RELATIVE_POSITION_N                   = -229.05282049453575
+ RELATIVE_VELOCITY_R                   = -0.19210112364305315
+ RELATIVE_VELOCITY_T                   = -5.090989396633006
+ RELATIVE_VELOCITY_N                   = -6.799981459457875
+ COLLISION_PROBABILITY                 = 0.0
+ COLLISION_PROBABILITY_METHOD          = MC
+ OBJECT                                = OBJECT1
+ OBJECT_DESIGNATOR                     = 76126AP
+ CATALOG_NAME                          = 9827
+ OBJECT_NAME                           = COSMOS 886 DEB
+ INTERNATIONAL_DESIGNATOR              = 76126AP
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2924.929977540771
+ Y                                     = 5327.304810006878
+ Z                                     = -3243.7170492098644
+ X_DOT                                 = -4.2615138681841875
+ Y_DOT                                 = 1.3437189117250603
+ Z_DOT                                 = 5.89269305798949
+ CR_R                                  = 1.000E-18
+ CT_R                                  = 0.0
+ CT_T                                  = 1.2451197530695846
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.0035176566277315556
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18
+ OBJECT                                = OBJECT2
+ OBJECT_DESIGNATOR                     = 65082PT
+ CATALOG_NAME                          = 3462
+ OBJECT_NAME                           = TITAN 3C TRANSTAGE DEB
+ INTERNATIONAL_DESIGNATOR              = 65082PT
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2874.503418692707
+ Y                                     = 5113.900250637651
+ Z                                     = -3608.261909514749
+ X_DOT                                 = -6.039832942280944
+ Y_DOT                                 = -3.836416281232265
+ Z_DOT                                 = -0.6033522297755305
+ CR_R                                  = 3.852952621853669
+ CT_R                                  = 0.0
+ CT_T                                  = 4.976328968225473
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.9333314012997196
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18,
+ CCSDS_CDM_VERS                        = 1.0
+ CREATION_DATE                         = 2025-02-22T03:22:24.902502
+ ORIGINATOR                            = KESSLER_SOFTWARE
+ MESSAGE_ID                            = KESSLER_SOFTWARE_67e5f530-1387-11f0-a1a9-f2a9f71f7e19
+ TCA                                   = 2025-02-23T13:01:31.347952
+ MISS_DISTANCE                         = 365.91514377217743
+ RELATIVE_SPEED                        = 8.495624572320558
+ RELATIVE_POSITION_R                   = -11.008603610554571
+ RELATIVE_POSITION_T                   = -282.86354623409915
+ RELATIVE_POSITION_N                   = -231.86400604714095
+ RELATIVE_VELOCITY_R                   = -0.22030241342365237
+ RELATIVE_VELOCITY_T                   = -5.08952819628144
+ RELATIVE_VELOCITY_N                   = -6.798809194242238
+ COLLISION_PROBABILITY                 = 0.0
+ COLLISION_PROBABILITY_METHOD          = MC
+ OBJECT                                = OBJECT1
+ OBJECT_DESIGNATOR                     = 76126AP
+ CATALOG_NAME                          = 9827
+ OBJECT_NAME                           = COSMOS 886 DEB
+ INTERNATIONAL_DESIGNATOR              = 76126AP
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2879.622493931614
+ Y                                     = 5315.228745835514
+ Z                                     = -3302.754913634334
+ X_DOT                                 = -4.298014903680345
+ Y_DOT                                 = 1.4042335059900655
+ Z_DOT                                 = 5.852443352637917
+ CR_R                                  = 1.000E-18
+ CT_R                                  = 0.0
+ CT_T                                  = 1.2451197530695846
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.0035176566277315556
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18
+ OBJECT                                = OBJECT2
+ OBJECT_DESIGNATOR                     = 65082PT
+ CATALOG_NAME                          = 3462
+ OBJECT_NAME                           = TITAN 3C TRANSTAGE DEB
+ INTERNATIONAL_DESIGNATOR              = 65082PT
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2874.503418692707
+ Y                                     = 5113.900250637651
+ Z                                     = -3608.261909514749
+ X_DOT                                 = -6.039832942280944
+ Y_DOT                                 = -3.836416281232265
+ Z_DOT                                 = -0.6033522297755305
+ CR_R                                  = 3.852952621853669
+ CT_R                                  = 0.0
+ CT_T                                  = 4.976328968225473
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.9333314012997196
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18,
+ CCSDS_CDM_VERS                        = 1.0
+ CREATION_DATE                         = 2025-02-22T11:19:33.102361
+ ORIGINATOR                            = KESSLER_SOFTWARE
+ MESSAGE_ID                            = KESSLER_SOFTWARE_682ac1e2-1387-11f0-a1a9-f2a9f71f7e19
+ TCA                                   = 2025-02-23T13:01:31.347952
+ MISS_DISTANCE                         = 327.1071065092106
+ RELATIVE_SPEED                        = 8.49477258058075
+ RELATIVE_POSITION_R                   = -8.851838708103571
+ RELATIVE_POSITION_T                   = -228.85298210225113
+ RELATIVE_POSITION_N                   = -233.5530275188496
+ RELATIVE_VELOCITY_R                   = -0.24019476540712978
+ RELATIVE_VELOCITY_T                   = -5.088429141322612
+ RELATIVE_VELOCITY_N                   = -6.797893537280234
+ COLLISION_PROBABILITY                 = 0.0
+ COLLISION_PROBABILITY_METHOD          = MC
+ OBJECT                                = OBJECT1
+ OBJECT_DESIGNATOR                     = 76126AP
+ CATALOG_NAME                          = 9827
+ OBJECT_NAME                           = COSMOS 886 DEB
+ INTERNATIONAL_DESIGNATOR              = 76126AP
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2847.1668519000614
+ Y                                     = 5306.04976534258
+ Z                                     = -3344.9553671663302
+ X_DOT                                 = -4.323999308182716
+ Y_DOT                                 = 1.4473467271883949
+ Z_DOT                                 = 5.8230717063439394
+ CR_R                                  = 1.000E-18
+ CT_R                                  = 0.0
+ CT_T                                  = 1.2451197530695846
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.0035176566277315556
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18
+ OBJECT                                = OBJECT2
+ OBJECT_DESIGNATOR                     = 65082PT
+ CATALOG_NAME                          = 3462
+ OBJECT_NAME                           = TITAN 3C TRANSTAGE DEB
+ INTERNATIONAL_DESIGNATOR              = 65082PT
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2874.503418692707
+ Y                                     = 5113.900250637651
+ Z                                     = -3608.261909514749
+ X_DOT                                 = -6.039832942280944
+ Y_DOT                                 = -3.836416281232265
+ Z_DOT                                 = -0.6033522297755305
+ CR_R                                  = 3.852952621853669
+ CT_R                                  = 0.0
+ CT_T                                  = 4.976328968225473
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.9333314012997196
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18,
+ CCSDS_CDM_VERS                        = 1.0
+ CREATION_DATE                         = 2025-02-22T19:18:57.382150
+ ORIGINATOR                            = KESSLER_SOFTWARE
+ MESSAGE_ID                            = KESSLER_SOFTWARE_686fd494-1387-11f0-a1a9-f2a9f71f7e19
+ TCA                                   = 2025-02-23T13:01:31.347952
+ MISS_DISTANCE                         = 304.00199947770375
+ RELATIVE_SPEED                        = 8.494039443021444
+ RELATIVE_POSITION_R                   = -7.734808394529005
+ RELATIVE_POSITION_T                   = -193.60549377766796
+ RELATIVE_POSITION_N                   = -234.25264396511537
+ RELATIVE_VELOCITY_R                   = -0.25275836956828907
+ RELATIVE_VELOCITY_T                   = -5.087505222676052
+ RELATIVE_VELOCITY_N                   = -6.797213390460911
+ COLLISION_PROBABILITY                 = 0.0
+ COLLISION_PROBABILITY_METHOD          = MC
+ OBJECT                                = OBJECT1
+ OBJECT_DESIGNATOR                     = 76126AP
+ CATALOG_NAME                          = 9827
+ OBJECT_NAME                           = COSMOS 886 DEB
+ INTERNATIONAL_DESIGNATOR              = 76126AP
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2826.2062399489596
+ Y                                     = 5299.708069047362
+ Z                                     = -3372.550109153248
+ X_DOT                                 = -4.340982987372497
+ Y_DOT                                 = 1.4752253221709153
+ Z_DOT                                 = 5.803603238097498
+ CR_R                                  = 1.000E-18
+ CT_R                                  = 0.0
+ CT_T                                  = 1.2451197530695846
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.0035176566277315556
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18
+ OBJECT                                = OBJECT2
+ OBJECT_DESIGNATOR                     = 65082PT
+ CATALOG_NAME                          = 3462
+ OBJECT_NAME                           = TITAN 3C TRANSTAGE DEB
+ INTERNATIONAL_DESIGNATOR              = 65082PT
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2874.503418692707
+ Y                                     = 5113.900250637651
+ Z                                     = -3608.261909514749
+ X_DOT                                 = -6.039832942280944
+ Y_DOT                                 = -3.836416281232265
+ Z_DOT                                 = -0.6033522297755305
+ CR_R                                  = 3.852952621853669
+ CT_R                                  = 0.0
+ CT_T                                  = 4.976328968225473
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.9333314012997196
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18,
+ CCSDS_CDM_VERS                        = 1.0
+ CREATION_DATE                         = 2025-02-23T03:19:44.317937
+ ORIGINATOR                            = KESSLER_SOFTWARE
+ MESSAGE_ID                            = KESSLER_SOFTWARE_68be23ec-1387-11f0-a1a9-f2a9f71f7e19
+ TCA                                   = 2025-02-23T13:01:31.347952
+ MISS_DISTANCE                         = 294.6326615148539
+ RELATIVE_SPEED                        = 8.493194057687942
+ RELATIVE_POSITION_R                   = -7.419299740360892
+ RELATIVE_POSITION_T                   = -174.57021712348944
+ RELATIVE_POSITION_N                   = -237.23110781713865
+ RELATIVE_VELOCITY_R                   = -0.26204858929400876
+ RELATIVE_VELOCITY_T                   = -5.086450727376211
+ RELATIVE_VELOCITY_N                   = -6.796594355732054
+ COLLISION_PROBABILITY                 = 0.0
+ COLLISION_PROBABILITY_METHOD          = MC
+ OBJECT                                = OBJECT1
+ OBJECT_DESIGNATOR                     = 76126AP
+ CATALOG_NAME                          = 9827
+ OBJECT_NAME                           = COSMOS 886 DEB
+ INTERNATIONAL_DESIGNATOR              = 76126AP
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2815.953763263901
+ Y                                     = 5296.190984284624
+ Z                                     = -3386.8113002022865
+ X_DOT                                 = -4.349799473304206
+ Y_DOT                                 = 1.4891053026520324
+ Z_DOT                                 = 5.793480676499484
+ CR_R                                  = 1.000E-18
+ CT_R                                  = 0.0
+ CT_T                                  = 1.2451197530695846
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.0035176566277315556
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18
+ OBJECT                                = OBJECT2
+ OBJECT_DESIGNATOR                     = 65082PT
+ CATALOG_NAME                          = 3462
+ OBJECT_NAME                           = TITAN 3C TRANSTAGE DEB
+ INTERNATIONAL_DESIGNATOR              = 65082PT
+ EPHEMERIS_NAME                        = NONE
+ COVARIANCE_METHOD                     = CALCULATED
+ MANEUVERABLE                          = N/A
+ ORBIT_CENTER                          = EARTH
+ REF_FRAME                             = ITRF
+ X                                     = -2877.333943848403
+ Y                                     = 5112.12102362322
+ Z                                     = -3608.5298791370465
+ X_DOT                                 = -6.038407838525875
+ Y_DOT                                 = -3.838957489663574
+ Z_DOT                                 = -0.6014152547562583
+ CR_R                                  = 3.852952621853669
+ CT_R                                  = 0.0
+ CT_T                                  = 4.976328968225473
+ CN_R                                  = 0.0
+ CN_T                                  = 0.0
+ CN_N                                  = 0.9333314012997196
+ CRDOT_R                               = 0.0
+ CRDOT_T                               = 0.0
+ CRDOT_N                               = 0.0
+ CRDOT_RDOT                            = 1.000E-18
+ CTDOT_R                               = 0.0
+ CTDOT_T                               = 0.0
+ CTDOT_N                               = 0.0
+ CTDOT_RDOT                            = 0.0
+ CTDOT_TDOT                            = 1.000E-18
+ CNDOT_R                               = 0.0
+ CNDOT_T                               = 0.0
+ CNDOT_N                               = 0.0
+ CNDOT_RDOT                            = 0.0
+ CNDOT_TDOT                            = 0.0
+ CNDOT_NDOT                            = 1.000E-18]
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#let&#39;s save all cdms to kvn files:</span>
+<span class="c1">#for i in range(len(trace[0][&#39;cdms&#39;])):    </span>
+<span class="c1">#    trace[0][&#39;cdms&#39;][i].save(f&#39;event2_{i}.kvn&#39;)</span>
+</pre></div>
+</div>
+</div>
+</div>
 </section>
 
 

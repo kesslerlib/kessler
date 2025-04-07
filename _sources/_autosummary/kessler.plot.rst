@@ -15,3 +15,9 @@
       plot_trace_event
       plot_trace_orbit
    
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Empirical
+   

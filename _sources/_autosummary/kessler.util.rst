@@ -39,6 +39,7 @@
       progress_bar_end
       progress_bar_init
       progress_bar_update
+      propagate_upsample
       rotation_matrix
       seed
       tile_rows_cols

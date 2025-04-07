@@ -166,6 +166,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/basics.html">Basics: loading CDMs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/cdms_analysis_and_plotting.html">Analyze and plot loaded CDMs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/plotting.html">Plotting Functionalities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/LSTM_training.html">LSTM training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/probabilistic_programming_module.html">Probabilistic Programming Module</a></li>
 </ul>
@@ -383,11 +384,23 @@ document.write(`
 <p class="rubric">Classes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DatasetEventDataset</span></code>(event_set, features[, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConjunctionDataMessage</span></code>([file_name, set_defaults])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataLoader</span></code>(dataset[, batch_size, shuffle, ...])</p></td>
+<td><p>Data loader combines a dataset and a sampler, and provides an iterable over the given dataset.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Dataset</span></code>()</p></td>
+<td><p>An abstract class representing a <code class="xref py py-class docutils literal notranslate"><span class="pre">Dataset</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DatasetEventDataset</span></code>(event_set, features[, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EventDataset</span></code>([cdms_dir, cdm_extension, events])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">LSTMPredictor</span></code>([lstm_size, lstm_depth, ...])</p></td>
-<td><p>Initializes internal Module state, shared by both nn.Module and ScriptModule.</p></td>
+<td><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p></td>
 </tr>
 </tbody>
 </table>

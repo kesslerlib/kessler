@@ -166,6 +166,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/basics.html">Basics: loading CDMs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/cdms_analysis_and_plotting.html">Analyze and plot loaded CDMs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/plotting.html">Plotting Functionalities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/LSTM_training.html">LSTM training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/probabilistic_programming_module.html">Probabilistic Programming Module</a></li>
 </ul>
@@ -395,10 +396,37 @@ document.write(`
 <p class="rubric">Classes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bernoulli</span></code>([probs, logits])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Categorical</span></code>([probs, logits])</p></td>
+<td><p></p></td>
+</tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Conjunction</span></code>([time0, max_duration_days, ...])</p></td>
 <td><p>A class for simulating conjunctions.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConjunctionSimplified</span></code>(tles[, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConjunctionDataMessage</span></code>([file_name, set_defaults])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConjunctionSimplified</span></code>(tles[, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mixture</span></code>(distributions[, probs])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code>([name, address_dict_file_name])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Normal</span></code>(loc, scale)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TLE</span></code>(data)</p></td>
+<td><p>This class constructs a TLE object from either a list of strings (that make up the TLE) or from a dictionary.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TruncatedNormal</span></code>(mean_non_truncated, ...[, ...])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Uniform</span></code>(low, high)</p></td>
 <td><p></p></td>
 </tr>
 </tbody>

@@ -166,6 +166,7 @@
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/basics.html">Basics: loading CDMs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/cdms_analysis_and_plotting.html">Analyze and plot loaded CDMs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/plotting.html">Plotting Functionalities</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/LSTM_training.html">LSTM training</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/probabilistic_programming_module.html">Probabilistic Programming Module</a></li>
 </ul>
@@ -380,13 +381,25 @@ document.write(`
                   
   <section id="module-kessler.event">
 <span id="kessler-event"></span><h1>kessler.event<a class="headerlink" href="#module-kessler.event" title="Link to this heading">#</a></h1>
+<p class="rubric">Functions</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">glob</span></code>(pathname, *[, recursive])</p></td>
+<td><p>Return a list of paths matching a pathname pattern.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <p class="rubric">Classes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Event</span></code>([cdms, cdm_file_names])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CDM</span></code></p></td>
+<td><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">ConjunctionDataMessage</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Event</span></code>([cdms, cdm_file_names])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EventDataset</span></code>([cdms_dir, cdm_extension, events])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">EventDataset</span></code>([cdms_dir, cdm_extension, events])</p></td>
 <td><p></p></td>
 </tr>
 </tbody>
