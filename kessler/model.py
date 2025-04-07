@@ -2,7 +2,7 @@ import numpy as np
 import dsgp4
 import torch
 import uuid
-import warnings
+# import warnings
 
 from . import util, ConjunctionDataMessage
 from dsgp4.tle import TLE
@@ -64,18 +64,6 @@ def default_prior():
                        Normal(0.08823495358228683, 0.061987943947315216)],
         probs=[0.9688150882720947, 0.0012630978599190712, 0.024090370163321495, 0.0009446446783840656, 0.0048867943696677685])
     return p
-
-
-# def make_tle(date_mjd, tle_data):
-#     tle_data['satellite_catalog_number'] = 43437
-#     tle_data['classification'] = 'U'
-#     tle_data['international_designator'] = '18100A'
-#     tle_data['epoch_year'] = util.from_mjd_to_datetime(date_mjd).year
-#     tle_data['epoch_days'] = util.from_mjd_to_epoch_days_after_1_jan(date_mjd)
-#     tle_data['ephemeris_type'] = 0
-#     tle_data['element_number'] = 9996
-#     tle_data['revolution_number_at_epoch'] = 56353
-#     return tle.TLE(tle_data)
 
 
 def find_conjunction(tr0, tr1, miss_dist_threshold):
@@ -460,27 +448,31 @@ class Conjunction(Model):
         #the following is a quick hack waiting for Pyprob to be able to sample w/o side effects
         rng_state = torch.random.get_rng_state()
         try:
-            samples=torch.distributions.MultivariateNormal(loc=mean_tle_els,covariance_matrix=torch.tensor(Cov_tle)).sample((self._mc_samples,))
+            dist=torch.distributions.MultivariateNormal(loc=mean_tle_els,covariance_matrix=torch.tensor(Cov_tle))
+            samples=dist.sample((self._mc_samples,))
         except Exception as e:
-            print(f"Multivariate Normal sampling error: {e}, returning state")
-            if mean_tle_els[1]<0.:
-                tle_data['eccentricity']=torch.tensor(0.)#mean_tle_els[0]
+            if "Expected parameter covariance_matrix" in str(e):
+                if mean_tle_els[1]<0.:
+                    tle_data['eccentricity']=torch.tensor(0.)#mean_tle_els[0]
+                else:
+                    tle_data['eccentricity']=mean_tle_els[1]
+                tle_data['argument_of_perigee']=mean_tle_els[4]
+                tle_data['inclination']=mean_tle_els[2]
+                tle_data['mean_anomaly']=mean_tle_els[5]
+                val=mean_tle_els[0]*no_kozai_conversion_factor
+                #if 2*np.pi / val >= 225.0:
+                #   tle_data['mean_motion']=(2*np.pi/(225.0*0.99))
+                #else:
+                tle_data['mean_motion']=val
+                tle_data['raan']=mean_tle_els[3]
+                # Propagate object at tca
+                tle_object = TLE(tle_data)
+                dsgp4.initialize_tle(tle_object)
+                tsinces=(torch.tensor(time_ca_mjd)-dsgp4.util.from_datetime_to_mjd(tle_object._epoch))*1440.
+                mean_state_tca_xyz_TEME=dsgp4.propagate(tle_object, tsinces).detach().numpy()*1e3
+                return mean_state_tca_xyz_TEME, np.diag(cov_matrix_diagonal_rtn)
             else:
-                tle_data['eccentricity']=mean_tle_els[1]
-            tle_data['argument_of_perigee']=mean_tle_els[4]
-            tle_data['inclination']=mean_tle_els[2]
-            tle_data['mean_anomaly']=mean_tle_els[5]
-            val=mean_tle_els[0]*no_kozai_conversion_factor
-#            if 2*np.pi / val >= 225.0:
-#                tle_data['mean_motion']=(2*np.pi/(225.0*0.99))
-#            else:
-            tle_data['mean_motion']=val
-            tle_data['raan']=mean_tle_els[3]
-            # Propagate object at tca
-            tle_object = TLE(tle_data)
-            util.lpop_init(tle_object)
-            mean_state_tca_xyz_TEME=util.lpop_single(time_ca_mjd)
-            return mean_state_tca_xyz_TEME, np.diag(cov_matrix_diagonal_rtn)
+                raise e
 
         mc_states_tca_xyz=[]
         for sample in samples:
@@ -499,8 +491,9 @@ class Conjunction(Model):
             tle_data['raan']=sample[3]
             # Propagate object at tca
             tle_object = TLE(tle_data)
-            util.lpop_init(tle_object)
-            mc_states_tca_xyz.append(util.lpop_single(time_ca_mjd))
+            dsgp4.initialize_tle(tle_object)
+            tsinces=(torch.tensor(time_ca_mjd)-dsgp4.util.from_datetime_to_mjd(tle_object._epoch))*1440.
+            mc_states_tca_xyz.append(dsgp4.propagate(tle_object,tsinces).numpy()*1e3)
         #WARNING WARNING WARNING:
         #the following is a quick hack waiting for Pyprob to be able to sample w/o side effects
         torch.random.set_rng_state(rng_state)
@@ -540,23 +533,23 @@ class Conjunction(Model):
         pyprob.tag(self._delta_time, 'delta_time')
 
         #Propagate target
-        util.lpop_init(t_tle)
+        dsgp4.initialize_tle(t_tle)
         try:
-            t_states = util.lpop_sequence_upsample(times, self._time_upsample_factor)
+            t_states = util.propagate_upsample(tle=t_tle, times_mjd=times, upsample_factor=self._time_upsample_factor)
             t_prop_error = False
         except RuntimeError as e:
             # if str(e) == 'Error: Satellite decayed' or str(e) == 'Error: (e <= -0.001)' or str(e) == 'Eccentricity out of range' :
-            warnings.warn('Propagator error for target: {}'.format(str(e)))
+            #warnings.warn('Propagator error for target: {}'.format(str(e)))
             t_prop_error = True
         pyprob.tag(t_prop_error, 't_prop_error')
 
         # Propagate chaser
-        util.lpop_init(c_tle)
+        dsgp4.initialize_tle(c_tle)
         try:
-            c_states = util.lpop_sequence_upsample(times, self._time_upsample_factor)
+            c_states = util.propagate_upsample(tle=c_tle, times_mjd=times, upsample_factor=self._time_upsample_factor)
             c_prop_error = False
         except RuntimeError as e:
-            warnings.warn('Propagator error for chaser: {}'.format(str(e)))
+            #warnings.warn(f'Propagator error for chaser: {str(e)}')
             c_prop_error = True
         pyprob.tag(c_prop_error, 'c_prop_error')
 
@@ -629,7 +622,7 @@ class Conjunction(Model):
                         t_cov_matrix_diagonal_obs_noise_list.append(t_cov_matrix_diagonal_obs_noise)
 
                     t_state_new_obs = np.stack(t_state_new_obs_list).mean(0)
-                    self._t_cov_matrix_diagonal_obs_noise = np.stack(t_cov_matrix_diagonal_obs_noise_list).mean(0)
+                    self._t_cov_matrix_diagonal_obs_noise = np.stack(t_cov_matrix_diagonal_obs_noise_list).mean(0).squeeze()
 
                 if c_new_obs:
                     ############## TODO: REVISIT THE WAY MULTIPLE OBSERVATIONS ARE COMBINED FOR AN OBJECT ##############
@@ -641,18 +634,14 @@ class Conjunction(Model):
                         c_cov_matrix_diagonal_obs_noise_list.append(c_cov_matrix_diagonal_obs_noise)
 
                     c_state_new_obs = np.stack(c_state_new_obs_list).mean(0)
-                    self._c_cov_matrix_diagonal_obs_noise = np.stack(c_cov_matrix_diagonal_obs_noise_list).mean(0)
+                    self._c_cov_matrix_diagonal_obs_noise = np.stack(c_cov_matrix_diagonal_obs_noise_list).mean(0).squeeze()
 
                 # We simulate CDM generation process and return CDM (is None if there are not new observation):
                 # other_tle_info=[mean_motion_first_derivative, mean_motion_second_derivative, bstar]
-                try:
-                    # print('Generate cdm')
-                    cdm = self.generate_cdm(t_state_new_obs=t_state_new_obs, c_state_new_obs=c_state_new_obs, time_obs_mjd=time_cdm,
-                                   time_conj_mjd=time_min,
-                                   t_tle=t_tle, c_tle=c_tle, previous_cdm=None if i==0 else cdms[-1])
-                except RuntimeError as e:
-                    warnings.warn(f'Propagator error for CDM MC: {str(e)}')
-                    mc_prop_error = True
+                # print('Generate cdm')
+                cdm = self.generate_cdm(t_state_new_obs=t_state_new_obs, c_state_new_obs=c_state_new_obs, time_obs_mjd=time_cdm,
+                                time_conj_mjd=time_min,
+                                t_tle=t_tle, c_tle=c_tle, previous_cdm=None if i==0 else cdms[-1])
                 if mc_prop_error:
                     conj = False
                     cdms = []
