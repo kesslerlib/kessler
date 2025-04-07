@@ -77,6 +77,11 @@ html_static_path = ["_static"]
 
 html_logo = "_static/kessler_logo.png"
 
+linkcheck_ignore = [
+    r'https://www\.esa\.int/gsp/ACT/team/giacomo_acciarini/',
+    r'https://kelvins.esa.int/collision-avoidance-challenge/'
+]
+
 html_theme_options = {
     "repository_url": "https://github.com/kesslerlib/kessler/",
     "repository_branch": "master",
