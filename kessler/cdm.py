@@ -259,11 +259,11 @@ class ConjunctionDataMessage():
 
     def _update_miss_distance(self):
         state_object1 = self.get_state(0)
-        if np.isnan(state_object1.sum()):
-            warnings.warn('state_object1 has NaN')
+        # if np.isnan(state_object1.sum()):
+        #     warnings.warn('state_object1 has NaN')
         state_object2 = self.get_state(1)
-        if np.isnan(state_object2.sum()):
-            warnings.warn('state_object2 has NaN')
+        # if np.isnan(state_object2.sum()):
+        #     warnings.warn('state_object2 has NaN')
 
         miss_distance = np.linalg.norm(state_object1[0] - state_object2[0])
         self.set_relative_metadata('MISS_DISTANCE', miss_distance)
@@ -287,11 +287,11 @@ class ConjunctionDataMessage():
             return relative_state
 
         state_object1 = self.get_state(0)
-        if np.isnan(state_object1.sum()):
-            warnings.warn('state_object1 has NaN')
+        # if np.isnan(state_object1.sum()):
+        #     warnings.warn('state_object1 has NaN')
         state_object2 = self.get_state(1)
-        if np.isnan(state_object2.sum()):
-            warnings.warn('state_object2 has NaN')
+        # if np.isnan(state_object2.sum()):
+        #     warnings.warn('state_object2 has NaN')
 
         relative_state = relative_state(state_object1, state_object2)
 

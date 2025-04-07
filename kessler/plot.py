@@ -61,7 +61,7 @@ def plot_tles(tles, file_name=None, figsize = (36,18), show=True, axs=None, retu
     - ax (`numpy.ndarray`): array of AxesSubplot objects
     """
     #I collect all the six variables from the TLEs:
-    mean_motion, eccentricity, inclination, argument_of_perigee, raan, b_star, mean_anomaly, mean_motion_first_derivative, mean_motion_second_derivative = tle.tle_elements(tles = tles)
+    mean_motion, eccentricity, inclination, argument_of_perigee, raan, b_star, mean_anomaly, mean_motion_first_derivative, mean_motion_second_derivative = util.tle_elements(tles = tles)
 
     plt.rcParams.update({'font.size': 22})
     if axs is None:

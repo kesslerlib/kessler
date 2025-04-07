@@ -54,6 +54,13 @@ def fit_mixture(values, *args, **kwargs):
     m.fit(values)
     return m
 
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
 def keplerian_cartesian_partials(state,mu):
     """
     Computes the partial derivatives of the cartesian state with respect to the keplerian elements.
@@ -91,26 +98,6 @@ def keplerian_cartesian_partials(state,mu):
     gradient_mean_anomaly=state_5.grad.flatten()
     DF=np.stack((gradient_a, gradient_e, gradient_i, gradient_Omega, gradient_omega, gradient_mean_anomaly))
     return DF
-
-def find_closest(values, t):
-    indx = np.argmin(abs(values-t))
-    return indx, values[indx]
-
-
-def upsample(s, target_resolution):
-    s = s.transpose(0, 1)
-    s = torch.nn.functional.interpolate(s.unsqueeze(0), size=(target_resolution), mode='linear', align_corners=True)
-    s = s.squeeze(0).transpose(0, 1)
-    return s
-
-
-def is_number(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
-
 
 def rotation_matrix(state):
     """
@@ -338,6 +325,37 @@ def upsample(s, target_resolution):
     s = torch.nn.functional.interpolate(s.unsqueeze(0), size=(target_resolution), mode='linear', align_corners=True)
     s = s.squeeze(0).transpose(0, 1)
     return s
+
+def propagate_upsample(tle, times_mjd, upsample_factor=1):
+    """
+    This function is the same as `lpop_sequence`, but it allows to upsample the time,
+    interpolating in between. The purpose is to reduce computational time.
+    Caveat: this will reduce the position and velocity prediction accuracy.
+
+    Args:
+        tle (`dsgp4.tle.TLE`): the two-line element set
+        times_mjd (`numpy.array`): modified julian dates
+        upsample_factor (`int`): the state is propagated only every `upsample_factor` times,
+                                        and it is performed interpolation in between.
+
+    Returns:
+        `numpy.array`: a 3 dimensional array, where in each row, there is a 2x3
+                                    element of position (first row), and velocity (second row),
+                                    both expressed in the TEME reference system and SI units.
+    """
+    if upsample_factor == 1:
+        tsinces=(torch.tensor(times_mjd)-dsgp4.util.from_datetime_to_mjd(tle._epoch))*1440.
+        return dsgp4.propagate(tle,tsinces).numpy()*1e3
+    else:
+        take_every = max(upsample_factor, 1)
+        times_mjds_subsample = [times_mjd[i] for i in range(0, len(times_mjd), take_every)]
+        tsinces_subsample=(torch.tensor(times_mjds_subsample)-dsgp4.util.from_datetime_to_mjd(tle._epoch))*1440.
+        ret = dsgp4.propagate(tle, tsinces_subsample).numpy()
+        ret = torch.from_numpy(ret).reshape(ret.shape[0], -1)
+        ret = upsample(ret, len(times_mjd))
+        ret = ret.view(ret.shape[0], 2, 3).cpu().numpy()*1e3
+        return ret
+
 
 def create_path(path, directory=False):
     if directory:
