@@ -79,12 +79,6 @@ If you would like to learn more about or cite the techniques Kessler uses, pleas
 
 ## Installation
 
-### Prerequisites
-
-- Python 3.6, 3.7 or 3.8.
-
-Note: Python 3.9 is currently not supported due to one of our dependencies (pykep) not supporting it. You might get things working with Python 3.9 if you install [pykep using conda](https://anaconda.org/conda-forge/pykep) (not tested).
-
 ### How to install
 
 To install kessler, do the following:
@@ -93,25 +87,4 @@ To install kessler, do the following:
 git clone https://github.com/kesslerlib/kessler.git
 cd kessler
 pip install -e .
-```
-
-### Optional: how to run it in Docker
-
-#### Build the Docker image
-
-In the root folder of this repository, run:
-```
-docker build -t kessler .
-```
-
-#### Run Jupyter inside Docker
-
-If you're using Linux:
-```
-docker run --rm -it -v $PWD:/workspace --net=host kessler jupyter notebook --allow-root
-```
-
-If you're using MacOS:
-```
-docker run --rm -it -v $PWD:/workspace -p 8888:8888 kessler jupyter notebook --ip 0.0.0.0 --no-browser --allow-root
 ```
