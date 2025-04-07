@@ -4,7 +4,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/kesslerlib/kessler">
-    <img src="docs/_static/kessler_logo.png" alt="Logo" width="120">
+    <img src="docs/_static/kessler_logo.png" alt="Logo" width="280">
   </a>
   <p align="center">
     Kessler
