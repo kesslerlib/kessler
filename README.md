@@ -1,8 +1,22 @@
 # Kessler
 
-<div align="left">
-  <a href="https://github.com/kesslerlib/kessler"> <img height="120px" src="docs/_static/kessler_logo.png"></a>
-</div>
+<!-- PROJECT LOGO -->
+<br />
+<p align="center">
+  <a href="https://github.com/kesslerlib/kessler">
+    <img src="docs/_static/kessler_logo.png" alt="Logo" width="280">
+  </a>
+  <p align="center">
+    Kessler
+    <br />
+    <a href="https://kesslerlib.github.io/kessler/"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/kesslerlib/kessler/issues/new/choose">Report bug</a>
+    ·
+    <a href="https://github.com/kesslerlib/kessler/issues/new/choose">Request feature</a>
+  </p>
+</p>
 
 -----------------------------------------
 [![Build Status](https://github.com/kesslerlib/kessler/workflows/build/badge.svg)](https://github.com/kesslerlib/kessler/actions)
@@ -15,10 +29,7 @@ Developed by the [FDL Europe](https://fdleurope.org/) Constellations team in col
 
 ## Documentation and roadmap
 
-To get started, follow the Jupyter notebooks in the [notebooks](https://github.com/kesslerlib/kessler/-/tree/master/notebooks) folder.
-
-The upcoming version of Kessler will inclue the probabilistic programming model of conjunctions, which is excluded from this initial release. 
-
+To get started, follow the documentation examples.
 
 ## Authors
 
