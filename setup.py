@@ -30,7 +30,8 @@ setup(
     author='ESA FDL Europe Constellations Team',
     # author_email='',
     packages=find_packages(),
-    install_requires=['numpy', 'matplotlib', 'torch>=1.5.1', 'dsgp4', 'skyfield>=1.26', 'pyprob', 'pandas'],
+    install_requires=['pyprob', 'numpy', 'matplotlib', 'torch>=1.5.1', 'dsgp4', 'skyfield>=1.26' 
+'pandas'],
     extras_require={'dev': ['pytest', 'coverage', 'pytest-xdist', 'docker', 'sgp4>=2.20']},
     # url='https://github.com/kessler/kessler',
     classifiers=['License :: OSI Approved :: BSD License', 'Programming Language :: Python :: 3'],
