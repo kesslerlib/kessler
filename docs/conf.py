@@ -78,7 +78,7 @@ html_static_path = ["_static"]
 html_logo = "_static/kessler_logo.png"
 
 html_theme_options = {
-    "repository_url": "https://github.com/esa/dSGP4/",
+    "repository_url": "https://github.com/kesslerlib/kessler/",
     "repository_branch": "master",
     "path_to_docs": "doc",
     "use_repository_button": True,
