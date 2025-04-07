@@ -1,4 +1,4 @@
-## ⚠️ We are in the process of updating Kessler. Because of this, Kessler is now in maintenance mode and not all functionalities might be working for a few days ⚠️
+# Kessler
 
 <!-- PROJECT LOGO -->
 <br />
@@ -89,8 +89,6 @@ If you would like to learn more about or cite the techniques Kessler uses, pleas
 ```
 
 ## Installation
-
-### How to install
 
 To install kessler, do the following:
 

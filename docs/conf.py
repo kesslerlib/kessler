@@ -27,12 +27,24 @@ release = kessler.__version__
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ["myst_nb",
-              "sphinx.ext.intersphinx",
-              "sphinx.ext.autodoc",
-              "sphinx.ext.autosummary",
-              "sphinx.ext.doctest",
-              ]
+extensions = ["myst_nb", "sphinx.ext.autodoc", "sphinx.ext.doctest", "sphinx.ext.intersphinx", "sphinx.ext.autosummary","sphinx.ext.napoleon"]
+
+
+# build the templated autosummary files
+autosummary_generate = True
+autosummary_imported_members = True
+napoleon_google_docstring = True
+numpydoc_show_class_members = False
+panels_add_bootstrap_css = False
+
+autosectionlabel_prefix_document = True
+
+# katex options
+#
+#
+katex_prerender = True
+
+napoleon_use_ivar = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
@@ -43,13 +55,12 @@ intersphinx_mapping = {
     "matplotlib": ("https://matplotlib.org/stable/", None),
 }
 
-
 autoclass_content = 'both'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["_build", ".DS_Store"]
+exclude_patterns = ["_build", ".DS_Store", ".pickle",".txt",'jupyter_execute/**/*.ipynb','jupyter_execute/*.ipynb']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -69,7 +80,7 @@ html_logo = "_static/kessler_logo.png"
 html_theme_options = {
     "repository_url": "https://github.com/kesslerlib/kessler/",
     "repository_branch": "master",
-    "path_to_docs": "docs",
+    "path_to_docs": "doc",
     "use_repository_button": True,
     "use_issues_button": True,
     "launch_buttons": {
@@ -81,13 +92,12 @@ html_theme_options = {
 
 nb_execution_mode = "force"
 
-nb_execution_excludepatterns = ['basics.ipynb','cdms_analysis_and_plotting.ipynb','LSTM_training.ipynb']
-
-# Force printing traceback to stderr on execution error.
-nb_execution_show_tb = True
-
-# Set a longer timeout for notebook execution.
-nb_execution_timeout = 120
+nb_execution_excludepatterns = [
+    "LSTM_training.ipynb",
+    "basics.ipynb",
+    "probabilistic_programming_module.ipynb",
+    "plotting.ipynb"
+]
 
 latex_engine = "xelatex"
 
