@@ -1,4 +1,6 @@
 # Kessler
+> [!WARNING]
+> Probabilistic programming module currently WIP (might not work as intended as a result)
 
 <!-- PROJECT LOGO -->
 <br />
