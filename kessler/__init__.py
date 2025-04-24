@@ -8,7 +8,7 @@
 #
 # GNU General Public License version 3. See LICENSE in root of repository.
 
-__version__ = '1.0.0'
+__version__ = '1.0.1'
 
 from .util import seed
 from .cdm import ConjunctionDataMessage, CDM
