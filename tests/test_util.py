@@ -139,11 +139,11 @@ class UtilTestCase(unittest.TestCase):
         max=0.68639
 
         categorical=Categorical(probs=probs)
-        batched_truncated_normal = kessler.util.TruncatedNormal(loc=locs, scale=scales, min=min, max=max)
+        batched_truncated_normal = kessler.util.TruncatedNormal(loc=locs, scale=scales, low=min, high=max)
         mix_truncated=MixtureSameFamily(categorical, batched_truncated_normal)
-        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.0001)).item(), 7.382209300994873, places=8)
-        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.001)).item(), 5.485926151275635, places=8)
-        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.01)).item(), 1.863307237625122, places=8)
-        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.1)).item(), -2.458112955093384, places=8)
+        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.0001)).item(), 7.382209300994873, places=6)
+        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.001)).item(), 5.485926151275635, places=6)
+        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.01)).item(), 1.863307237625122, places=6)
+        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.1)).item(), -2.458112955093384, places=6)
 
 

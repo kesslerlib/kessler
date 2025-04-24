@@ -308,14 +308,14 @@ class Conjunction:
             mean_anomaly = pyro.sample('c_mean_anomaly', self._prior_dict['mean_anomaly_prior'])
             tle = self._c_tle.copy()
             tle.update({'mean_anomaly': mean_anomaly})
-            pyro.deterministic('c_mean_motion',tle.mean_motion)
-            pyro.deterministic('c_eccentricity',tle.eccentricity)
-            pyro.deterministic('c_inclination',tle.inclination)
-            pyro.deterministic('c_argument_of_perigee',tle.argument_of_perigee)
-            pyro.deterministic('c_raan',tle.raan)
-            pyro.deterministic('c_mean_motion_first_derivative',tle.mean_motion_first_derivative)
-            pyro.deterministic('c_mean_motion_second_derivative',tle.mean_motion_second_derivative)
-            pyro.deterministic('c_b_star',tle.b_star)
+            pyro.deterministic('c_mean_motion',torch.tensor(tle.mean_motion))
+            pyro.deterministic('c_eccentricity',torch.tensor(tle.eccentricity))
+            pyro.deterministic('c_inclination',torch.tensor(tle.inclination))
+            pyro.deterministic('c_argument_of_perigee',torch.tensor(tle.argument_of_perigee))
+            pyro.deterministic('c_raan',torch.tensor(tle.raan))
+            pyro.deterministic('c_mean_motion_first_derivative',torch.tensor(tle.mean_motion_first_derivative))
+            pyro.deterministic('c_mean_motion_second_derivative',torch.tensor(tle.mean_motion_second_derivative))
+            pyro.deterministic('c_b_star',torch.tensor(tle.b_star))
             return tle
 
     def generate_cdm(self, 
