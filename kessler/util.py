@@ -597,7 +597,7 @@ def has_nan_or_inf(value):
 
 def trace_to_event(trace):
     from .event import Event
-    return Event(cdms=trace['cdms'])
+    return Event(cdms=trace.nodes['cdms']['infer']['cdms'])
 
 
 def dist_to_event_dataset(dist):

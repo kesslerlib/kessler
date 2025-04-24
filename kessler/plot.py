@@ -158,434 +158,6 @@ def plot_tles(tles, file_name=None, figsize = (36,18), show=True, axs=None, retu
     if return_axs:
         return axs
 
-
-def plot_dist(dists, file_name=None, n_bins=30, num_resample=None, trace=None, figsize = (16, 18)):
-    if isinstance(dists, Empirical):
-        dists = [dists]
-
-    marginal_dists = [{} for _ in range(len(dists))]
-    pyprob.set_verbosity(0)
-    for i, dist in enumerate(dists):
-        if num_resample is not None:
-            dist = dist.resample(num_resample)
-        dist = dist.condition(lambda t: not t['prop_error'])
-
-        marginal_dists[i]['dist_time_min'] = dist.map(lambda t:t['time_min'])
-        marginal_dists[i]['dist_d_min'] = dist.map(lambda t:t['d_min'])
-        marginal_dists[i]['dist_conj'] = dist.map(lambda t:t['conj'])
-        marginal_dists[i]['dist_events_with_conjunction'] = dist.condition(lambda t:t['conj'])
-        marginal_dists[i]['dist_time_conj'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['time_conj'])
-        marginal_dists[i]['dist_d_conj'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['d_conj'])
-
-        marginal_dists[i]['dist_t_mean_motion'] = dist.map(lambda t:t['t_mean_motion'])
-        marginal_dists[i]['dist_t_mean_anomaly'] = dist.map(lambda t:t['t_mean_anomaly'])
-        marginal_dists[i]['dist_t_eccentricity'] = dist.map(lambda t:t['t_eccentricity'])
-        marginal_dists[i]['dist_t_inclination'] = dist.map(lambda t:t['t_inclination'])
-        marginal_dists[i]['dist_t_argument_of_perigee'] = dist.map(lambda t:t['t_argument_of_perigee'])
-        marginal_dists[i]['dist_t_raan'] = dist.map(lambda t:t['t_raan'])
-        marginal_dists[i]['dist_t_mean_motion_first_derivative'] = dist.map(lambda t:t['t_mean_motion_first_derivative'])
-        marginal_dists[i]['dist_t_b_star'] = dist.map(lambda t:t['t_b_star'])
-
-        marginal_dists[i]['dist_c_mean_motion'] = dist.map(lambda t:t['c_mean_motion'])
-        marginal_dists[i]['dist_c_mean_anomaly'] = dist.map(lambda t:t['c_mean_anomaly'])
-        marginal_dists[i]['dist_c_eccentricity'] = dist.map(lambda t:t['c_eccentricity'])
-        marginal_dists[i]['dist_c_inclination'] = dist.map(lambda t:t['c_inclination'])
-        marginal_dists[i]['dist_c_argument_of_perigee'] = dist.map(lambda t:t['c_argument_of_perigee'])
-        marginal_dists[i]['dist_c_raan'] = dist.map(lambda t:t['c_raan'])
-        marginal_dists[i]['dist_c_mean_motion_first_derivative'] = dist.map(lambda t:t['c_mean_motion_first_derivative'])
-        marginal_dists[i]['dist_c_b_star'] = dist.map(lambda t:t['c_b_star'])
-
-        marginal_dists[i]['dist_num_cdms'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['num_cdms'])
-        if len(marginal_dists[i]['dist_conj']) > 0:
-            marginal_dists[i]['dist_time_cdm'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['time_cdm'])
-
-    fig, axs = plt.subplots(8, 4, figsize=figsize)
-
-    t_color = 'green'
-    c_color = 'red'
-    # Chaser and target
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, bins, _ = axs[0,0].hist(marginal_dists[i]['dist_t_mean_motion'].values_numpy(), bins=n_bins, alpha=0.5, label=label, density=True)
-    # axs[0,0].legend()
-    axs[0,0].set_xlabel('mean_motion')
-    axs[0,0].set_ylabel('Target')
-    if trace:
-        axs[0,0].vlines(trace['t_mean_motion'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, bins, _ = axs[0,1].hist(marginal_dists[i]['dist_t_mean_anomaly'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[0,1].legend()
-    axs[0,1].set_xlabel('mean_anomaly')
-    if trace:
-        axs[0,1].vlines(trace['t_mean_anomaly'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, bins, _ = axs[0,2].hist(marginal_dists[i]['dist_t_eccentricity'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[0,2].legend()
-    axs[0,2].set_xlabel('eccentricity')
-    if trace:
-        axs[0,2].vlines(trace['t_eccentricity'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, bins, _ = axs[0,3].hist(marginal_dists[i]['dist_t_inclination'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[0,3].legend()
-    axs[0,3].set_xlabel('inclination')
-    if trace:
-        axs[0,3].vlines(trace['t_inclination'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, bins, _ = axs[1,0].hist(marginal_dists[i]['dist_t_argument_of_perigee'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[1,0].legend()
-    axs[1,0].set_xlabel('argument_of_perigee')
-    axs[1,0].set_ylabel('Target')
-    if trace:
-        axs[1,0].vlines(trace['t_argument_of_perigee'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, bins, _ = axs[1,1].hist(marginal_dists[i]['dist_t_raan'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[1,1].legend()
-    axs[1,1].set_xlabel('raan')
-    if trace:
-        axs[1,1].vlines(trace['t_raan'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, bins, _ = axs[1,2].hist(marginal_dists[i]['dist_t_mean_motion_first_derivative'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[1,2].legend()
-    axs[1,2].set_xlabel('mean_motion_first_derivative')
-    if trace:
-        axs[1,2].vlines(trace['t_mean_motion_first_derivative'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, bins, _ = axs[1,3].hist(marginal_dists[i]['dist_t_b_star'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[1,3].legend()
-    axs[1,3].set_xlabel('b_star')
-    if trace:
-        axs[1,3].vlines(trace['t_b_star'], 0, np.max(h)*1.05, linestyles='dashed')
-#     ax.set_xlim(-0.01,0.01)
-
-
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[2,0].hist(marginal_dists[i]['dist_c_mean_motion'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[2,0].legend()
-    axs[2,0].set_xlabel('mean_motion')
-    axs[2,0].set_ylabel('Chaser')
-    if trace:
-        axs[2,0].vlines(trace['c_mean_motion'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[2,1].hist(marginal_dists[i]['dist_c_mean_anomaly'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[2,1].legend()
-    axs[2,1].set_xlabel('mean_anomaly')
-    if trace:
-        axs[2,1].vlines(trace['c_mean_anomaly'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[2,2].hist(marginal_dists[i]['dist_c_eccentricity'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[2,2].legend()
-    axs[2,2].set_xlabel('eccentricity')
-    if trace:
-        axs[2,2].vlines(trace['c_eccentricity'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[2,3].hist(marginal_dists[i]['dist_c_inclination'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[2,3].legend()
-    axs[2,3].set_xlabel('inclination')
-    if trace:
-        axs[2,3].vlines(trace['c_inclination'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[3,0].hist(marginal_dists[i]['dist_c_argument_of_perigee'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[3,0].legend()
-    axs[3,0].set_xlabel('argument_of_perigee')
-    axs[3,0].set_ylabel('Chaser')
-    if trace:
-        axs[3,0].vlines(trace['c_argument_of_perigee'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[3,1].hist(marginal_dists[i]['dist_c_raan'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[3,1].legend()
-    axs[3,1].set_xlabel('raan')
-    if trace:
-        axs[3,1].vlines(trace['c_raan'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[3,2].hist(marginal_dists[i]['dist_c_mean_motion_first_derivative'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[3,2].legend()
-    axs[3,2].set_xlabel('mean_motion_first_derivative')
-    if trace:
-        axs[3,2].vlines(trace['c_mean_motion_first_derivative'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[3,3].hist(marginal_dists[i]['dist_c_b_star'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    # axs[3,3].legend()
-    axs[3,3].set_xlabel('b_star')
-    if trace:
-        axs[3,3].vlines(trace['c_b_star'], 0, np.max(h)*1.05, linestyles='dashed')
-#     ax.set_xlim(-0.01,0.01)
-
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['dist_t_mean_motion'].values_numpy()
-        c = marginal_dists[i]['dist_c_mean_motion'].values_numpy()
-        axs[4,0].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[4,0].set_xlabel('t_mean_motion')
-    axs[4,0].set_ylabel('c_mean_motion')
-    if trace:
-        t = float(trace['t_mean_motion'])
-        c = float(trace['c_mean_motion'])
-        axs[4,0].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[4,0].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[4,0].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['dist_t_mean_anomaly'].values_numpy()
-        c = marginal_dists[i]['dist_c_mean_anomaly'].values_numpy()
-        axs[4,1].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[4,1].set_xlabel('t_mean_anomaly')
-    axs[4,1].set_ylabel('c_mean_anomaly')
-    if trace:
-        t = float(trace['t_mean_anomaly'])
-        c = float(trace['c_mean_anomaly'])
-        axs[4,1].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[4,1].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[4,1].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['dist_t_eccentricity'].values_numpy()
-        c = marginal_dists[i]['dist_c_eccentricity'].values_numpy()
-        axs[4,2].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[4,2].set_xlabel('t_eccentricity')
-    axs[4,2].set_ylabel('c_eccentricity')
-    if trace:
-        t = float(trace['t_eccentricity'])
-        c = float(trace['c_eccentricity'])
-        axs[4,2].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[4,2].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[4,2].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['dist_t_inclination'].values_numpy()
-        c = marginal_dists[i]['dist_c_inclination'].values_numpy()
-        axs[4,3].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[4,3].set_xlabel('t_inclination')
-    axs[4,3].set_ylabel('c_inclination')
-    if trace:
-        t = float(trace['t_inclination'])
-        c = float(trace['c_inclination'])
-        axs[4,3].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[4,3].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[4,3].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['dist_t_argument_of_perigee'].values_numpy()
-        c = marginal_dists[i]['dist_c_argument_of_perigee'].values_numpy()
-        axs[5,0].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[5,0].set_xlabel('t_argument_of_perigee')
-    axs[5,0].set_ylabel('c_argument_of_perigee')
-    if trace:
-        t = float(trace['t_argument_of_perigee'])
-        c = float(trace['c_argument_of_perigee'])
-        axs[5,0].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[5,0].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[5,0].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['dist_t_raan'].values_numpy()
-        c = marginal_dists[i]['dist_c_raan'].values_numpy()
-        axs[5,1].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[5,1].set_xlabel('t_raan')
-    axs[5,1].set_ylabel('c_raan')
-    if trace:
-        t = float(trace['t_raan'])
-        c = float(trace['c_raan'])
-        axs[5,1].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[5,1].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[5,1].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['dist_t_mean_motion_first_derivative'].values_numpy()
-        c = marginal_dists[i]['dist_c_mean_motion_first_derivative'].values_numpy()
-        axs[5,2].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[5,2].set_xlabel('t_mean_motion_first_derivative')
-    axs[5,2].set_ylabel('c_mean_motion_first_derivative')
-    if trace:
-        t = float(trace['t_mean_motion_first_derivative'])
-        c = float(trace['c_mean_motion_first_derivative'])
-        axs[5,2].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[5,2].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[5,2].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['dist_t_b_star'].values_numpy()
-        c = marginal_dists[i]['dist_c_b_star'].values_numpy()
-        axs[5,3].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[5,3].set_xlabel('t_b_star')
-    axs[5,3].set_ylabel('c_b_star')
-    if trace:
-        t = float(trace['t_b_star'])
-        c = float(trace['c_b_star'])
-        axs[5,3].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[5,3].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[5,3].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-    # Other variables from simulation
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[6,0].hist(marginal_dists[i]['dist_time_min'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    axs[6,0].set_xlabel('time_min')
-    if trace:
-        axs[6,0].vlines(trace['time_min'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    ax = axs[6,1]
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[6,1].hist(marginal_dists[i]['dist_d_min'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    axs[6,1].set_xlabel('d_min')
-    if trace:
-        axs[6,1].vlines(trace['d_min'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        label = dists[i].name
-        dist_conj = marginal_dists[i]['dist_conj']
-        p_conj = sum(dist_conj.values)/len(dist_conj)
-        axs[6,2].bar(['No conj', 'Conj'], [1-p_conj, p_conj], alpha=0.5)
-    axs[6,2].set_xlabel('conj')
-    if trace:
-        axs[6,2].vlines(trace['conj']==1, 0, 1., linestyles='dashed')
-
-    t_min, t_max = 1e30, -1e30
-    c_min, c_max = 1e30, -1e30
-    for i in range(len(dists)):
-        t = marginal_dists[i]['d_conj'].values_numpy()
-        c = marginal_dists[i]['d_min'].values_numpy()
-        axs[6,3].scatter(x=t, y=c, alpha=0.5)
-        t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
-        c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
-    axs[6,3].set_xlabel('d_conj')
-    axs[6,3].set_ylabel('d_min')
-    if trace:
-        t = float(trace['d_conj'])
-        c = float(trace['d_min'])
-        axs[6,3].scatter(x=[t], y=[c], color='black')
-        t_min, t_max = min(t_min, t), max(t_max, t)
-        c_min, c_max = min(c_min, c), max(c_max, c)
-    axs[6,3].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
-    axs[6,3].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
-
-    #axs[6,3].axis('off')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[7,0].hist(marginal_dists[i]['dist_time_conj'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    axs[7,0].set_xlabel('time_conj')
-    if trace:
-        if 'time_conj' in trace:
-            if trace['time_conj'] is not None:
-                axs[7,0].vlines(trace['time_conj'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[7,1].hist(marginal_dists[i]['dist_d_conj'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    axs[7,1].set_xlabel('d_conj')
-    if trace:
-        if 'd_conj' in trace:
-            if trace['d_conj'] is not None:
-                axs[7,1].vlines(trace['d_conj'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        h, _, _ = axs[7,2].hist(marginal_dists[i]['dist_num_cdms'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-    axs[7,2].set_xlabel('num_cdms')
-    if trace:
-        axs[7,2].vlines(trace['num_cdms'], 0, np.max(h)*1.05, linestyles='dashed')
-
-    for i in range(len(dists)):
-        label = dists[i].name
-        dist_conj = marginal_dists[i]['dist_conj']
-        if len(dist_conj) > 0:
-            axs[7,3].hist(marginal_dists[i]['dist_time_cdm'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
-            axs[7,3].set_xlabel('time_cdm')
-
-    plt.tight_layout()
-    fig.legend()
-
-    if file_name:
-        print('Plotting to file: {}'.format(file_name))
-        plt.savefig(file_name)
-    return fig, axs
-
 def plot_trace_orbit(trace, time_upsample_factor=100, figsize=(10, 8), file_name=None):
     t_color, c_color = 'red', 'forestgreen'
 
@@ -693,32 +265,460 @@ def plot_trace_event(trace, *args, **kwargs):
     return event.plot_features(*args, **kwargs)
 
 
-def plot_combined(dists, trace, figsize=(20,10), file_name=None):
-    file_name_1 = os.path.join(tempfile.mkdtemp(), str(uuid.uuid4())) + '.png'
-    file_name_2 = os.path.join(tempfile.mkdtemp(), str(uuid.uuid4())) + '.png'
-    file_name_3 = os.path.join(tempfile.mkdtemp(), str(uuid.uuid4())) + '.png'
+# def plot_combined(dists, trace, figsize=(20,10), file_name=None):
+#     file_name_1 = os.path.join(tempfile.mkdtemp(), str(uuid.uuid4())) + '.png'
+#     file_name_2 = os.path.join(tempfile.mkdtemp(), str(uuid.uuid4())) + '.png'
+#     file_name_3 = os.path.join(tempfile.mkdtemp(), str(uuid.uuid4())) + '.png'
 
-    plot_dist(dists, trace=trace, file_name=file_name_1)
-    plot_trace_orbit(trace, file_name=file_name_2)
-    features = ['MISS_DISTANCE', 'RELATIVE_SPEED', 'RELATIVE_POSITION_R', 'OBJECT1_CR_R', 'OBJECT1_CT_T', 'OBJECT1_CN_N', 'OBJECT1_CRDOT_RDOT', 'OBJECT1_CTDOT_TDOT', 'OBJECT1_CNDOT_NDOT', 'OBJECT2_CR_R', 'OBJECT2_CT_T', 'OBJECT2_CN_N', 'OBJECT2_CRDOT_RDOT', 'OBJECT2_CTDOT_TDOT', 'OBJECT2_CNDOT_NDOT']
-    plot_trace_event(trace, features, file_name=file_name_3)
+#     plot_dist(dists, trace=trace, file_name=file_name_1)
+#     plot_trace_orbit(trace, file_name=file_name_2)
+#     features = ['MISS_DISTANCE', 'RELATIVE_SPEED', 'RELATIVE_POSITION_R', 'OBJECT1_CR_R', 'OBJECT1_CT_T', 'OBJECT1_CN_N', 'OBJECT1_CRDOT_RDOT', 'OBJECT1_CTDOT_TDOT', 'OBJECT1_CNDOT_NDOT', 'OBJECT2_CR_R', 'OBJECT2_CT_T', 'OBJECT2_CN_N', 'OBJECT2_CRDOT_RDOT', 'OBJECT2_CTDOT_TDOT', 'OBJECT2_CNDOT_NDOT']
+#     plot_trace_event(trace, features, file_name=file_name_3)
 
-    fig = plt.figure(figsize=figsize)
-    gs = fig.add_gridspec(2, 2, width_ratios=[2, 1], height_ratios=[1, 1], hspace=0.09, wspace=0.05, left=0, right=1, bottom=0, top=1)
+#     fig = plt.figure(figsize=figsize)
+#     gs = fig.add_gridspec(2, 2, width_ratios=[2, 1], height_ratios=[1, 1], hspace=0.09, wspace=0.05, left=0, right=1, bottom=0, top=1)
 
-    ax = fig.add_subplot(gs[:, 0])
-    ax.imshow(mpimg.imread(file_name_1), interpolation='bicubic', aspect='auto')
-    ax.axis('off')
+#     ax = fig.add_subplot(gs[:, 0])
+#     ax.imshow(mpimg.imread(file_name_1), interpolation='bicubic', aspect='auto')
+#     ax.axis('off')
 
-    ax = fig.add_subplot(gs[0, 1])
-    ax.imshow(mpimg.imread(file_name_2), interpolation='bicubic', aspect='auto')
-    ax.axis('off')
+#     ax = fig.add_subplot(gs[0, 1])
+#     ax.imshow(mpimg.imread(file_name_2), interpolation='bicubic', aspect='auto')
+#     ax.axis('off')
 
-    ax = fig.add_subplot(gs[1, 1])
-    ax.imshow(mpimg.imread(file_name_3), interpolation='bicubic', aspect='auto')
-    ax.axis('off')
+#     ax = fig.add_subplot(gs[1, 1])
+#     ax.imshow(mpimg.imread(file_name_3), interpolation='bicubic', aspect='auto')
+#     ax.axis('off')
+# #     plt.tight_layout()
+
+#     if file_name is not None:
+#         print('Plotting combined plot to file: {}'.format(file_name))
+#         fig.savefig(file_name, dpi=150)
+
+# def plot_dist(dists, file_name=None, n_bins=30, num_resample=None, trace=None, figsize = (16, 18)):
+#     if isinstance(dists, Empirical):
+#         dists = [dists]
+
+#     marginal_dists = [{} for _ in range(len(dists))]
+#     pyprob.set_verbosity(0)
+#     for i, dist in enumerate(dists):
+#         if num_resample is not None:
+#             dist = dist.resample(num_resample)
+#         dist = dist.condition(lambda t: not t['prop_error'])
+
+#         marginal_dists[i]['dist_time_min'] = dist.map(lambda t:t['time_min'])
+#         marginal_dists[i]['dist_d_min'] = dist.map(lambda t:t['d_min'])
+#         marginal_dists[i]['dist_conj'] = dist.map(lambda t:t['conj'])
+#         marginal_dists[i]['dist_events_with_conjunction'] = dist.condition(lambda t:t['conj'])
+#         marginal_dists[i]['dist_time_conj'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['time_conj'])
+#         marginal_dists[i]['dist_d_conj'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['d_conj'])
+
+#         marginal_dists[i]['dist_t_mean_motion'] = dist.map(lambda t:t['t_mean_motion'])
+#         marginal_dists[i]['dist_t_mean_anomaly'] = dist.map(lambda t:t['t_mean_anomaly'])
+#         marginal_dists[i]['dist_t_eccentricity'] = dist.map(lambda t:t['t_eccentricity'])
+#         marginal_dists[i]['dist_t_inclination'] = dist.map(lambda t:t['t_inclination'])
+#         marginal_dists[i]['dist_t_argument_of_perigee'] = dist.map(lambda t:t['t_argument_of_perigee'])
+#         marginal_dists[i]['dist_t_raan'] = dist.map(lambda t:t['t_raan'])
+#         marginal_dists[i]['dist_t_mean_motion_first_derivative'] = dist.map(lambda t:t['t_mean_motion_first_derivative'])
+#         marginal_dists[i]['dist_t_b_star'] = dist.map(lambda t:t['t_b_star'])
+
+#         marginal_dists[i]['dist_c_mean_motion'] = dist.map(lambda t:t['c_mean_motion'])
+#         marginal_dists[i]['dist_c_mean_anomaly'] = dist.map(lambda t:t['c_mean_anomaly'])
+#         marginal_dists[i]['dist_c_eccentricity'] = dist.map(lambda t:t['c_eccentricity'])
+#         marginal_dists[i]['dist_c_inclination'] = dist.map(lambda t:t['c_inclination'])
+#         marginal_dists[i]['dist_c_argument_of_perigee'] = dist.map(lambda t:t['c_argument_of_perigee'])
+#         marginal_dists[i]['dist_c_raan'] = dist.map(lambda t:t['c_raan'])
+#         marginal_dists[i]['dist_c_mean_motion_first_derivative'] = dist.map(lambda t:t['c_mean_motion_first_derivative'])
+#         marginal_dists[i]['dist_c_b_star'] = dist.map(lambda t:t['c_b_star'])
+
+#         marginal_dists[i]['dist_num_cdms'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['num_cdms'])
+#         if len(marginal_dists[i]['dist_conj']) > 0:
+#             marginal_dists[i]['dist_time_cdm'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['time_cdm'])
+
+#     fig, axs = plt.subplots(8, 4, figsize=figsize)
+
+#     t_color = 'green'
+#     c_color = 'red'
+#     # Chaser and target
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, bins, _ = axs[0,0].hist(marginal_dists[i]['dist_t_mean_motion'].values_numpy(), bins=n_bins, alpha=0.5, label=label, density=True)
+#     # axs[0,0].legend()
+#     axs[0,0].set_xlabel('mean_motion')
+#     axs[0,0].set_ylabel('Target')
+#     if trace:
+#         axs[0,0].vlines(trace['t_mean_motion'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, bins, _ = axs[0,1].hist(marginal_dists[i]['dist_t_mean_anomaly'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[0,1].legend()
+#     axs[0,1].set_xlabel('mean_anomaly')
+#     if trace:
+#         axs[0,1].vlines(trace['t_mean_anomaly'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, bins, _ = axs[0,2].hist(marginal_dists[i]['dist_t_eccentricity'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[0,2].legend()
+#     axs[0,2].set_xlabel('eccentricity')
+#     if trace:
+#         axs[0,2].vlines(trace['t_eccentricity'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, bins, _ = axs[0,3].hist(marginal_dists[i]['dist_t_inclination'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[0,3].legend()
+#     axs[0,3].set_xlabel('inclination')
+#     if trace:
+#         axs[0,3].vlines(trace['t_inclination'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, bins, _ = axs[1,0].hist(marginal_dists[i]['dist_t_argument_of_perigee'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[1,0].legend()
+#     axs[1,0].set_xlabel('argument_of_perigee')
+#     axs[1,0].set_ylabel('Target')
+#     if trace:
+#         axs[1,0].vlines(trace['t_argument_of_perigee'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, bins, _ = axs[1,1].hist(marginal_dists[i]['dist_t_raan'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[1,1].legend()
+#     axs[1,1].set_xlabel('raan')
+#     if trace:
+#         axs[1,1].vlines(trace['t_raan'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, bins, _ = axs[1,2].hist(marginal_dists[i]['dist_t_mean_motion_first_derivative'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[1,2].legend()
+#     axs[1,2].set_xlabel('mean_motion_first_derivative')
+#     if trace:
+#         axs[1,2].vlines(trace['t_mean_motion_first_derivative'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, bins, _ = axs[1,3].hist(marginal_dists[i]['dist_t_b_star'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[1,3].legend()
+#     axs[1,3].set_xlabel('b_star')
+#     if trace:
+#         axs[1,3].vlines(trace['t_b_star'], 0, np.max(h)*1.05, linestyles='dashed')
+# #     ax.set_xlim(-0.01,0.01)
+
+
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[2,0].hist(marginal_dists[i]['dist_c_mean_motion'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[2,0].legend()
+#     axs[2,0].set_xlabel('mean_motion')
+#     axs[2,0].set_ylabel('Chaser')
+#     if trace:
+#         axs[2,0].vlines(trace['c_mean_motion'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[2,1].hist(marginal_dists[i]['dist_c_mean_anomaly'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[2,1].legend()
+#     axs[2,1].set_xlabel('mean_anomaly')
+#     if trace:
+#         axs[2,1].vlines(trace['c_mean_anomaly'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[2,2].hist(marginal_dists[i]['dist_c_eccentricity'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[2,2].legend()
+#     axs[2,2].set_xlabel('eccentricity')
+#     if trace:
+#         axs[2,2].vlines(trace['c_eccentricity'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[2,3].hist(marginal_dists[i]['dist_c_inclination'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[2,3].legend()
+#     axs[2,3].set_xlabel('inclination')
+#     if trace:
+#         axs[2,3].vlines(trace['c_inclination'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[3,0].hist(marginal_dists[i]['dist_c_argument_of_perigee'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[3,0].legend()
+#     axs[3,0].set_xlabel('argument_of_perigee')
+#     axs[3,0].set_ylabel('Chaser')
+#     if trace:
+#         axs[3,0].vlines(trace['c_argument_of_perigee'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[3,1].hist(marginal_dists[i]['dist_c_raan'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[3,1].legend()
+#     axs[3,1].set_xlabel('raan')
+#     if trace:
+#         axs[3,1].vlines(trace['c_raan'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[3,2].hist(marginal_dists[i]['dist_c_mean_motion_first_derivative'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[3,2].legend()
+#     axs[3,2].set_xlabel('mean_motion_first_derivative')
+#     if trace:
+#         axs[3,2].vlines(trace['c_mean_motion_first_derivative'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[3,3].hist(marginal_dists[i]['dist_c_b_star'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     # axs[3,3].legend()
+#     axs[3,3].set_xlabel('b_star')
+#     if trace:
+#         axs[3,3].vlines(trace['c_b_star'], 0, np.max(h)*1.05, linestyles='dashed')
+# #     ax.set_xlim(-0.01,0.01)
+
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['dist_t_mean_motion'].values_numpy()
+#         c = marginal_dists[i]['dist_c_mean_motion'].values_numpy()
+#         axs[4,0].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[4,0].set_xlabel('t_mean_motion')
+#     axs[4,0].set_ylabel('c_mean_motion')
+#     if trace:
+#         t = float(trace['t_mean_motion'])
+#         c = float(trace['c_mean_motion'])
+#         axs[4,0].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[4,0].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[4,0].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['dist_t_mean_anomaly'].values_numpy()
+#         c = marginal_dists[i]['dist_c_mean_anomaly'].values_numpy()
+#         axs[4,1].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[4,1].set_xlabel('t_mean_anomaly')
+#     axs[4,1].set_ylabel('c_mean_anomaly')
+#     if trace:
+#         t = float(trace['t_mean_anomaly'])
+#         c = float(trace['c_mean_anomaly'])
+#         axs[4,1].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[4,1].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[4,1].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['dist_t_eccentricity'].values_numpy()
+#         c = marginal_dists[i]['dist_c_eccentricity'].values_numpy()
+#         axs[4,2].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[4,2].set_xlabel('t_eccentricity')
+#     axs[4,2].set_ylabel('c_eccentricity')
+#     if trace:
+#         t = float(trace['t_eccentricity'])
+#         c = float(trace['c_eccentricity'])
+#         axs[4,2].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[4,2].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[4,2].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['dist_t_inclination'].values_numpy()
+#         c = marginal_dists[i]['dist_c_inclination'].values_numpy()
+#         axs[4,3].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[4,3].set_xlabel('t_inclination')
+#     axs[4,3].set_ylabel('c_inclination')
+#     if trace:
+#         t = float(trace['t_inclination'])
+#         c = float(trace['c_inclination'])
+#         axs[4,3].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[4,3].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[4,3].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['dist_t_argument_of_perigee'].values_numpy()
+#         c = marginal_dists[i]['dist_c_argument_of_perigee'].values_numpy()
+#         axs[5,0].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[5,0].set_xlabel('t_argument_of_perigee')
+#     axs[5,0].set_ylabel('c_argument_of_perigee')
+#     if trace:
+#         t = float(trace['t_argument_of_perigee'])
+#         c = float(trace['c_argument_of_perigee'])
+#         axs[5,0].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[5,0].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[5,0].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['dist_t_raan'].values_numpy()
+#         c = marginal_dists[i]['dist_c_raan'].values_numpy()
+#         axs[5,1].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[5,1].set_xlabel('t_raan')
+#     axs[5,1].set_ylabel('c_raan')
+#     if trace:
+#         t = float(trace['t_raan'])
+#         c = float(trace['c_raan'])
+#         axs[5,1].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[5,1].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[5,1].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['dist_t_mean_motion_first_derivative'].values_numpy()
+#         c = marginal_dists[i]['dist_c_mean_motion_first_derivative'].values_numpy()
+#         axs[5,2].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[5,2].set_xlabel('t_mean_motion_first_derivative')
+#     axs[5,2].set_ylabel('c_mean_motion_first_derivative')
+#     if trace:
+#         t = float(trace['t_mean_motion_first_derivative'])
+#         c = float(trace['c_mean_motion_first_derivative'])
+#         axs[5,2].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[5,2].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[5,2].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['dist_t_b_star'].values_numpy()
+#         c = marginal_dists[i]['dist_c_b_star'].values_numpy()
+#         axs[5,3].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[5,3].set_xlabel('t_b_star')
+#     axs[5,3].set_ylabel('c_b_star')
+#     if trace:
+#         t = float(trace['t_b_star'])
+#         c = float(trace['c_b_star'])
+#         axs[5,3].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[5,3].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[5,3].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+#     # Other variables from simulation
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[6,0].hist(marginal_dists[i]['dist_time_min'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     axs[6,0].set_xlabel('time_min')
+#     if trace:
+#         axs[6,0].vlines(trace['time_min'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     ax = axs[6,1]
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[6,1].hist(marginal_dists[i]['dist_d_min'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     axs[6,1].set_xlabel('d_min')
+#     if trace:
+#         axs[6,1].vlines(trace['d_min'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         dist_conj = marginal_dists[i]['dist_conj']
+#         p_conj = sum(dist_conj.values)/len(dist_conj)
+#         axs[6,2].bar(['No conj', 'Conj'], [1-p_conj, p_conj], alpha=0.5)
+#     axs[6,2].set_xlabel('conj')
+#     if trace:
+#         axs[6,2].vlines(trace['conj']==1, 0, 1., linestyles='dashed')
+
+#     t_min, t_max = 1e30, -1e30
+#     c_min, c_max = 1e30, -1e30
+#     for i in range(len(dists)):
+#         t = marginal_dists[i]['d_conj'].values_numpy()
+#         c = marginal_dists[i]['d_min'].values_numpy()
+#         axs[6,3].scatter(x=t, y=c, alpha=0.5)
+#         t_min, t_max = min(t_min, t.min()), max(t_max, t.max())
+#         c_min, c_max = min(c_min, c.min()), max(c_max, c.max())
+#     axs[6,3].set_xlabel('d_conj')
+#     axs[6,3].set_ylabel('d_min')
+#     if trace:
+#         t = float(trace['d_conj'])
+#         c = float(trace['d_min'])
+#         axs[6,3].scatter(x=[t], y=[c], color='black')
+#         t_min, t_max = min(t_min, t), max(t_max, t)
+#         c_min, c_max = min(c_min, c), max(c_max, c)
+#     axs[6,3].set_xlim(t_min-(t_max-t_min)*0.05, t_max+(t_max-t_min)*0.05)
+#     axs[6,3].set_ylim(c_min-(c_max-c_min)*0.05, c_max+(c_max-c_min)*0.05)
+
+#     #axs[6,3].axis('off')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[7,0].hist(marginal_dists[i]['dist_time_conj'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     axs[7,0].set_xlabel('time_conj')
+#     if trace:
+#         if 'time_conj' in trace:
+#             if trace['time_conj'] is not None:
+#                 axs[7,0].vlines(trace['time_conj'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[7,1].hist(marginal_dists[i]['dist_d_conj'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     axs[7,1].set_xlabel('d_conj')
+#     if trace:
+#         if 'd_conj' in trace:
+#             if trace['d_conj'] is not None:
+#                 axs[7,1].vlines(trace['d_conj'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         h, _, _ = axs[7,2].hist(marginal_dists[i]['dist_num_cdms'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#     axs[7,2].set_xlabel('num_cdms')
+#     if trace:
+#         axs[7,2].vlines(trace['num_cdms'], 0, np.max(h)*1.05, linestyles='dashed')
+
+#     for i in range(len(dists)):
+#         label = dists[i].name
+#         dist_conj = marginal_dists[i]['dist_conj']
+#         if len(dist_conj) > 0:
+#             axs[7,3].hist(marginal_dists[i]['dist_time_cdm'].values_numpy(), bins=n_bins, alpha=0.5, density=True)
+#             axs[7,3].set_xlabel('time_cdm')
+
 #     plt.tight_layout()
+#     fig.legend()
 
-    if file_name is not None:
-        print('Plotting combined plot to file: {}'.format(file_name))
-        fig.savefig(file_name, dpi=150)
+#     if file_name:
+#         print('Plotting to file: {}'.format(file_name))
+#         plt.savefig(file_name)
+#     return fig, axs
+
