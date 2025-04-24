@@ -8,7 +8,6 @@
 #
 # GNU General Public License version 3. See LICENSE in root of repository.
 
-
 import numpy as np
 import torch
 import math
@@ -61,39 +60,119 @@ def is_number(s):
     except ValueError:
         return False
 
+
+def from_cartesian_to_keplerian(r_vec, v_vec, mu):
+    """
+    This function converts the provided state from Cartesian to Keplerian elements.
+    It mirrors the function from_cartesian_to_keplerian in (`dsgp4`)[https://github.com/esa/dSGP4], but uses torch tensors instead of numpy arrays.
+    
+    Args:
+        r_vec (``torch.Tensor``): position vector in Cartesian coordinates
+        v_vec (``torch.Tensor``): velocity vector in Cartesian coordinates
+        mu (``float``): gravitational parameter of the central body
+
+    Returns:
+        ``torch.Tensor``: tensor of Keplerian elements: (a, e, i, Omega, omega, M)
+                                                (i.e., semi-major axis, eccentricity, inclination,
+                                                right ascension of ascending node, argument of perigee,
+                                                mean anomaly). All the angles are in radians, eccentricity is unitless
+                                                and semi-major axis is in SI.    
+    """
+
+    r = torch.norm(r_vec)
+    v = torch.norm(v_vec)
+
+    h_vec = torch.cross(r_vec, v_vec)
+    h = torch.norm(h_vec)
+
+    # Inclination
+    i = torch.where(h != 0, torch.acos(h_vec[2] / h), torch.tensor(0.0, device=r_vec.device))
+
+    # Node vector
+    K = torch.tensor([0.0, 0.0, 1.0], device=r_vec.device)
+    n_vec = torch.cross(K, h_vec)
+    n = torch.norm(n_vec)
+
+    # Eccentricity vector and magnitude
+    e_vec = (1 / mu) * ((v ** 2 - mu / r) * r_vec - torch.dot(r_vec, v_vec) * v_vec)
+    e = torch.norm(e_vec)
+
+    # Specific orbital energy
+    energy = v ** 2 / 2 - mu / r
+
+    # Semi-major axis
+    a = torch.where(torch.abs(e - 1.0) > 1e-8, -mu / (2 * energy), torch.tensor(float('inf'), device=r_vec.device))
+
+    # Right Ascension of Ascending Node (RAAN)
+    cos_Omega = n_vec[0] / n
+    cos_Omega = torch.clamp(cos_Omega, -1.0, 1.0)
+    raw_Omega = torch.acos(cos_Omega)
+    Omega = torch.where(n_vec[1] >= 0, raw_Omega, 2 * torch.pi - raw_Omega)
+    Omega = torch.where(n != 0, Omega, torch.tensor(0.0, device=r_vec.device))
+
+    # Argument of perigee
+    cos_omega = torch.dot(n_vec, e_vec) / (n * e + 1e-12)
+    cos_omega = torch.clamp(cos_omega, -1.0, 1.0)
+    raw_omega = torch.acos(cos_omega)
+    omega = torch.where(e_vec[2] >= 0, raw_omega, 2 * torch.pi - raw_omega)
+    omega = torch.where((n != 0) & (e != 0), omega, torch.tensor(0.0, device=r_vec.device))
+
+    # True anomaly
+    cos_nu = torch.dot(e_vec, r_vec) / (e * r + 1e-12)
+    cos_nu = torch.clamp(cos_nu, -1.0, 1.0)
+    raw_nu = torch.acos(cos_nu)
+    nu = torch.where(torch.dot(r_vec, v_vec) >= 0, raw_nu, 2 * torch.pi - raw_nu)
+    nu = torch.where(e != 0, nu, torch.tensor(0.0, device=r_vec.device))
+
+    # Eccentric anomaly (E) and Mean anomaly (M)
+    elliptic = e < 1.0
+    hyperbolic = e > 1.0
+    #parabolic = ~elliptic & ~hyperbolic
+    if elliptic:
+        E = 2 * torch.atan(torch.tan(nu / 2) * torch.sqrt((1 - e) / (1 + e)))
+        M = E - e * torch.sin(E)
+    elif hyperbolic:    
+        F = 2 * torch.atanh(torch.tan(nu / 2) * torch.sqrt((e - 1) / (e + 1)))
+        M = e * torch.sinh(F) - F
+    # Normalize angles to [0, 2π)
+    Omega=Omega - (2 * torch.pi) * torch.floor(Omega / (2 * torch.pi))
+    omega=omega - (2 * torch.pi) * torch.floor(omega / (2 * torch.pi))
+    M=M - (2 * torch.pi) * torch.floor(M / (2 * torch.pi))
+    return a, e, i, Omega, omega, M
+
 def keplerian_cartesian_partials(state,mu):
     """
     Computes the partial derivatives of the cartesian state with respect to the keplerian elements.
 
     Args:
-        state (`numpy.array`): numpy array of 2 rows and 3 columns, where
+        state (``numpy.array``): numpy array of 2 rows and 3 columns, where
                                     the first row represents position, and the second velocity.
-        mu (`float`): gravitational parameter of the central body
+        mu (``float``): gravitational parameter of the central body
 
     Returns:
-        `numpy.array`: numpy array of the partial derivatives of the cartesian state with respect to the keplerian elements.
+        ``numpy.array``: numpy array of the partial derivatives of the cartesian state with respect to the keplerian elements.
     """
     state_1=dsgp4.util.clone_w_grad(state)
     state_2=dsgp4.util.clone_w_grad(state)
     state_3=dsgp4.util.clone_w_grad(state)
     state_4=dsgp4.util.clone_w_grad(state)
     state_5=dsgp4.util.clone_w_grad(state)
-    a=dsgp4.util.from_cartesian_to_keplerian_torch(state,mu=mu)[0]
+    a=from_cartesian_to_keplerian(state[0], state[1], mu=mu)[0]
     a.backward()
     gradient_a=state.grad.flatten()
-    e=dsgp4.util.from_cartesian_to_keplerian_torch(state_1,mu=mu)[1]
+    e=from_cartesian_to_keplerian(state_1[0], state_1[1],mu=mu)[1]
     e.backward()
     gradient_e=state_1.grad.flatten()
-    i=dsgp4.util.from_cartesian_to_keplerian_torch(state_2,mu=mu)[2]
+    i=from_cartesian_to_keplerian(state_2[0], state_2[1], mu=mu)[2]
     i.backward()
     gradient_i=state_2.grad.flatten()
-    Omega=dsgp4.util.from_cartesian_to_keplerian_torch(state_3,mu=mu)[3]
+    Omega=from_cartesian_to_keplerian(state_3[0], state_3[1], mu=mu)[3]
     Omega.backward()
     gradient_Omega=state_3.grad.flatten()
-    omega=dsgp4.util.from_cartesian_to_keplerian_torch(state_4,mu=mu)[4]
+    omega=from_cartesian_to_keplerian(state_4[0], state_4[1], mu=mu)[4]
     omega.backward()
     gradient_omega=state_4.grad.flatten()
-    mean_anomaly=dsgp4.util.from_cartesian_to_keplerian_torch(state_5,mu=mu)[5]
+    mean_anomaly=from_cartesian_to_keplerian(state_5[0], state_5[1], mu=mu)[5]
     mean_anomaly.backward()
     gradient_mean_anomaly=state_5.grad.flatten()
     DF=np.stack((gradient_a, gradient_e, gradient_i, gradient_Omega, gradient_omega, gradient_mean_anomaly))

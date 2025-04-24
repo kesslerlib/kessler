@@ -12,7 +12,8 @@
 import unittest
 import numpy as np
 import datetime
-
+import torch
+import dsgp4
 import kessler
 import kessler.util
 
@@ -101,4 +102,33 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(kessler.util.doy_2_date(example3, doy_3, year_3, 5), test_case3_correct)
         self.assertEqual(kessler.util.doy_2_date(example4, doy_4, year_4, 5), test_case4_correct) 
         self.assertEqual(kessler.util.doy_2_date(example5, doy_5, year_5, 5), test_case5_correct) 
+    
+    def test_from_cartesian_to_keplerian_torch(self):
+        lines=[]
+        lines.append("0 COSMOS 2251 DEB")
+        lines.append("1 34427U 93036RU  22068.94647328  .00008100  00000-0  11455-2 0  9999")
+        lines.append("2 34427  74.0145 306.8269 0033346  13.0723 347.1308 14.76870515693886")
+        tle=dsgp4.TLE(lines)
+        dsgp4.initialize_tle(tle)
+        # Extract the state vector from the dSGP4 output
+        st=dsgp4.sgp4(tle,torch.tensor(0.0))*1e3  # Convert to meters and meters/second
+        #now let's retrieve the poliastro gravitational parameter of the Earth:
+        mu = 398600441800000.0000000000000000#Earth.k.to(u.m**3 / u.s**2).value
+        # Let's then convert Cartesian -> Keplerian using our function
+        a,e,i,Omega,omega,M=kessler.util.from_cartesian_to_keplerian(r_vec=st[0], v_vec=st[1], mu=mu)
+
+        a_poliastro=7023679.5817881366237998
+        e_poliastro=0.0041649630912143
+        i_poliastro=1.2919744331609118
+        Omega_poliastro=5.3551396410293757
+        omega_poliastro=0.4409272281996022
+        M_poliastro=5.8458093777349722
+        #let's now test they are close:
+        self.assertAlmostEqual(a.item(), a_poliastro, places=5)
+        self.assertAlmostEqual(e.item(), e_poliastro, places=5)
+        self.assertAlmostEqual(i.item(), i_poliastro, places=5)
+        self.assertAlmostEqual(Omega.item(), Omega_poliastro, places=5)
+        self.assertAlmostEqual(omega.item(), omega_poliastro, places=5)
+        self.assertAlmostEqual(M.item(), M_poliastro, places=5)
+        
 
