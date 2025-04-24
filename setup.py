@@ -35,6 +35,6 @@ setup(
     extras_require={'dev': ['pytest', 'coverage', 'pytest-xdist', 'scikit-learn']},
     url='https://kesslerlib.github.io/kessler/',
     classifiers=['License :: OSI Approved :: BSD License', 'Programming Language :: Python :: 3'],
-    license='BSD'
+    license='BSD',
     keywords='Spacecraft Collision Avoidance Kessler Machine Learning Artificial Intelligence Probabilistic Programming',
 )
