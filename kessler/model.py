@@ -1,3 +1,13 @@
+# This code is part of Kessler, a machine learning library for spacecraft collision avoidance.
+#
+# Copyright (c) 2020-
+# Trillium Technologies
+# University of Oxford
+# Giacomo Acciarini (giacomo.acciarini@gmail.com)
+# and other contributors, see README in root of repository.
+#
+# GNU General Public License version 3. See LICENSE in root of repository.
+
 import dsgp4
 import numpy as np
 import uuid
@@ -7,10 +17,6 @@ import pyro.distributions as dist
 
 from . import GNSS, Radar, ConjunctionDataMessage, util
 from dsgp4 import TLE
-
-from torch.distributions import constraints
-from torch.distributions.distribution import Distribution
-from torch.distributions.utils import broadcast_all
 
 from pyro.distributions import MixtureSameFamily, Categorical, Uniform, Normal, Bernoulli
 
@@ -45,74 +51,6 @@ def find_conjunction(tr0,
         d_conj = squared_norm[i_conj].sqrt()
         return i_min, d_min, i_conj, d_conj
 
-
-class TruncatedNormal(Distribution):
-    """
-    Truncated Normal distribution with specified lower and upper bounds.
-    This class inherits from the Pyro Distribution class and implements
-    the log probability and sampling methods for a truncated normal distribution.
-
-    Args:
-        loc (``torch.Tensor``): The mean of the normal distribution.
-        scale (``torch.Tensor``): The standard deviation of the normal distribution.
-        low (``torch.Tensor``, optional): The lower bound for truncation. Default is None.
-        high (``torch.Tensor``, optional): The upper bound for truncation. Default is None.
-        validate_args (bool, optional): Whether to validate the arguments. Default is None.
-
-    Attributes:
-        loc (``torch.Tensor``): The mean of the normal distribution.
-        scale (``torch.Tensor``): The standard deviation of the normal distribution.
-        low (``torch.Tensor``): The lower bound for truncation.
-        high (``torch.Tensor``): The upper bound for truncation.
-        base_dist (``Normal``): The base normal distribution.
-
-    Methods:
-        log_prob(value): Computes the log probability of the given value.
-        sample(sample_shape): Samples from the truncated normal distribution.
-    """
-    arg_constraints = {
-        'loc': constraints.real,       # loc can be any real number
-        'scale': constraints.positive, # scale must be positive
-        'low': constraints.real,       # low can be any real number
-        'high': constraints.real       # high can be any real number
-    }
-
-    def __init__(self, loc, scale, low=None, high=None, validate_args=None):
-        # Convert inputs to tensors and handle None values
-        self.loc, self.scale, self.low, self.high = broadcast_all(
-            torch.as_tensor(loc), torch.as_tensor(scale),
-            torch.as_tensor(low) if low is not None else None,
-            torch.as_tensor(high) if high is not None else None
-        )
-        # Validate bounds (low < high)
-        if self.low is not None and self.high is not None:
-            if (self.low >= self.high).any():
-                raise ValueError("Invalid bounds: low must be less than high.")
-        # Create a base Normal distribution
-        self.base_dist = Normal(loc, scale)
-        super().__init__(batch_shape=self.loc.shape, validate_args=validate_args)
-
-    def log_prob(self, value):
-        # Calculate log probability for the normal distribution
-        log_prob = self.base_dist.log_prob(value)
-        # Adjust for truncation at the low bound (if any)
-        if self.low is not None:
-            log_prob -= torch.log(torch.clamp(self.base_dist.cdf(self.low), min=1e-10))
-        # Adjust for truncation at the high bound (if any)
-        if self.high is not None:
-            log_prob -= torch.log(torch.clamp(1 - self.base_dist.cdf(self.high), min=1e-10))
-
-        return log_prob
-
-    def sample(self, sample_shape=torch.Size()):
-        shape = self._extended_shape(sample_shape)
-        rand = torch.rand(shape, dtype=self.loc.dtype, device=self.loc.device)
-        if self.low is not None:
-            rand = rand * (1 - self.base_dist.cdf(self.low)) + self.base_dist.cdf(self.low)
-        if self.high is not None:
-            rand = rand * self.base_dist.cdf(self.high)
-        return self.base_dist.icdf(rand)
-
 def default_prior():
     """
     This function returns a dictionary of TLE elements priors.
@@ -145,7 +83,7 @@ def default_prior():
         mixture_distribution=Categorical(probs=torch.tensor([
             0.12375596165657043, 0.05202080309391022, 0.21220888197422028,
             0.0373813770711422, 0.01674230769276619, 0.5578906536102295])),
-        component_distribution=TruncatedNormal(
+        component_distribution=util.TruncatedNormal(
             low=0.0, high=0.004, loc=torch.tensor([
                 0.0010028142482042313, 0.00017592836171388626, 0.0010926761478185654,
                 0.0003353552892804146, 0.0007777251303195953, 0.001032940074801445]),
@@ -162,7 +100,7 @@ def default_prior():
         mixture_distribution=Categorical(probs=torch.tensor([
             0.5433819890022278, 0.04530993849039078, 0.08378008753061295,
             0.02705608867108822, 0.03350389748811722, 0.2669680118560791])),
-        component_distribution=TruncatedNormal(
+        component_distribution=util.TruncatedNormal(
             low=0.0, high=0.8999999761581421, loc=torch.tensor([
                 0.0028987403493374586, 0.6150050163269043, 0.05085373669862747,
                 0.3420163094997406, 0.7167646288871765, 0.013545362278819084]),
@@ -178,7 +116,7 @@ def default_prior():
             0.028676774352788925, 0.06484941393136978, 0.13786117732524872, 0.0010146398562937975,
             0.047179922461509705, 0.01607278548181057, 0.020023610442876816, 0.06644929945468903,
             0.4442509114742279])),
-        component_distribution=TruncatedNormal(
+        component_distribution=util.TruncatedNormal(
             low=0.0, high=torch.pi, loc=torch.tensor([
                 0.09954200685024261, 1.4393062591552734, 1.736578106880188, 1.0963480472564697,
                 0.48166394233703613, 0.9063634872436523, 1.275956392288208, 2.5208728313446045,
