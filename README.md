@@ -106,3 +106,6 @@ git clone https://github.com/kesslerlib/kessler.git
 cd kessler
 pip install -e .
 ```
+
+## Installation
+* `giacomo.acciarini@gmail.com`

@@ -12,7 +12,7 @@
 #
 project = 'kessler'
 copyright = "2020-2025, Kessler contributors"
-author = 'Giacomo Acciarini, Atılım Güneş Baydin, Francesco Pinto'
+author = 'Giacomo Acciarini, Atılım Güneş Baydin'
 
 
 # The full version, including alpha/beta/rc tags
