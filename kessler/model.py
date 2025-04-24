@@ -230,11 +230,11 @@ class Conjunction:
         if t_observing_instruments is None:
             t_instrument_characteristics={'bias_xyz': np.array([[0., 0., 0.],[0., 0., 0.]]), 'covariance_rtn': np.array([1e-9, 1.115849341564346, 0.059309835843067, 1e-9, 1e-9, 1e-9])**2}
             t_observing_instruments=[GNSS(t_instrument_characteristics)]
-            print(f'No observing instruments for target, using default one with diagonal covariance {t_observing_instruments[0]._instrument_characteristics['covariance_rtn']}')
+            print(f"No observing instruments for target, using default one with diagonal covariance {t_observing_instruments[0]._instrument_characteristics['covariance_rtn']}")
         if c_observing_instruments is None:
             c_instrument_characteristics={'bias_xyz': np.array([[0., 0., 0.],[0., 0., 0.]]), 'covariance_rtn': np.array([1.9628939405514678, 2.2307686944695706, 0.9660907831563862, 1e-9, 1e-9, 1e-9])**2}
             c_observing_instruments=[Radar(c_instrument_characteristics)]
-            print(f'No observing instruments for chaser, using default one with diagonal covariance {c_observing_instruments[0]._instrument_characteristics['covariance_rtn']}')
+            print(f"No observing instruments for chaser, using default one with diagonal covariance {c_observing_instruments[0]._instrument_characteristics['covariance_rtn']}")
         if len(t_observing_instruments) == 0 or len(c_observing_instruments) == 0:
             raise ValueError("We need at least one observing instrument for target and chaser!")
         self._t_observing_instruments = t_observing_instruments
