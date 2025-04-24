@@ -1,13 +1,12 @@
 # This code is part of Kessler, a machine learning library for spacecraft collision avoidance.
 #
 # Copyright (c) 2020-
-# University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 # Trillium Technologies
-# Giacomo Acciarini
+# University of Oxford
+# Giacomo Acciarini (giacomo.acciarini@gmail.com)
 # and other contributors, see README in root of repository.
 #
 # GNU General Public License version 3. See LICENSE in root of repository.
-
 
 import numpy as np
 import warnings
@@ -258,10 +257,10 @@ class ConjunctionDataMessage():
         self._update_miss_distance()
 
     def _update_miss_distance(self):
-        state_object1 = self.get_state(0)
+        state_object1 = self.get_state(0)*1e3
         # if np.isnan(state_object1.sum()):
         #     warnings.warn('state_object1 has NaN')
-        state_object2 = self.get_state(1)
+        state_object2 = self.get_state(1)*1e3
         # if np.isnan(state_object2.sum()):
         #     warnings.warn('state_object2 has NaN')
 
@@ -286,10 +285,10 @@ class ConjunctionDataMessage():
             relative_state[1] = np.array([np.dot(rot_matrix[0], rel_velocity_xyz), np.dot(rot_matrix[1], rel_velocity_xyz), np.dot(rot_matrix[2], rel_velocity_xyz)])
             return relative_state
 
-        state_object1 = self.get_state(0)
+        state_object1 = self.get_state(0)*1e3
         # if np.isnan(state_object1.sum()):
         #     warnings.warn('state_object1 has NaN')
-        state_object2 = self.get_state(1)
+        state_object2 = self.get_state(1)*1e3
         # if np.isnan(state_object2.sum()):
         #     warnings.warn('state_object2 has NaN')
 

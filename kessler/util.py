@@ -1,13 +1,12 @@
 # This code is part of Kessler, a machine learning library for spacecraft collision avoidance.
 #
 # Copyright (c) 2020-
-# University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 # Trillium Technologies
-# Giacomo Acciarini
+# University of Oxford
+# Giacomo Acciarini (giacomo.acciarini@gmail.com)
 # and other contributors, see README in root of repository.
 #
 # GNU General Public License version 3. See LICENSE in root of repository.
-
 
 import numpy as np
 import torch
@@ -20,7 +19,13 @@ import functools
 import random
 import dsgp4
 import matplotlib.pyplot as plt
+import pyro
+import warnings
 
+#for the TruncatedNormal custom distribution
+from torch.distributions import constraints
+from pyro.distributions.torch_distribution import TorchDistribution
+from pyro.distributions import MixtureSameFamily, Categorical, Uniform
 
 _print_refresh_rate = 0.25  #
 
@@ -37,16 +42,133 @@ def seed(seed=None):
         torch.cuda.manual_seed(seed)
 
 seed()
+  
+class TruncatedNormal(TorchDistribution):
+    """
+    Truncated Normal distribution with specified lower and upper bounds.
+    This class inherits from the Pyro Distribution class and implements
+    the log probability and sampling methods for a truncated normal distribution.
+
+    Args:
+        loc (``torch.Tensor``): The mean of the normal distribution.
+        scale (``torch.Tensor``): The standard deviation of the normal distribution.
+        low (``torch.Tensor``, optional): The lower bound for truncation. Default is None.
+        high (``torch.Tensor``, optional): The upper bound for truncation. Default is None.
+        validate_args (bool, optional): Whether to validate the arguments. Default is None.
+
+    Attributes:
+        loc (``torch.Tensor``): The mean of the normal distribution.
+        scale (``torch.Tensor``): The standard deviation of the normal distribution.
+        low (``torch.Tensor``): The lower bound for truncation.
+        high (``torch.Tensor``): The upper bound for truncation.
+        base_dist (``Normal``): The base normal distribution.
+
+    Methods:
+        log_prob(value): Computes the log probability of the given value.
+        sample(sample_shape): Samples from the truncated normal distribution.
+    """  
+    arg_constraints = {
+        '_loc': constraints.real,
+        '_scale': constraints.positive,
+        '_low': constraints.real,
+        '_high': constraints.real,
+    }
+    def __init__(self, loc, scale, low, high):#, clamp_mean_between_low_high=False):
+        self._loc = torch.as_tensor(loc)
+        self._scale = torch.as_tensor(scale)
+        self._low = torch.as_tensor(low)
+        self._high = torch.as_tensor(high)
+        # Define batch dimensions
+        if self._loc.dim() == 0:
+            self._batch_length = 0
+        elif self._loc.dim() in (1, 2):
+            self._batch_length = self._loc.size(0)
+        else:
+            raise RuntimeError('Expecting 1d or 2d (batched) probabilities.')
+
+        # Standard normal distribution for calculations
+        self._standard_normal_dist = pyro.distributions.Normal(
+            torch.zeros_like(self._loc),
+            torch.ones_like(self._scale)
+        )
+
+        # Precompute alpha, beta, CDFs, and Z
+        self._alpha = (self._low - self._loc) / self._scale
+        self._beta = (self._high - self._loc) / self._scale
+        self._standard_normal_cdf_alpha = self._standard_normal_dist.cdf(self._alpha)
+        self._standard_normal_cdf_beta = self._standard_normal_dist.cdf(self._beta)
+        self._Z = self._standard_normal_cdf_beta - self._standard_normal_cdf_alpha
+        self._log_stddev_Z = torch.log(self._scale * self._Z)
+
+        # Initialize base class
+        batch_shape = self._loc.shape
+        event_shape = torch.Size()
+        super().__init__(batch_shape=batch_shape, event_shape=event_shape)
+
+    def log_prob(self, value):
+        value = torch.as_tensor(value)
+
+        # Ensure the value is within bounds
+        lb = value.ge(self._low).type_as(self._low)
+        ub = value.le(self._high).type_as(self._low)
+
+        # Compute log probability
+        lp = (
+            torch.log(lb.mul(ub)) +
+            self._standard_normal_dist.log_prob((value - self._loc) / self._scale) -
+            self._log_stddev_Z
+        )
+
+        # Handle potential NaN or Inf values
+        if self._batch_length == 1:
+            lp = lp.squeeze(0)
+
+        if torch.any(torch.isnan(lp)) or torch.isinf(lp).any():
+            warnings.warn('NaN, -Inf, or Inf encountered in TruncatedNormal log_prob.')
+            print('distribution', self)
+            print('value', value)
+            print('log_prob', lp)
+
+        return lp
+
+    def sample(self, sample_shape=torch.Size()):
+        shape = self._low.expand(sample_shape + self._low.shape)
+        attempt_count = 0
+        ret = torch.full(shape, float('NaN'), dtype=self._low.dtype)
+
+        outside_domain = True
+        while torch.isnan(ret).any() or outside_domain:
+            attempt_count += 1
+            if attempt_count == 10000:
+                warnings.warn('Trying to sample from the tail of a truncated normal distribution, which can take a long time. A more efficient implementation is pending.')
+
+            # Sample uniformly between CDF(alpha) and CDF(beta)
+            rand = torch.rand(shape, dtype=self._low.dtype)
+            ret = (
+                self._standard_normal_dist.icdf(
+                    self._standard_normal_cdf_alpha + rand * (self._standard_normal_cdf_beta - self._standard_normal_cdf_alpha)
+                ) * self._scale + self._loc
+            )
+
+            # Check if the sample is within bounds
+            lb = ret.ge(self._low).type_as(self._low)
+            ub = ret.le(self._high).type_as(self._low)
+            outside_domain = (torch.sum(lb.mul(ub)) == 0)
+
+        if self._batch_length == 1:
+            ret = ret.squeeze(0)
+        return ret
 
 def fit_mixture(values, *args, **kwargs):
     """
-    This function fits a mixture of Gaussians to the provided values.
-
+    Fit a Gaussian Mixture Model to the given data.
     Args:
-        values (`numpy.ndarray`): values to fit the mixture to
+        values (``numpy.ndarray``): The data to fit the model to.
+        *args: Additional arguments for the GaussianMixture constructor.
+        **kwargs: Additional keyword arguments for the GaussianMixture constructor.
 
     Returns:
-        tuple: tuple containing: - `numpy.ndarray`: means of the mixture - `numpy.ndarray`: standard deviations of the mixture - `numpy.ndarray`: weights of the mixture
+        ``GaussianMixture``: The fitted Gaussian Mixture Model.
     """
     from sklearn import mixture
     values = values.reshape(-1,1)
@@ -61,39 +183,119 @@ def is_number(s):
     except ValueError:
         return False
 
+
+def from_cartesian_to_keplerian(r_vec, v_vec, mu):
+    """
+    This function converts the provided state from Cartesian to Keplerian elements.
+    It mirrors the function from_cartesian_to_keplerian in (`dsgp4`)[https://github.com/esa/dSGP4], but uses torch tensors instead of numpy arrays.
+    
+    Args:
+        r_vec (``torch.Tensor``): position vector in Cartesian coordinates
+        v_vec (``torch.Tensor``): velocity vector in Cartesian coordinates
+        mu (``float``): gravitational parameter of the central body
+
+    Returns:
+        ``torch.Tensor``: tensor of Keplerian elements: (a, e, i, Omega, omega, M)
+                                                (i.e., semi-major axis, eccentricity, inclination,
+                                                right ascension of ascending node, argument of perigee,
+                                                mean anomaly). All the angles are in radians, eccentricity is unitless
+                                                and semi-major axis is in SI.    
+    """
+
+    r = torch.norm(r_vec)
+    v = torch.norm(v_vec)
+
+    h_vec = torch.cross(r_vec, v_vec)
+    h = torch.norm(h_vec)
+
+    # Inclination
+    i = torch.where(h != 0, torch.acos(h_vec[2] / h), torch.tensor(0.0, device=r_vec.device))
+
+    # Node vector
+    K = torch.tensor([0.0, 0.0, 1.0], device=r_vec.device)
+    n_vec = torch.cross(K, h_vec)
+    n = torch.norm(n_vec)
+
+    # Eccentricity vector and magnitude
+    e_vec = (1 / mu) * ((v ** 2 - mu / r) * r_vec - torch.dot(r_vec, v_vec) * v_vec)
+    e = torch.norm(e_vec)
+
+    # Specific orbital energy
+    energy = v ** 2 / 2 - mu / r
+
+    # Semi-major axis
+    a = torch.where(torch.abs(e - 1.0) > 1e-8, -mu / (2 * energy), torch.tensor(float('inf'), device=r_vec.device))
+
+    # Right Ascension of Ascending Node (RAAN)
+    cos_Omega = n_vec[0] / n
+    cos_Omega = torch.clamp(cos_Omega, -1.0, 1.0)
+    raw_Omega = torch.acos(cos_Omega)
+    Omega = torch.where(n_vec[1] >= 0, raw_Omega, 2 * torch.pi - raw_Omega)
+    Omega = torch.where(n != 0, Omega, torch.tensor(0.0, device=r_vec.device))
+
+    # Argument of perigee
+    cos_omega = torch.dot(n_vec, e_vec) / (n * e + 1e-12)
+    cos_omega = torch.clamp(cos_omega, -1.0, 1.0)
+    raw_omega = torch.acos(cos_omega)
+    omega = torch.where(e_vec[2] >= 0, raw_omega, 2 * torch.pi - raw_omega)
+    omega = torch.where((n != 0) & (e != 0), omega, torch.tensor(0.0, device=r_vec.device))
+
+    # True anomaly
+    cos_nu = torch.dot(e_vec, r_vec) / (e * r + 1e-12)
+    cos_nu = torch.clamp(cos_nu, -1.0, 1.0)
+    raw_nu = torch.acos(cos_nu)
+    nu = torch.where(torch.dot(r_vec, v_vec) >= 0, raw_nu, 2 * torch.pi - raw_nu)
+    nu = torch.where(e != 0, nu, torch.tensor(0.0, device=r_vec.device))
+
+    # Eccentric anomaly (E) and Mean anomaly (M)
+    elliptic = e < 1.0
+    hyperbolic = e > 1.0
+    #parabolic = ~elliptic & ~hyperbolic
+    if elliptic:
+        E = 2 * torch.atan(torch.tan(nu / 2) * torch.sqrt((1 - e) / (1 + e)))
+        M = E - e * torch.sin(E)
+    elif hyperbolic:    
+        F = 2 * torch.atanh(torch.tan(nu / 2) * torch.sqrt((e - 1) / (e + 1)))
+        M = e * torch.sinh(F) - F
+    # Normalize angles to [0, 2π)
+    Omega=Omega - (2 * torch.pi) * torch.floor(Omega / (2 * torch.pi))
+    omega=omega - (2 * torch.pi) * torch.floor(omega / (2 * torch.pi))
+    M=M - (2 * torch.pi) * torch.floor(M / (2 * torch.pi))
+    return a, e, i, Omega, omega, M
+
 def keplerian_cartesian_partials(state,mu):
     """
     Computes the partial derivatives of the cartesian state with respect to the keplerian elements.
 
     Args:
-        state (`numpy.array`): numpy array of 2 rows and 3 columns, where
+        state (``numpy.array``): numpy array of 2 rows and 3 columns, where
                                     the first row represents position, and the second velocity.
-        mu (`float`): gravitational parameter of the central body
+        mu (``float``): gravitational parameter of the central body
 
     Returns:
-        `numpy.array`: numpy array of the partial derivatives of the cartesian state with respect to the keplerian elements.
+        ``numpy.array``: numpy array of the partial derivatives of the cartesian state with respect to the keplerian elements.
     """
     state_1=dsgp4.util.clone_w_grad(state)
     state_2=dsgp4.util.clone_w_grad(state)
     state_3=dsgp4.util.clone_w_grad(state)
     state_4=dsgp4.util.clone_w_grad(state)
     state_5=dsgp4.util.clone_w_grad(state)
-    a=dsgp4.util.from_cartesian_to_keplerian_torch(state,mu=mu)[0]
+    a=from_cartesian_to_keplerian(state[0], state[1], mu=mu)[0]
     a.backward()
     gradient_a=state.grad.flatten()
-    e=dsgp4.util.from_cartesian_to_keplerian_torch(state_1,mu=mu)[1]
+    e=from_cartesian_to_keplerian(state_1[0], state_1[1],mu=mu)[1]
     e.backward()
     gradient_e=state_1.grad.flatten()
-    i=dsgp4.util.from_cartesian_to_keplerian_torch(state_2,mu=mu)[2]
+    i=from_cartesian_to_keplerian(state_2[0], state_2[1], mu=mu)[2]
     i.backward()
     gradient_i=state_2.grad.flatten()
-    Omega=dsgp4.util.from_cartesian_to_keplerian_torch(state_3,mu=mu)[3]
+    Omega=from_cartesian_to_keplerian(state_3[0], state_3[1], mu=mu)[3]
     Omega.backward()
     gradient_Omega=state_3.grad.flatten()
-    omega=dsgp4.util.from_cartesian_to_keplerian_torch(state_4,mu=mu)[4]
+    omega=from_cartesian_to_keplerian(state_4[0], state_4[1], mu=mu)[4]
     omega.backward()
     gradient_omega=state_4.grad.flatten()
-    mean_anomaly=dsgp4.util.from_cartesian_to_keplerian_torch(state_5,mu=mu)[5]
+    mean_anomaly=from_cartesian_to_keplerian(state_5[0], state_5[1], mu=mu)[5]
     mean_anomaly.backward()
     gradient_mean_anomaly=state_5.grad.flatten()
     DF=np.stack((gradient_a, gradient_e, gradient_i, gradient_Omega, gradient_omega, gradient_mean_anomaly))
@@ -104,11 +306,11 @@ def rotation_matrix(state):
     Computes the UVW rotation matrix.
 
     Args:
-        state (`numpy.array`): numpy array of 2 rows and 3 columns, where
+        state (``numpy.array``): numpy array of 2 rows and 3 columns, where
                                     the first row represents position, and the second velocity.
 
     Returns:
-        `numpy.array`: numpy array of the rotation matrix from the cartesian state.
+        ``numpy.array``: numpy array of the rotation matrix from the cartesian state.
     """
     r, v = state[0], state[1]
     u = r / np.linalg.norm(r)
@@ -123,12 +325,12 @@ def from_cartesian_to_rtn(state, cartesian_to_rtn_rotation_matrix=None):
     Converts a cartesian state to the RTN frame.
 
     Args:
-        state (`numpy.array`): numpy array of 2 rows and 3 columns, where
+        state (``numpy.array``): numpy array of 2 rows and 3 columns, where
                                     the first row represents position, and the second velocity.
-        cartesian_to_rtn_rotation_matrix (`numpy.array`): numpy array of the rotation matrix from the cartesian state. If None, it is computed.
+        cartesian_to_rtn_rotation_matrix (``numpy.array``): numpy array of the rotation matrix from the cartesian state. If None, it is computed.
 
     Returns:
-        `numpy.array`: numpy array of the RTN state.
+        ``numpy.array``: numpy array of the RTN state.
     """
     # Use the supplied rotation matrix if available, otherwise compute it
     if cartesian_to_rtn_rotation_matrix is None:
@@ -144,12 +346,12 @@ def from_rtn_to_cartesian(state_rtn, rtn_to_cartesian_rotation_matrix):
     Converts a RTN state to the cartesian frame.
 
     Args:
-        state_rtn (`numpy.array`): numpy array of 2 rows and 3 columns, where
+        state_rtn (``numpy.array``): numpy array of 2 rows and 3 columns, where
                                     the first row represents position, and the second velocity.
-        rtn_to_cartesian_rotation_matrix (`numpy.array`): numpy array of the rotation matrix from the RTN state.
+        rtn_to_cartesian_rotation_matrix (``numpy.array``): numpy array of the rotation matrix from the RTN state.
 
     Returns:
-        `numpy.array`: numpy array of the cartesian state.
+        ``numpy.array``: numpy array of the cartesian state.
     """
     r_rtn, v_rtn = state_rtn[0], state_rtn[1]
     state_xyz = np.stack([np.matmul(rtn_to_cartesian_rotation_matrix, r_rtn), np.matmul(rtn_to_cartesian_rotation_matrix, v_rtn)])
@@ -185,32 +387,26 @@ def from_TEME_to_ITRF(state, time):
     state = np.stack([r_new, v_new])
     return state
 
-def from_datetime_to_fractional_day(datetime_object):
+def from_datetime_to_cdm_datetime_str(date):
     """
-    Converts a datetime object to a fractional day. The fractional day is the number of days since the beginning of the year. For example, January 1st is 0.0, January 2nd is 1.0, etc.
-
+    Converts a datetime object to a string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'.
+    The date format is compatible with the CCSDS time format.
     Args:
-        datetime_object (`datetime.datetime`): datetime object to convert
-
+        date (``datetime.datetime``): datetime object to convert    
     Returns:
-        `float`: fractional day
+        ``str``: string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'
     """
-    d = datetime_object-datetime.datetime(datetime_object.year-1, 12, 31)
-    fractional_day = d.days + d.seconds/60./60./24 + d.microseconds/60./60./24./1e6
-    return fractional_day
-
-def from_datetime_to_cdm_datetime_str(datetime):
-    return datetime.strftime('%Y-%m-%dT%H:%M:%S.%f')
+    return date.strftime('%Y-%m-%dT%H:%M:%S.%f')
 
 def from_mjd_to_jd(mjd_date):
     """
     Converts a Modified Julian Date to a Julian Date. The Julian Date is the number of days since noon on January 1st, 4713 BC. The Modified Julian Date is the number of days since midnight on November 17th, 1858.
 
     Args:
-        mjd_date (`float`): Modified Julian Date
+        mjd_date (``float``): Modified Julian Date
 
     Returns:
-        `float`: Julian Date
+        ``float``: Julian Date
     """
     return mjd_date+2400000.5
 
@@ -219,47 +415,38 @@ def from_jd_to_mjd(jd_date):
     Converts a Julian Date to a Modified Julian Date. The Julian Date is the number of days since noon on January 1st, 4713 BC.
 
     Args:
-        jd_date (`float`): Julian Date
+        jd_date (``float``): Julian Date
 
     Returns:
-        `float`: Modified Julian Date
+        ``float``: Modified Julian Date
     """
     return jd_date-2400000.5
 
 def from_jd_to_cdm_datetime_str(jd_date):
+    """
+    Converts a Julian Date to a string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'.
+    The date format is compatible with the CCSDS time format.
+    Args:
+        jd_date (``float``): Julian Date to convert
+    Returns:
+        ``str``: string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'
+    """
     d = dsgp4.util.from_jd_to_datetime(jd_date)
     return from_datetime_to_cdm_datetime_str(d)
 
-
-def from_mjd_to_epoch_days_after_1_jan(mjd_date):
-    d = dsgp4.util.from_mjd_to_datetime(mjd_date)
-    dd = d - datetime.datetime(d.year, 1, 1)
-    days = dd.days
-    days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
-    return days + days_fraction
-
-def from_mjd_to_datetime_offset_aware(mjd_date):
-    """
-    Converts a Modified Julian Date to a datetime object. The Modified Julian Date is the number of days since midnight on November 17, 1858.
-
-    Args:
-        mjd_date (`float`): Modified Julian Date
-
-    Returns:
-        `datetime.datetime`: datetime object
-    """
-    datetime_obj=dsgp4.util.from_mjd_to_datetime(mjd_date)
-    return datetime_obj.replace(tzinfo = datetime.timezone.utc)
+# def from_mjd_to_datetime_offset_aware(mjd_date):
+#     datetime_obj=dsgp4.util.from_mjd_to_datetime(mjd_date)
+#     return datetime_obj.replace(tzinfo = datetime.timezone.utc)
 
 def from_string_to_datetime(string):
     """
     Converts a string to a datetime object.
 
     Args:
-        string (`str`): string to convert
+        string (``str``): string to convert
 
     Returns:
-        `datetime.datetime`: datetime object
+        ``datetime.datetime``: datetime object
     """
     if string.find('.')!=-1:
         return datetime.datetime.strptime(string, '%Y-%m-%d %H:%M:%S.%f')
@@ -269,6 +456,19 @@ def from_string_to_datetime(string):
 
 @functools.lru_cache(maxsize=None)
 def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975', date_format='%Y-%m-%dT%H:%M:%S.%f'):
+    """
+    Converts a date string to the number of days since a reference date.
+    The date string must be in the format YYYY-MM-DDTHH:MM:SS.ssssss.
+    The date format can be changed by passing a different date_format string.
+    The date format must be compatible with the strptime function from the datetime module.
+
+    Args:
+        date (``str``): date string to convert
+        date0 (``str``, optional): reference date string. Default is '2020-05-22T21:41:31.975'.
+        date_format (``str``, optional): date format string. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+    Returns:
+        ``float``: number of days since the reference date
+    """
     date = datetime.datetime.strptime(date, date_format)
     date0 = datetime.datetime.strptime(date0, date_format)
     dd = date-date0
@@ -276,14 +476,32 @@ def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975', date_format='%Y
     days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
     return days + days_fraction
 
-
 def add_days_to_date_str(date0, days):
+    """
+    Adds a number of days to a date string.
+    The date string must be in the format YYYY-MM-DDTHH:MM:SS.ssssss.
+
+    Args:
+        date0 (``str``): date string to convert
+        days (``int``): number of days to add
+        date_format (``str``, optional): date format string. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+    Returns:
+        ``str``: date string with the added days
+    """
     date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
     date = date0 + datetime.timedelta(days=days)
     return from_datetime_to_cdm_datetime_str(date)
 
-
 def is_date(date_string, date_format):
+    """
+    Checks if a string is in a valid date format.
+    The date format must be compatible with the strptime function from the datetime module.
+    Args:
+        date_string (``str``): string to check
+        date_format (``str``): date format string. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+    Returns:
+        ``bool``: True if the string is in a valid date format, False otherwise
+    """
     try:
         datetime.datetime.strptime(date_string, date_format)
         return True
@@ -292,6 +510,16 @@ def is_date(date_string, date_format):
 
 
 def transform_date_str(date_string, date_format_from, date_format_to):
+    """
+    Transforms a date string from one format to another.
+    The date format must be compatible with the strptime function from the datetime module.
+    Args:
+        date_string (``str``): string to transform
+        date_format_from (``str``): date format string to transform from. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+        date_format_to (``str``): date format string to transform to. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+    Returns:
+        ``str``: transformed date string
+    """
     date = datetime.datetime.strptime(date_string, date_format_from)
     return date.strftime(date_format_to)
 
@@ -301,11 +529,11 @@ def find_closest(values, t):
     Finds the closest value in a list of values to a given value.
 
     Args:
-        values (`list`): list of values
-        t (`float`): value to find the closest to
+        values (``list``): list of values
+        t (``float``): value to find the closest to
 
     Returns:
-        `float`: closest value in the list to the given value
+        ``float``: closest value in the list to the given value
     """
     indx = np.argmin(abs(values-t))
     return indx, values[indx]
@@ -315,11 +543,11 @@ def upsample(s, target_resolution):
     Upsamples a tensor to a given resolution, via linear interpolation.
 
     Args:
-        s (`torch.Tensor`): tensor to upsample
-        target_resolution (`int`): target resolution
+        s (``torch.Tensor``): tensor to upsample
+        target_resolution (``int``): target resolution
 
     Returns:
-        `torch.Tensor`: upsampled tensor
+        ``torch.Tensor``: upsampled tensor
     """
     s = s.transpose(0, 1)
     s = torch.nn.functional.interpolate(s.unsqueeze(0), size=(target_resolution), mode='linear', align_corners=True)
@@ -328,20 +556,15 @@ def upsample(s, target_resolution):
 
 def propagate_upsample(tle, times_mjd, upsample_factor=1):
     """
-    This function is the same as `lpop_sequence`, but it allows to upsample the time,
-    interpolating in between. The purpose is to reduce computational time.
-    Caveat: this will reduce the position and velocity prediction accuracy.
-
+    Propagates a TLE object to a set of times, and upsamples the result.
+    The propagation is done using the dsgp4 library, and the upsampling is done using linear interpolation.
+    
     Args:
-        tle (`dsgp4.tle.TLE`): the two-line element set
-        times_mjd (`numpy.array`): modified julian dates
-        upsample_factor (`int`): the state is propagated only every `upsample_factor` times,
-                                        and it is performed interpolation in between.
-
+        tle (``dsgp4.TLE``): TLE object to propagate
+        times_mjd (``list``): list of times in MJD to propagate to
+        upsample_factor (``int``, optional): factor by which to upsample the result. Default is 1 (no upsampling).
     Returns:
-        `numpy.array`: a 3 dimensional array, where in each row, there is a 2x3
-                                    element of position (first row), and velocity (second row),
-                                    both expressed in the TEME reference system and SI units.
+        ``numpy.ndarray``: propagated and upsampled state vector
     """
     if upsample_factor == 1:
         tsinces=(torch.tensor(times_mjd)-dsgp4.util.from_datetime_to_mjd(tle._epoch))*1440.
@@ -356,21 +579,6 @@ def propagate_upsample(tle, times_mjd, upsample_factor=1):
         ret = ret.view(ret.shape[0], 2, 3).cpu().numpy()*1e3
         return ret
 
-
-def create_path(path, directory=False):
-    if directory:
-        dir = path
-    else:
-        dir = os.path.dirname(path)
-    if not os.path.exists(dir):
-        print('{} does not exist, creating'.format(dir))
-        try:
-            os.makedirs(dir)
-        except Exception as e:
-            print(e)
-            print('Could not create path, potentially created by another process in the meantime: {}'.format(path))
-
-
 def tile_rows_cols(num_items):
     if num_items < 5:
         return 1, num_items
@@ -382,8 +590,15 @@ def tile_rows_cols(num_items):
             num_items -= cols
         return rows, cols
 
-
 def has_nan_or_inf(value):
+    """
+    Checks if a value is NaN or Inf.
+    
+    Args:
+        value (``float`` or ``torch.Tensor``): value to check
+    Returns:
+        ``bool``: True if the value is NaN or Inf, False otherwise
+    """
     if torch.is_tensor(value):
         value = torch.sum(value)
         isnan = int(torch.isnan(value)) > 0
@@ -395,73 +610,24 @@ def has_nan_or_inf(value):
 
 
 def trace_to_event(trace):
+    """
+    Converts a trace object to an Event object.
+    Args:
+        trace (``pyro.poutine.trace_struct.Trace``): trace object to convert
+    Returns:
+        ``kessler.Event``: Event object
+    """
     from .event import Event
-    return Event(cdms=trace['cdms'])
+    return Event(cdms=trace.nodes['cdms']['infer']['cdms'])
 
 
-def dist_to_event_dataset(dist):
-    from .event import EventDataset
-    return EventDataset(events=list(map(trace_to_event, dist)))
-
-
-def days_hours_mins_secs_str(total_seconds):
-    d, r = divmod(total_seconds, 86400)
-    h, r = divmod(r, 3600)
-    m, s = divmod(r, 60)
-    return '{0}d:{1:02}:{2:02}:{3:02}'.format(int(d), int(h), int(m), int(s))
-
-
-def progress_bar(i, len):
-    bar_len = 20
-    filled_len = int(round(bar_len * i / len))
-    # percents = round(100.0 * i / len, 1)
-    return '#' * filled_len + '-' * (bar_len - filled_len)
-
-
-progress_bar_num_iters = None
-progress_bar_len_str_num_iters = None
-progress_bar_time_start = None
-progress_bar_prev_duration = None
-
-
-def progress_bar_init(message, num_iters, iter_name='Items'):
-    global progress_bar_num_iters
-    global progress_bar_len_str_num_iters
-    global progress_bar_time_start
-    global progress_bar_prev_duration
-    if num_iters < 0:
-        raise ValueError('num_iters must be a non-negative integer')
-    progress_bar_num_iters = num_iters
-    progress_bar_time_start = time.time()
-    progress_bar_prev_duration = 0
-    progress_bar_len_str_num_iters = len(str(progress_bar_num_iters))
-    print(message)
-    sys.stdout.flush()
-    if progress_bar_num_iters > 0:
-        print('Time spent  | Time remain.| Progress             | {} | {}/sec'.format(iter_name.ljust(progress_bar_len_str_num_iters * 2 + 1), iter_name))
-
-
-def progress_bar_update(iter):
-    global progress_bar_prev_duration
-    if progress_bar_num_iters > 0:
-        duration = time.time() - progress_bar_time_start
-        if (duration - progress_bar_prev_duration > _print_refresh_rate) or (iter >= progress_bar_num_iters - 1):
-            progress_bar_prev_duration = duration
-            traces_per_second = (iter + 1) / duration
-            print('{} | {} | {} | {}/{} | {:,.2f}       '.format(days_hours_mins_secs_str(duration), days_hours_mins_secs_str((progress_bar_num_iters - iter) / traces_per_second), progress_bar(iter, progress_bar_num_iters), str(iter).rjust(progress_bar_len_str_num_iters), progress_bar_num_iters, traces_per_second), end='\r')
-            sys.stdout.flush()
-
-
-def progress_bar_end(message=None):
-    progress_bar_update(progress_bar_num_iters)
-    print()
-    if message is not None:
-        print(message)
+# def dist_to_event_dataset(dist):
+#     from .event import EventDataset
+#     return EventDataset(events=list(map(trace_to_event, dist)))
 
 def get_ccsds_time_format(time_string):
     """
-    Adapted by Andrew Ng, 18/3/2022.  
-    Original MATLAB source code:  
+    Original MATLAB source code (adapted by Andrew Ng, 18/3/2022): 
     `NASA CARA Analysis Tools <https://github.com/nasa/CARA_Analysis_Tools>`_  
 
     Processes and outputs the format of the time string extracted from the CDM.  
@@ -483,11 +649,11 @@ def get_ccsds_time_format(time_string):
         7. The time string can end with an optional **"Z"** time zone indicator.
 
     Args:
-        time_string (str): Original time string stored in CDM.
+        time_string (``str``): Original time string stored in CDM.
 
     Returns:
-        str: Outputs the format of the time string.  
-        Must be of the form **yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]**, otherwise a `RuntimeError` is raised.
+        ``str``: Outputs the format of the time string.  
+        Must be of the form **yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]**, otherwise a ``RuntimeError`` is raised.
     """
 
     time_format = []
@@ -532,18 +698,17 @@ def get_ccsds_time_format(time_string):
 
 def doy_2_date(value, doy, year, idx):
     '''
-    Written by Andrew Ng, 18/03/2022, 
-    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools
+    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools (adapted by Andrew Ng, 18/03/2022)
     Use the datetime python package. 
     doy_2_date  - Converts Day of Year (DOY) date format to date format.
     
     Args:
-        - value(``str``): Original date time string with day of year format "YYYY-DDDTHH:MM:SS.ff"
-        - doy  (``str``): The day of year in the DOY format. 
-        - year (``str``): The year.
-        - idx  (``int``): Index of the start of the original "value" string at which characters 'DDD' are found. 
+        value(``str``): Original date time string with day of year format "YYYY-DDDTHH:MM:SS.ff"
+        doy  (``str``): The day of year in the DOY format. 
+        year (``str``): The year.
+        idx  (``int``): Index of the start of the original "value" string at which characters 'DDD' are found. 
     Returns: 
-        -value (``str``): Transformed date in traditional date format. i.e.: "YYYY-mm-ddTHH:MM:SS.ff"
+        value (``str``): Transformed date in traditional date format. i.e.: "YYYY-mm-ddTHH:MM:SS.ff"
 
     '''
     # Calculate datetime format
@@ -570,13 +735,13 @@ def build_megaconstellation(launch_date,
     returned.
 
     Args:
-        launch_date (`datetime.datetime`): launch date as a datetime object
-        constellation_name (`str`)
-        groups (`str` or `int`): group number as an integer, or 'all' in case all groups shall be selected
-        mu_earth (`float`): gravitational parameter of the Earth i m^3/s^2
+        launch_date (``datetime.datetime``): launch date as a datetime object
+        constellation_name (``str``)
+        groups (``str`` or ``int``): group number as an integer, or 'all' in case all groups shall be selected
+        mu_earth (``float``): gravitational parameter of the Earth i m^3/s^2
 
     Returns:
-        `list`: list of TLE (`dsgp4.tle.TLE`) objects
+        ``list``: list of TLE (``dsgp4.tle.TLE``) objects
     """
     from . import TLE
 
@@ -602,12 +767,13 @@ def build_megaconstellation(launch_date,
             if groups not in [1,2]:
                 raise ValueError(f"Only group values of: 1 or 2 are valid; while {groups} provided")
     if isinstance(launch_date,float):
-        launch_date=from_mjd_to_datetime(launch_date)
+        launch_date=dsgp4.util.from_mjd_to_datetime(launch_date)
     print(f"Launch date: {launch_date}, for constellation: {constellation_name}, group: {groups}")
     epoch_year=launch_date.year
-    epoch_days=from_datetime_to_fractional_day(launch_date)
+    #we transform the datetime in fractional days:
+    d = launch_date-datetime.datetime(launch_date.year-1, 12, 31)
+    epoch_days = d.days + d.seconds/60./60./24 + d.microseconds/60./60./24./1e6
     tles=[]
-
     if constellation_name=='starlink':
         starlink_dic={"group_1":
                                    {"inclination":np.deg2rad(53),
@@ -1134,27 +1300,6 @@ def build_megaconstellation(launch_date,
                     tles.append(tle)
             return tles
 
-def create_path(path, directory=False):
-    """
-    This function creates a path if it does not exist.
-
-    Args:
-        path (`str`): path to be created
-        directory (`bool`): if True, the path is a directory, otherwise it is a file
-    """
-    if directory:
-        dir = path
-    else:
-        dir = os.path.dirname(path)
-    if not os.path.exists(dir):
-        print('{} does not exist, creating'.format(dir))
-        try:
-            os.makedirs(dir)
-        except Exception as e:
-            print(e)
-            print('Could not create path, potentially created by another process in the meantime: {}'.format(path))
-
-
 def create_priors_from_tles(tles, mixture_components = {'mean_motion': 5, 'eccentricity': 5, 'inclination': 13, 'b_star': 4}):
     """
     This function takes a list of TLEs and a dictionary of mixture_components numbers,
@@ -1162,57 +1307,75 @@ def create_priors_from_tles(tles, mixture_components = {'mean_motion': 5, 'eccen
     by fitting probability density functions to data using the specified number of mixture components for each element.
 
     Args:
-        `list`: list of `dsgp4.tle.TLE` objects
-        `dict`: dictionary of mixture component numbers (`mean_motion`, `eccentricity`,
-                                      `inclination` and `b_star` can be selected).
+        ``list``: list of ``dsgp4.tle.TLE`` objects
+        ``dict``: dictionary of mixture component numbers (``mean_motion``, ``eccentricity``,
+                                      ``inclination`` and ``b_star`` can be selected).
 
     Returns:
-        `dict`: dictionary of prior distributions.
+        ``dict``: dictionary of prior distributions.
     """
-    from pyprob.distributions import Mixture, TruncatedNormal, Uniform
     #I extract the tle elements from the tles:
     tle_els = tle_elements(tles)
 
     mean_motion = tle_els[0]
     eccentricity = tle_els[1]
     inclination = tle_els[2]
-    agument_of_perigee = tle_els[3]
-    raan = tle_els[4]
+    #agument_of_perigee = tle_els[3]
+    #raan = tle_els[4]
     b_star = tle_els[5]
-    mean_anomaly = tle_els[6]
+    #mean_anomaly = tle_els[6]
     mean_motion_first_derivative = tle_els[7]
     #mean_motion_second_derivative = tle_els[8]
 
     priors_dict = {}
+    #first the mean motion:
     m = fit_mixture(np.array(mean_motion)*10000, n_components = mixture_components['mean_motion'], covariance_type = 'diag')
-    dists = []
+    locs=[]
+    scales=[]
     for i in range(len(m.means_)):
-        dists.append(TruncatedNormal(mean_non_truncated = m.means_[i][0]/10000, stddev_non_truncated = np.sqrt(m.covariances_[i][0])/10000, low = min(mean_motion), high = max(mean_motion)))
-    priors_dict['mean_motion_prior'] = Mixture(distributions = dists, probs = list(m.weights_))
-
+        locs.append(m.means_[i][0]/10000)
+        scales.append(np.sqrt(m.covariances_[i][0])/10000)
+    priors_dict['mean_motion_prior']=MixtureSameFamily(mixture_distribution=Categorical(probs=torch.tensor(m.weights_)),
+                                                       component_distribution=TruncatedNormal(loc=torch.tensor(locs), 
+                                                                                              scale=torch.tensor(scales), 
+                                                                                              low = min(mean_motion), 
+                                                                                              high = max(mean_motion)))
+    
+    #now the eccentricity:
     m = fit_mixture(values = np.array(eccentricity), n_components = mixture_components['eccentricity'], covariance_type = 'diag')
-    dists = []
+    locs=[]
+    scales=[]
     for i in range(len(m.means_)):
-        dists.append(TruncatedNormal(mean_non_truncated = m.means_[i][0], stddev_non_truncated = np.sqrt(m.covariances_[i][0]), low = 0., high = max(eccentricity) ))
-    priors_dict['eccentricity_prior'] = Mixture(distributions = dists, probs = list(m.weights_))
-
+        locs.append(m.means_[i][0])
+        scales.append(np.sqrt(m.covariances_[i][0]))
+    priors_dict['eccentricity_prior']=MixtureSameFamily(mixture_distribution=Categorical(probs=torch.tensor(m.weights_)),
+                      component_distribution=TruncatedNormal(loc=torch.tensor(locs), scale=torch.tensor(scales), low = 0., high = max(eccentricity)))
+    #now the inclination:
     m = fit_mixture(values = np.array(inclination), n_components = mixture_components['inclination'], covariance_type = 'diag')
-    dists = []
+    locs=[]
+    scales=[]
     for i in range(len(m.means_)):
-        dists.append(TruncatedNormal(mean_non_truncated = m.means_[i][0], stddev_non_truncated = np.sqrt(m.covariances_[i][0]), low = 0., high = np.pi ))
-    priors_dict['inclination_prior'] = Mixture(distributions = dists, probs = list(m.weights_))
-
+        locs.append(m.means_[i][0])
+        scales.append(np.sqrt(m.covariances_[i][0]))
+    priors_dict['inclination_prior']=MixtureSameFamily(mixture_distribution=Categorical(probs=torch.tensor(m.weights_)),
+                      component_distribution=TruncatedNormal(loc=torch.tensor(locs), scale=torch.tensor(scales), low = 0., high = np.pi))
+    #now the b_star:
     m = fit_mixture(values = np.array(b_star)*10000, n_components = mixture_components['b_star'], covariance_type = 'diag')
-    dists = []
+    locs=[]
+    scales=[]
     for i in range(len(m.means_)):
-        dists.append(TruncatedNormal(mean_non_truncated = m.means_[i][0]/10000, stddev_non_truncated = np.sqrt(m.covariances_[i][0]), low = min(b_star), high = max(b_star) ))
-    priors_dict['b_star_prior'] = Mixture(distributions = dists, probs = list(m.weights_))
-#    if plot==True:
-#        analysis.plot_mix(priors_dict)
+        locs.append(m.means_[i][0]/10000)
+        scales.append(np.sqrt(m.covariances_[i][0])/10000)
+    priors_dict['b_star_prior']=MixtureSameFamily(mixture_distribution=Categorical(probs=torch.tensor(m.weights_)),
+                      component_distribution=TruncatedNormal(loc=torch.tensor(locs), scale=torch.tensor(scales), low = min(b_star), high = max(b_star)))
+    #now the mean anomaly:
     priors_dict['mean_anomaly_prior'] = Uniform(low=0.0, high=2*np.pi)
+    #now the argument of perigee:
     priors_dict['argument_of_perigee_prior'] = Uniform(low=0.0, high=2*np.pi)
+    #now the raan:
     priors_dict['raan_prior'] = Uniform(low=0.0, high=2*np.pi)
-    priors_dict['mean_motion_first_derivative_prior'] = TruncatedNormal(mean_non_truncated = np.mean(mean_motion_first_derivative), stddev_non_truncated = np.std(mean_motion_first_derivative), low = min(mean_motion_first_derivative), high = max(mean_motion_first_derivative))
+    #now the mean motion first derivative:
+    priors_dict['mean_motion_first_derivative_prior']=TruncatedNormal(loc = np.mean(mean_motion_first_derivative), scale = np.std(mean_motion_first_derivative), low = min(mean_motion_first_derivative), high = max(mean_motion_first_derivative))
     return priors_dict
 
 
@@ -1221,15 +1384,16 @@ def tle_elements(tles):
     This function takes a list of TLEs as input and extracts their elements as lists.
 
     Args:
-        - tles (`list`): list of `dsgp4.tle.TLE` objects
+        tles (``list``): list of ``dsgp4.tle.TLE`` objects
     Returns:
-        - mean_motion, eccentricity, inclination, argument_of_perigee, raan, b_star, mean_anomaly, mean_motion_first_derivative, mean_motion_second_derivative
-    Example::
-        import matplotlib.pyplot as plt
-        import kessler
-        sats = dsgp4.tle.load(file_name = 'path_to_tle.txt')
-        n, e, i, omega, RAAN, B_star, M, n_dot, n_ddot = dsgp4.tle.tle_elements(sats)#tles is a list of TLEs dictionary
-        plt.hist(n)
+        mean_motion, eccentricity, inclination, argument_of_perigee, raan, b_star, mean_anomaly, mean_motion_first_derivative, mean_motion_second_derivative
+    
+    Example:
+        >>> import matplotlib.pyplot as plt
+        >>> import kessler
+        >>> sats = dsgp4.tle.load(file_name = 'path_to_tle.txt')
+        >>> n, e, i, omega, RAAN, B_star, M, n_dot, n_ddot = dsgp4.tle.tle_elements(sats)#tles is a list of TLEs dictionary
+        >>> plt.hist(n)
     """
     mean_motion, eccentricity, inclination, argument_of_perigee, raan, b_star, mean_anomaly, mean_motion_first_derivative, mean_motion_second_derivative = [], [], [], [], [], [], [], [], []
     for tle in tles:
@@ -1251,11 +1415,57 @@ def add_megaconstellation_from_file(tles, megaconstellation_file_name):
     a list of the original TLEs plus the TLEs of the added megaconstellation.
 
     Args:
-        tles (`list`): list of `dsgp4.tle.TLE` objects
-        megaconstellation_file_name (`str`): megaconstellation file name
+        tles (``list``): list of ``dsgp4.tle.TLE`` objects
+        megaconstellation_file_name (``str``): megaconstellation file name
 
     Returns:
-        `list`: list of `dsgp4.tle.TLE` objects
+        ``list``: list of ``dsgp4.tle.TLE`` objects
     """
     tles_megaconstellation=dsgp4.util.load(file_name=megaconstellation_file_name)
     return tles+tles_megaconstellation
+
+
+def progress_bar(i, len):
+    bar_len = 20
+    filled_len = int(round(bar_len * i / len))
+    # percents = round(100.0 * i / len, 1)
+    return '#' * filled_len + '-' * (bar_len - filled_len)
+
+
+progress_bar_num_iters = None
+progress_bar_len_str_num_iters = None
+progress_bar_time_start = None
+progress_bar_prev_duration = None
+
+
+def progress_bar_init(message, num_iters, iter_name='Items'):
+    global progress_bar_num_iters
+    global progress_bar_len_str_num_iters
+    global progress_bar_time_start
+    global progress_bar_prev_duration
+    if num_iters < 0:
+        raise ValueError('num_iters must be a non-negative integer')
+    progress_bar_num_iters = num_iters
+    progress_bar_time_start = time.time()
+    progress_bar_prev_duration = 0
+    progress_bar_len_str_num_iters = len(str(progress_bar_num_iters))
+    print(message)
+    sys.stdout.flush()
+    if progress_bar_num_iters > 0:
+        print('Time spent  | Time remain.| Progress             | {} | {}/sec'.format(iter_name.ljust(progress_bar_len_str_num_iters * 2 + 1), iter_name))
+
+def progress_bar_update(iter):
+    global progress_bar_prev_duration
+    if progress_bar_num_iters > 0:
+        duration = time.time() - progress_bar_time_start
+        if (duration - progress_bar_prev_duration > _print_refresh_rate) or (iter >= progress_bar_num_iters - 1):
+            progress_bar_prev_duration = duration
+            traces_per_second = (iter + 1) / duration
+            print('{} | {} | {} | {}/{} | {:,.2f}       '.format(days_hours_mins_secs_str(duration), days_hours_mins_secs_str((progress_bar_num_iters - iter) / traces_per_second), progress_bar(iter, progress_bar_num_iters), str(iter).rjust(progress_bar_len_str_num_iters), progress_bar_num_iters, traces_per_second), end='\r')
+            sys.stdout.flush()
+
+def progress_bar_end(message=None):
+    progress_bar_update(progress_bar_num_iters)
+    print()
+    if message is not None:
+        print(message)

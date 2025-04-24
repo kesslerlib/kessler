@@ -26,14 +26,15 @@ check_python_version()
 setup(
     name='kessler',
     version=read_package_variable('__version__'),
-    description='Simulation-based inference and machine learning for space collision assessment and avoidance.',
-    author='ESA FDL Europe Constellations Team',
-    # author_email='',
+    description='Machine learning and simulation-based inference and machine learning for space collision assessment and avoidance.',
+    long_description=open('README.md').read(),
+    author='Giacomo Acciarini',
+    author_email='giacomo.acciarini@gmail.com',
     packages=find_packages(),
-    install_requires=['pyprob', 'numpy', 'matplotlib', 'torch>=1.5.1', 'dsgp4', 'skyfield>=1.26', 'pandas'],
-    extras_require={'dev': ['pytest', 'coverage', 'pytest-xdist']},
-    # url='https://github.com/kessler/kessler',
+    install_requires=['pyro-ppl', 'numpy', 'matplotlib', 'torch>=1.5.1', 'dsgp4', 'skyfield>=1.26', 'pandas'],
+    extras_require={'dev': ['pytest', 'coverage', 'pytest-xdist', 'scikit-learn']},
+    url='https://kesslerlib.github.io/kessler/',
     classifiers=['License :: OSI Approved :: BSD License', 'Programming Language :: Python :: 3'],
-    license='BSD'
-    # keywords='',
+    license='BSD',
+    keywords='Spacecraft Collision Avoidance Kessler Machine Learning Artificial Intelligence Probabilistic Programming',
 )

@@ -1,19 +1,19 @@
 # This code is part of Kessler, a machine learning library for spacecraft collision avoidance.
 #
 # Copyright (c) 2020-
-# University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 # Trillium Technologies
-# Giacomo Acciarini
+# University of Oxford
+# Giacomo Acciarini (giacomo.acciarini@gmail.com)
 # and other contributors, see README in root of repository.
 #
 # GNU General Public License version 3. See LICENSE in root of repository.
-
 
 import pandas as pd
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from glob import glob
+from tqdm import tqdm
 import copy
 import os
 import re
@@ -165,7 +165,7 @@ class Event():
 
 
 class EventDataset():
-    def __init__(self, cdms_dir=None, cdm_extension='.cdm.kvn.txt', events=None):
+    def __init__(self, cdms_dir=None, cdm_extension='.kvn', events=None):
         if events is None:
             if cdms_dir is None:
                 self._events = []
@@ -399,10 +399,8 @@ class EventDataset():
         df_events = df.groupby(group_events_by).groups
         print('Grouped into {} event(s)'.format(len(df_events)))
         events = []
-        util.progress_bar_init('Converting DataFrame to EventDataset', len(df_events), 'Events')
         i = 0
-        for k, v in df_events.items():
-            util.progress_bar_update(i)
+        for k, v in tqdm(df_events.items()):
             i += 1
             df_event = df.iloc[v]
             cdms = []
@@ -417,7 +415,6 @@ class EventDataset():
                         cdm[cdm_name] = value
                 cdms.append(cdm)
             events.append(Event(cdms))
-        util.progress_bar_end()
         event_dataset = EventDataset(events=events)
         print('\n{}'.format(event_dataset))
         return event_dataset
@@ -426,12 +423,8 @@ class EventDataset():
         if len(self) == 0:
             return pd.DataFrame()
         event_dataframes = []
-
-        util.progress_bar_init('Converting EventDataset to DataFrame', len(self._events), 'Events')
-        for i, event in enumerate(self._events):
-            util.progress_bar_update(i)
+        for i, event in enumerate(tqdm(self._events)):
             event_dataframes.append(event.to_dataframe())
-        util.progress_bar_end()
         return pd.concat(event_dataframes, ignore_index=True)
 
     def dates(self):
