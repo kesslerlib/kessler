@@ -161,13 +161,14 @@ class TruncatedNormal(TorchDistribution):
 
 def fit_mixture(values, *args, **kwargs):
     """
-    This function fits a mixture of Gaussians to the provided values.
-
+    Fit a Gaussian Mixture Model to the given data.
     Args:
-        values (`numpy.ndarray`): values to fit the mixture to
+        values (``numpy.ndarray``): The data to fit the model to.
+        *args: Additional arguments for the GaussianMixture constructor.
+        **kwargs: Additional keyword arguments for the GaussianMixture constructor.
 
     Returns:
-        tuple: tuple containing: - `numpy.ndarray`: means of the mixture - `numpy.ndarray`: standard deviations of the mixture - `numpy.ndarray`: weights of the mixture
+        ``GaussianMixture``: The fitted Gaussian Mixture Model.
     """
     from sklearn import mixture
     values = values.reshape(-1,1)
@@ -305,11 +306,11 @@ def rotation_matrix(state):
     Computes the UVW rotation matrix.
 
     Args:
-        state (`numpy.array`): numpy array of 2 rows and 3 columns, where
+        state (``numpy.array``): numpy array of 2 rows and 3 columns, where
                                     the first row represents position, and the second velocity.
 
     Returns:
-        `numpy.array`: numpy array of the rotation matrix from the cartesian state.
+        ``numpy.array``: numpy array of the rotation matrix from the cartesian state.
     """
     r, v = state[0], state[1]
     u = r / np.linalg.norm(r)
@@ -324,12 +325,12 @@ def from_cartesian_to_rtn(state, cartesian_to_rtn_rotation_matrix=None):
     Converts a cartesian state to the RTN frame.
 
     Args:
-        state (`numpy.array`): numpy array of 2 rows and 3 columns, where
+        state (``numpy.array``): numpy array of 2 rows and 3 columns, where
                                     the first row represents position, and the second velocity.
-        cartesian_to_rtn_rotation_matrix (`numpy.array`): numpy array of the rotation matrix from the cartesian state. If None, it is computed.
+        cartesian_to_rtn_rotation_matrix (``numpy.array``): numpy array of the rotation matrix from the cartesian state. If None, it is computed.
 
     Returns:
-        `numpy.array`: numpy array of the RTN state.
+        ``numpy.array``: numpy array of the RTN state.
     """
     # Use the supplied rotation matrix if available, otherwise compute it
     if cartesian_to_rtn_rotation_matrix is None:
@@ -345,12 +346,12 @@ def from_rtn_to_cartesian(state_rtn, rtn_to_cartesian_rotation_matrix):
     Converts a RTN state to the cartesian frame.
 
     Args:
-        state_rtn (`numpy.array`): numpy array of 2 rows and 3 columns, where
+        state_rtn (``numpy.array``): numpy array of 2 rows and 3 columns, where
                                     the first row represents position, and the second velocity.
-        rtn_to_cartesian_rotation_matrix (`numpy.array`): numpy array of the rotation matrix from the RTN state.
+        rtn_to_cartesian_rotation_matrix (``numpy.array``): numpy array of the rotation matrix from the RTN state.
 
     Returns:
-        `numpy.array`: numpy array of the cartesian state.
+        ``numpy.array``: numpy array of the cartesian state.
     """
     r_rtn, v_rtn = state_rtn[0], state_rtn[1]
     state_xyz = np.stack([np.matmul(rtn_to_cartesian_rotation_matrix, r_rtn), np.matmul(rtn_to_cartesian_rotation_matrix, v_rtn)])
@@ -386,32 +387,26 @@ def from_TEME_to_ITRF(state, time):
     state = np.stack([r_new, v_new])
     return state
 
-def from_datetime_to_fractional_day(datetime_object):
+def from_datetime_to_cdm_datetime_str(date):
     """
-    Converts a datetime object to a fractional day. The fractional day is the number of days since the beginning of the year. For example, January 1st is 0.0, January 2nd is 1.0, etc.
-
+    Converts a datetime object to a string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'.
+    The date format is compatible with the CCSDS time format.
     Args:
-        datetime_object (`datetime.datetime`): datetime object to convert
-
+        date (``datetime.datetime``): datetime object to convert    
     Returns:
-        `float`: fractional day
+        ``str``: string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'
     """
-    d = datetime_object-datetime.datetime(datetime_object.year-1, 12, 31)
-    fractional_day = d.days + d.seconds/60./60./24 + d.microseconds/60./60./24./1e6
-    return fractional_day
-
-def from_datetime_to_cdm_datetime_str(datetime):
-    return datetime.strftime('%Y-%m-%dT%H:%M:%S.%f')
+    return date.strftime('%Y-%m-%dT%H:%M:%S.%f')
 
 def from_mjd_to_jd(mjd_date):
     """
     Converts a Modified Julian Date to a Julian Date. The Julian Date is the number of days since noon on January 1st, 4713 BC. The Modified Julian Date is the number of days since midnight on November 17th, 1858.
 
     Args:
-        mjd_date (`float`): Modified Julian Date
+        mjd_date (``float``): Modified Julian Date
 
     Returns:
-        `float`: Julian Date
+        ``float``: Julian Date
     """
     return mjd_date+2400000.5
 
@@ -420,47 +415,38 @@ def from_jd_to_mjd(jd_date):
     Converts a Julian Date to a Modified Julian Date. The Julian Date is the number of days since noon on January 1st, 4713 BC.
 
     Args:
-        jd_date (`float`): Julian Date
+        jd_date (``float``): Julian Date
 
     Returns:
-        `float`: Modified Julian Date
+        ``float``: Modified Julian Date
     """
     return jd_date-2400000.5
 
 def from_jd_to_cdm_datetime_str(jd_date):
+    """
+    Converts a Julian Date to a string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'.
+    The date format is compatible with the CCSDS time format.
+    Args:
+        jd_date (``float``): Julian Date to convert
+    Returns:
+        ``str``: string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'
+    """
     d = dsgp4.util.from_jd_to_datetime(jd_date)
     return from_datetime_to_cdm_datetime_str(d)
 
-
-def from_mjd_to_epoch_days_after_1_jan(mjd_date):
-    d = dsgp4.util.from_mjd_to_datetime(mjd_date)
-    dd = d - datetime.datetime(d.year, 1, 1)
-    days = dd.days
-    days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
-    return days + days_fraction
-
-def from_mjd_to_datetime_offset_aware(mjd_date):
-    """
-    Converts a Modified Julian Date to a datetime object. The Modified Julian Date is the number of days since midnight on November 17, 1858.
-
-    Args:
-        mjd_date (`float`): Modified Julian Date
-
-    Returns:
-        `datetime.datetime`: datetime object
-    """
-    datetime_obj=dsgp4.util.from_mjd_to_datetime(mjd_date)
-    return datetime_obj.replace(tzinfo = datetime.timezone.utc)
+# def from_mjd_to_datetime_offset_aware(mjd_date):
+#     datetime_obj=dsgp4.util.from_mjd_to_datetime(mjd_date)
+#     return datetime_obj.replace(tzinfo = datetime.timezone.utc)
 
 def from_string_to_datetime(string):
     """
     Converts a string to a datetime object.
 
     Args:
-        string (`str`): string to convert
+        string (``str``): string to convert
 
     Returns:
-        `datetime.datetime`: datetime object
+        ``datetime.datetime``: datetime object
     """
     if string.find('.')!=-1:
         return datetime.datetime.strptime(string, '%Y-%m-%d %H:%M:%S.%f')
@@ -470,6 +456,19 @@ def from_string_to_datetime(string):
 
 @functools.lru_cache(maxsize=None)
 def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975', date_format='%Y-%m-%dT%H:%M:%S.%f'):
+    """
+    Converts a date string to the number of days since a reference date.
+    The date string must be in the format YYYY-MM-DDTHH:MM:SS.ssssss.
+    The date format can be changed by passing a different date_format string.
+    The date format must be compatible with the strptime function from the datetime module.
+
+    Args:
+        date (``str``): date string to convert
+        date0 (``str``, optional): reference date string. Default is '2020-05-22T21:41:31.975'.
+        date_format (``str``, optional): date format string. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+    Returns:
+        ``float``: number of days since the reference date
+    """
     date = datetime.datetime.strptime(date, date_format)
     date0 = datetime.datetime.strptime(date0, date_format)
     dd = date-date0
@@ -477,14 +476,32 @@ def from_date_str_to_days(date, date0='2020-05-22T21:41:31.975', date_format='%Y
     days_fraction = (dd.seconds + dd.microseconds/1e6) / (60*60*24)
     return days + days_fraction
 
-
 def add_days_to_date_str(date0, days):
+    """
+    Adds a number of days to a date string.
+    The date string must be in the format YYYY-MM-DDTHH:MM:SS.ssssss.
+
+    Args:
+        date0 (``str``): date string to convert
+        days (``int``): number of days to add
+        date_format (``str``, optional): date format string. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+    Returns:
+        ``str``: date string with the added days
+    """
     date0 = datetime.datetime.strptime(date0, '%Y-%m-%dT%H:%M:%S.%f')
     date = date0 + datetime.timedelta(days=days)
     return from_datetime_to_cdm_datetime_str(date)
 
-
 def is_date(date_string, date_format):
+    """
+    Checks if a string is in a valid date format.
+    The date format must be compatible with the strptime function from the datetime module.
+    Args:
+        date_string (``str``): string to check
+        date_format (``str``): date format string. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+    Returns:
+        ``bool``: True if the string is in a valid date format, False otherwise
+    """
     try:
         datetime.datetime.strptime(date_string, date_format)
         return True
@@ -493,6 +510,16 @@ def is_date(date_string, date_format):
 
 
 def transform_date_str(date_string, date_format_from, date_format_to):
+    """
+    Transforms a date string from one format to another.
+    The date format must be compatible with the strptime function from the datetime module.
+    Args:
+        date_string (``str``): string to transform
+        date_format_from (``str``): date format string to transform from. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+        date_format_to (``str``): date format string to transform to. Default is '%Y-%m-%dT%H:%M:%S.%f'.
+    Returns:
+        ``str``: transformed date string
+    """
     date = datetime.datetime.strptime(date_string, date_format_from)
     return date.strftime(date_format_to)
 
@@ -502,11 +529,11 @@ def find_closest(values, t):
     Finds the closest value in a list of values to a given value.
 
     Args:
-        values (`list`): list of values
-        t (`float`): value to find the closest to
+        values (``list``): list of values
+        t (``float``): value to find the closest to
 
     Returns:
-        `float`: closest value in the list to the given value
+        ``float``: closest value in the list to the given value
     """
     indx = np.argmin(abs(values-t))
     return indx, values[indx]
@@ -516,11 +543,11 @@ def upsample(s, target_resolution):
     Upsamples a tensor to a given resolution, via linear interpolation.
 
     Args:
-        s (`torch.Tensor`): tensor to upsample
-        target_resolution (`int`): target resolution
+        s (``torch.Tensor``): tensor to upsample
+        target_resolution (``int``): target resolution
 
     Returns:
-        `torch.Tensor`: upsampled tensor
+        ``torch.Tensor``: upsampled tensor
     """
     s = s.transpose(0, 1)
     s = torch.nn.functional.interpolate(s.unsqueeze(0), size=(target_resolution), mode='linear', align_corners=True)
@@ -529,20 +556,15 @@ def upsample(s, target_resolution):
 
 def propagate_upsample(tle, times_mjd, upsample_factor=1):
     """
-    This function is the same as `lpop_sequence`, but it allows to upsample the time,
-    interpolating in between. The purpose is to reduce computational time.
-    Caveat: this will reduce the position and velocity prediction accuracy.
-
+    Propagates a TLE object to a set of times, and upsamples the result.
+    The propagation is done using the dsgp4 library, and the upsampling is done using linear interpolation.
+    
     Args:
-        tle (`dsgp4.tle.TLE`): the two-line element set
-        times_mjd (`numpy.array`): modified julian dates
-        upsample_factor (`int`): the state is propagated only every `upsample_factor` times,
-                                        and it is performed interpolation in between.
-
+        tle (``dsgp4.TLE``): TLE object to propagate
+        times_mjd (``list``): list of times in MJD to propagate to
+        upsample_factor (``int``, optional): factor by which to upsample the result. Default is 1 (no upsampling).
     Returns:
-        `numpy.array`: a 3 dimensional array, where in each row, there is a 2x3
-                                    element of position (first row), and velocity (second row),
-                                    both expressed in the TEME reference system and SI units.
+        ``numpy.ndarray``: propagated and upsampled state vector
     """
     if upsample_factor == 1:
         tsinces=(torch.tensor(times_mjd)-dsgp4.util.from_datetime_to_mjd(tle._epoch))*1440.
@@ -557,34 +579,15 @@ def propagate_upsample(tle, times_mjd, upsample_factor=1):
         ret = ret.view(ret.shape[0], 2, 3).cpu().numpy()*1e3
         return ret
 
-
-def create_path(path, directory=False):
-    if directory:
-        dir = path
-    else:
-        dir = os.path.dirname(path)
-    if not os.path.exists(dir):
-        print('{} does not exist, creating'.format(dir))
-        try:
-            os.makedirs(dir)
-        except Exception as e:
-            print(e)
-            print('Could not create path, potentially created by another process in the meantime: {}'.format(path))
-
-
-def tile_rows_cols(num_items):
-    if num_items < 5:
-        return 1, num_items
-    else:
-        cols = math.ceil(math.sqrt(num_items))
-        rows = 0
-        while num_items > 0:
-            rows += 1
-            num_items -= cols
-        return rows, cols
-
-
 def has_nan_or_inf(value):
+    """
+    Checks if a value is NaN or Inf.
+    
+    Args:
+        value (``float`` or ``torch.Tensor``): value to check
+    Returns:
+        ``bool``: True if the value is NaN or Inf, False otherwise
+    """
     if torch.is_tensor(value):
         value = torch.sum(value)
         isnan = int(torch.isnan(value)) > 0
@@ -596,73 +599,24 @@ def has_nan_or_inf(value):
 
 
 def trace_to_event(trace):
+    """
+    Converts a trace object to an Event object.
+    Args:
+        trace (``pyro.poutine.trace_struct.Trace``): trace object to convert
+    Returns:
+        ``kessler.Event``: Event object
+    """
     from .event import Event
     return Event(cdms=trace.nodes['cdms']['infer']['cdms'])
 
 
-def dist_to_event_dataset(dist):
-    from .event import EventDataset
-    return EventDataset(events=list(map(trace_to_event, dist)))
-
-
-def days_hours_mins_secs_str(total_seconds):
-    d, r = divmod(total_seconds, 86400)
-    h, r = divmod(r, 3600)
-    m, s = divmod(r, 60)
-    return '{0}d:{1:02}:{2:02}:{3:02}'.format(int(d), int(h), int(m), int(s))
-
-
-def progress_bar(i, len):
-    bar_len = 20
-    filled_len = int(round(bar_len * i / len))
-    # percents = round(100.0 * i / len, 1)
-    return '#' * filled_len + '-' * (bar_len - filled_len)
-
-
-progress_bar_num_iters = None
-progress_bar_len_str_num_iters = None
-progress_bar_time_start = None
-progress_bar_prev_duration = None
-
-
-def progress_bar_init(message, num_iters, iter_name='Items'):
-    global progress_bar_num_iters
-    global progress_bar_len_str_num_iters
-    global progress_bar_time_start
-    global progress_bar_prev_duration
-    if num_iters < 0:
-        raise ValueError('num_iters must be a non-negative integer')
-    progress_bar_num_iters = num_iters
-    progress_bar_time_start = time.time()
-    progress_bar_prev_duration = 0
-    progress_bar_len_str_num_iters = len(str(progress_bar_num_iters))
-    print(message)
-    sys.stdout.flush()
-    if progress_bar_num_iters > 0:
-        print('Time spent  | Time remain.| Progress             | {} | {}/sec'.format(iter_name.ljust(progress_bar_len_str_num_iters * 2 + 1), iter_name))
-
-
-def progress_bar_update(iter):
-    global progress_bar_prev_duration
-    if progress_bar_num_iters > 0:
-        duration = time.time() - progress_bar_time_start
-        if (duration - progress_bar_prev_duration > _print_refresh_rate) or (iter >= progress_bar_num_iters - 1):
-            progress_bar_prev_duration = duration
-            traces_per_second = (iter + 1) / duration
-            print('{} | {} | {} | {}/{} | {:,.2f}       '.format(days_hours_mins_secs_str(duration), days_hours_mins_secs_str((progress_bar_num_iters - iter) / traces_per_second), progress_bar(iter, progress_bar_num_iters), str(iter).rjust(progress_bar_len_str_num_iters), progress_bar_num_iters, traces_per_second), end='\r')
-            sys.stdout.flush()
-
-
-def progress_bar_end(message=None):
-    progress_bar_update(progress_bar_num_iters)
-    print()
-    if message is not None:
-        print(message)
+# def dist_to_event_dataset(dist):
+#     from .event import EventDataset
+#     return EventDataset(events=list(map(trace_to_event, dist)))
 
 def get_ccsds_time_format(time_string):
     """
-    Adapted by Andrew Ng, 18/3/2022.  
-    Original MATLAB source code:  
+    Original MATLAB source code (adapted by Andrew Ng, 18/3/2022): 
     `NASA CARA Analysis Tools <https://github.com/nasa/CARA_Analysis_Tools>`_  
 
     Processes and outputs the format of the time string extracted from the CDM.  
@@ -684,11 +638,11 @@ def get_ccsds_time_format(time_string):
         7. The time string can end with an optional **"Z"** time zone indicator.
 
     Args:
-        time_string (str): Original time string stored in CDM.
+        time_string (``str``): Original time string stored in CDM.
 
     Returns:
-        str: Outputs the format of the time string.  
-        Must be of the form **yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]**, otherwise a `RuntimeError` is raised.
+        ``str``: Outputs the format of the time string.  
+        Must be of the form **yyyy-[mm-dd|ddd]THH:MM:SS[.F*][Z]**, otherwise a ``RuntimeError`` is raised.
     """
 
     time_format = []
@@ -733,8 +687,7 @@ def get_ccsds_time_format(time_string):
 
 def doy_2_date(value, doy, year, idx):
     '''
-    Written by Andrew Ng, 18/03/2022, 
-    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools
+    Based on source code @ https://github.com/nasa/CARA_Analysis_Tools (adapted by Andrew Ng, 18/03/2022)
     Use the datetime python package. 
     doy_2_date  - Converts Day of Year (DOY) date format to date format.
     
@@ -803,12 +756,13 @@ def build_megaconstellation(launch_date,
             if groups not in [1,2]:
                 raise ValueError(f"Only group values of: 1 or 2 are valid; while {groups} provided")
     if isinstance(launch_date,float):
-        launch_date=from_mjd_to_datetime(launch_date)
+        launch_date=dsgp4.util.from_mjd_to_datetime(launch_date)
     print(f"Launch date: {launch_date}, for constellation: {constellation_name}, group: {groups}")
     epoch_year=launch_date.year
-    epoch_days=from_datetime_to_fractional_day(launch_date)
+    #we transform the datetime in fractional days:
+    d = launch_date-datetime.datetime(launch_date.year-1, 12, 31)
+    epoch_days = d.days + d.seconds/60./60./24 + d.microseconds/60./60./24./1e6
     tles=[]
-
     if constellation_name=='starlink':
         starlink_dic={"group_1":
                                    {"inclination":np.deg2rad(53),
@@ -1335,27 +1289,6 @@ def build_megaconstellation(launch_date,
                     tles.append(tle)
             return tles
 
-def create_path(path, directory=False):
-    """
-    This function creates a path if it does not exist.
-
-    Args:
-        path (``str``): path to be created
-        directory (``bool``): if True, the path is a directory, otherwise it is a file
-    """
-    if directory:
-        dir = path
-    else:
-        dir = os.path.dirname(path)
-    if not os.path.exists(dir):
-        print('{} does not exist, creating'.format(dir))
-        try:
-            os.makedirs(dir)
-        except Exception as e:
-            print(e)
-            print('Could not create path, potentially created by another process in the meantime: {}'.format(path))
-
-
 def create_priors_from_tles(tles, mixture_components = {'mean_motion': 5, 'eccentricity': 5, 'inclination': 13, 'b_star': 4}):
     """
     This function takes a list of TLEs and a dictionary of mixture_components numbers,
@@ -1479,3 +1412,49 @@ def add_megaconstellation_from_file(tles, megaconstellation_file_name):
     """
     tles_megaconstellation=dsgp4.util.load(file_name=megaconstellation_file_name)
     return tles+tles_megaconstellation
+
+
+def progress_bar(i, len):
+    bar_len = 20
+    filled_len = int(round(bar_len * i / len))
+    # percents = round(100.0 * i / len, 1)
+    return '#' * filled_len + '-' * (bar_len - filled_len)
+
+
+progress_bar_num_iters = None
+progress_bar_len_str_num_iters = None
+progress_bar_time_start = None
+progress_bar_prev_duration = None
+
+
+def progress_bar_init(message, num_iters, iter_name='Items'):
+    global progress_bar_num_iters
+    global progress_bar_len_str_num_iters
+    global progress_bar_time_start
+    global progress_bar_prev_duration
+    if num_iters < 0:
+        raise ValueError('num_iters must be a non-negative integer')
+    progress_bar_num_iters = num_iters
+    progress_bar_time_start = time.time()
+    progress_bar_prev_duration = 0
+    progress_bar_len_str_num_iters = len(str(progress_bar_num_iters))
+    print(message)
+    sys.stdout.flush()
+    if progress_bar_num_iters > 0:
+        print('Time spent  | Time remain.| Progress             | {} | {}/sec'.format(iter_name.ljust(progress_bar_len_str_num_iters * 2 + 1), iter_name))
+
+def progress_bar_update(iter):
+    global progress_bar_prev_duration
+    if progress_bar_num_iters > 0:
+        duration = time.time() - progress_bar_time_start
+        if (duration - progress_bar_prev_duration > _print_refresh_rate) or (iter >= progress_bar_num_iters - 1):
+            progress_bar_prev_duration = duration
+            traces_per_second = (iter + 1) / duration
+            print('{} | {} | {} | {}/{} | {:,.2f}       '.format(days_hours_mins_secs_str(duration), days_hours_mins_secs_str((progress_bar_num_iters - iter) / traces_per_second), progress_bar(iter, progress_bar_num_iters), str(iter).rjust(progress_bar_len_str_num_iters), progress_bar_num_iters, traces_per_second), end='\r')
+            sys.stdout.flush()
+
+def progress_bar_end(message=None):
+    progress_bar_update(progress_bar_num_iters)
+    print()
+    if message is not None:
+        print(message)
