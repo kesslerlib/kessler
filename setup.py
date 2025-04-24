@@ -27,6 +27,7 @@ setup(
     name='kessler',
     version=read_package_variable('__version__'),
     description='Machine learning and simulation-based inference and machine learning for space collision assessment and avoidance.',
+    long_description_content_type='text/markdown',  
     long_description=open('README.md').read(),
     author='Giacomo Acciarini',
     author_email='giacomo.acciarini@gmail.com',
