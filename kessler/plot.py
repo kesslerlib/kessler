@@ -16,7 +16,6 @@ import uuid
 import tempfile
 import pyro
 import dsgp4
-from pyprob.distributions import Empirical
 import numpy as np
 import torch
 
@@ -25,8 +24,6 @@ from dsgp4 import tle
 
 mpl.rcParams['axes.unicode_minus'] = False
 
-# I need to re-write this w.r.t. pyprob, since 'nonposy', 'nonposx' are deprecated in favour of 'nonpositive'
-# TODO: transform this into a more generic plot_priors, that takes the priors dict, and plots each mixture
 def plot_mix(mix, min_val=-10, max_val=10, resolution=1000, figsize=(10, 5), xlabel=None, ylabel='Probability', xticks=None, yticks=None, log_xscale=False, log_yscale=False, file_name=None, show=True, fig=None, ax = None, *args, **kwargs):
     if ax is None:
         if not show:
