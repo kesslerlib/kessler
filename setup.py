@@ -31,7 +31,7 @@ setup(
     author='Giacomo Acciarini',
     author_email='giacomo.acciarini@gmail.com',
     packages=find_packages(),
-    install_requires=['pyro', 'numpy', 'matplotlib', 'torch>=1.5.1', 'dsgp4', 'skyfield>=1.26', 'pandas'],
+    install_requires=['pyro-ppl', 'numpy', 'matplotlib', 'torch>=1.5.1', 'dsgp4', 'skyfield>=1.26', 'pandas'],
     extras_require={'dev': ['pytest', 'coverage', 'pytest-xdist', 'scikit-learn']},
     url='https://kesslerlib.github.io/kessler/',
     classifiers=['License :: OSI Approved :: BSD License', 'Programming Language :: Python :: 3'],
