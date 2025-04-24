@@ -52,7 +52,6 @@ templates_path = ["_templates"]
 intersphinx_mapping = {
     "numpy": ("https://numpy.org/doc/stable/", None),
     "python": ("https://docs.python.org/3", None),
-    "matplotlib": ("https://matplotlib.org/stable/", "docs/_static/matplotlib_objects.inv"),
 }
 
 autoclass_content = 'both'
