@@ -388,7 +388,7 @@ document.write(`
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">default_prior</span></code>()</p></td>
-<td><p>This function returns a dictionary of TLE elements priors, corresponding to the 22nd of May 2020.</p></td>
+<td><p>This function returns a dictionary of TLE elements priors. Each prior is a probability density function defined using Pyro distributions. The population of objects from which these priors were derived is the one of May 2022. The priors are defined as follows:     - mean_motion_prior: MixtureSameFamily     - mean_anomaly_prior: Uniform     - eccentricity_prior: MixtureSameFamily     - inclination_prior: MixtureSameFamily     - argument_of_perigee_prior: Uniform     - raan_prior: Uniform     - mean_motion_first_derivative_prior: Uniform     - b_star_prior: MixtureSameFamily The parameters of the distributions are based on the population of objects. The priors are defined in the following ranges:     - mean_motion: [0.0, 0.004]     - mean_anomaly: [0.0, 2 * pi]     - eccentricity: [0.0, 0.9]     - inclination: [0.0, pi]     - argument_of_perigee: [0.0, 2 * pi]     - raan: [0.0, 2 * pi]     - mean_motion_first_derivative: [4.937096738377722e-13, 5.807570136601159e-13]     - b_star: (-inf, inf).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_conjunction</span></code>(tr0, tr1, miss_dist_threshold)</p></td>
 <td><p></p></td>
@@ -399,38 +399,38 @@ document.write(`
 <p class="rubric">Classes</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bernoulli</span></code>([probs, logits])</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bernoulli</span></code>([probs, logits, validate_args])</p></td>
+<td><p>Wraps <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.bernoulli.Bernoulli</span></code> with <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDistributionMixin</span></code>.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Categorical</span></code>([probs, logits])</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Categorical</span></code>([probs, logits, validate_args])</p></td>
+<td><p>Wraps <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.categorical.Categorical</span></code> with <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDistributionMixin</span></code>.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Conjunction</span></code>([time0, max_duration_days, ...])</p></td>
-<td><p>A class for simulating conjunctions.</p></td>
+<td><p>This class implements the Conjunction class, which is used to generate conjunction data messages (CDM) for two objects in space. The class uses the Pyro probabilistic programming library to define the model and perform inference. The class has the following attributes:     - time0: The time of the first observation in MJD. - max_duration_days: The maximum duration of the simulation in days. - time_resolution: The time resolution of the simulation in seconds. - time_upsample_factor: The upsample factor for the time resolution. - miss_dist_threshold: The miss distance threshold in meters. - prior_dict: A dictionary containing the priors for the TLE elements. - t_prob_new_obs: The probability of a new observation for the target. - c_prob_new_obs: The probability of a new observation for the chaser. - cdm_update_every_hours: The interval at which to update the CDM in hours. - mc_samples: The number of Monte Carlo samples to use for uncertainty propagation. - mc_upsample_factor: The upsample factor for the Monte Carlo samples. - pc_method: The method to use for calculating the probability of collision. - collision_threshold: The threshold for considering a collision in meters. - likelihood_t_stddev: The standard deviation of the likelihood for the target. - likelihood_c_stddev: The standard deviation of the likelihood for the chaser. - likelihood_time_to_tca_stddev: The standard deviation of the likelihood for time to TCA.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConjunctionDataMessage</span></code>([file_name, set_defaults])</p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ConjunctionSimplified</span></code>(tles[, ...])</p></td>
+<td><p>This class is a simplified version of the Conjunction class.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">GNSS</span></code>([instrument_characteristics])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Mixture</span></code>(distributions[, probs])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MixtureSameFamily</span></code>(mixture_distribution, ...)</p></td>
+<td><p>Wraps <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.mixture_same_family.MixtureSameFamily</span></code> with <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDistributionMixin</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Normal</span></code>(loc, scale[, validate_args])</p></td>
+<td><p>Wraps <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.normal.Normal</span></code> with <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDistributionMixin</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Radar</span></code>([instrument_characteristics])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Model</span></code>([name, address_dict_file_name])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Normal</span></code>(loc, scale)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TLE</span></code>(data)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TLE</span></code>(data)</p></td>
 <td><p>This class constructs a TLE object from either a list of strings (that make up the TLE) or from a dictionary.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TruncatedNormal</span></code>(mean_non_truncated, ...[, ...])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Uniform</span></code>(low, high)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Uniform</span></code>(low, high[, validate_args])</p></td>
+<td><p>Wraps <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.uniform.Uniform</span></code> with <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDistributionMixin</span></code>.</p></td>
 </tr>
 </tbody>
 </table>

@@ -387,7 +387,7 @@ document.write(`
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_days_to_date_str</span></code>(date0, days)</p></td>
-<td><p></p></td>
+<td><p>Adds a number of days to a date string.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_megaconstellation_from_file</span></code>(tles, ...)</p></td>
 <td><p>This function takes a list of TLEs and a megaconstellation file name, and returns a list of the original TLEs plus the TLEs of the added megaconstellation.</p></td>
@@ -395,113 +395,119 @@ document.write(`
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">build_megaconstellation</span></code>(launch_date[, ...])</p></td>
 <td><p>This function creates a list of TLEs for a given specified megaconstellation.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_path</span></code>(path[, directory])</p></td>
-<td><p>This function creates a path if it does not exist.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_priors_from_tles</span></code>(tles[, ...])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_priors_from_tles</span></code>(tles[, ...])</p></td>
 <td><p>This function takes a list of TLEs and a dictionary of mixture_components numbers, and returns a dictionary of prior distributions for the TLE elements, by fitting probability density functions to data using the specified number of mixture components for each element.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">days_hours_mins_secs_str</span></code>(total_seconds)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">doy_2_date</span></code>(value, doy, year, idx)</p></td>
+<td><p>Based on source code &#64; <a class="github reference external" href="https://github.com/nasa/CARA_Analysis_Tools">nasa/CARA_Analysis_Tools</a> (adapted by Andrew Ng, 18/03/2022) Use the datetime python package.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dist_to_event_dataset</span></code>(dist)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">doy_2_date</span></code>(value, doy, year, idx)</p></td>
-<td><p>Written by Andrew Ng, 18/03/2022, Based on source code &#64; <a class="github reference external" href="https://github.com/nasa/CARA_Analysis_Tools">nasa/CARA_Analysis_Tools</a> Use the datetime python package.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_closest</span></code>(values, t)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">find_closest</span></code>(values, t)</p></td>
 <td><p>Finds the closest value in a list of values to a given value.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_mixture</span></code>(values, *args, **kwargs)</p></td>
-<td><p>This function fits a mixture of Gaussians to the provided values.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_mixture</span></code>(values, *args, **kwargs)</p></td>
+<td><p>Fit a Gaussian Mixture Model to the given data.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_TEME_to_ITRF</span></code>(state, time)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_TEME_to_ITRF</span></code>(state, time)</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_cartesian_to_keplerian</span></code>(r_vec, v_vec, mu)</p></td>
+<td><p>This function converts the provided state from Cartesian to Keplerian elements.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_cartesian_to_rtn</span></code>(state[, ...])</p></td>
 <td><p>Converts a cartesian state to the RTN frame.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_date_str_to_days</span></code>(date[, date0, date_format])</p></td>
-<td><p></p></td>
+<td><p>Converts a date string to the number of days since a reference date.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_datetime_to_cdm_datetime_str</span></code>(datetime)</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_datetime_to_cdm_datetime_str</span></code>(date)</p></td>
+<td><p>Converts a datetime object to a string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_datetime_to_fractional_day</span></code>(datetime_object)</p></td>
-<td><p>Converts a datetime object to a fractional day.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_jd_to_cdm_datetime_str</span></code>(jd_date)</p></td>
+<td><p>Converts a Julian Date to a string in the format 'yyyy-mm-ddTHH:MM:SS.FFF'.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_jd_to_cdm_datetime_str</span></code>(jd_date)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_jd_to_mjd</span></code>(jd_date)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_jd_to_mjd</span></code>(jd_date)</p></td>
 <td><p>Converts a Julian Date to a Modified Julian Date.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_mjd_to_datetime_offset_aware</span></code>(mjd_date)</p></td>
-<td><p>Converts a Modified Julian Date to a datetime object.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_mjd_to_epoch_days_after_1_jan</span></code>(mjd_date)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_mjd_to_jd</span></code>(mjd_date)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_mjd_to_jd</span></code>(mjd_date)</p></td>
 <td><p>Converts a Modified Julian Date to a Julian Date.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_rtn_to_cartesian</span></code>(state_rtn, ...)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_rtn_to_cartesian</span></code>(state_rtn, ...)</p></td>
 <td><p>Converts a RTN state to the cartesian frame.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_string_to_datetime</span></code>(string)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">from_string_to_datetime</span></code>(string)</p></td>
 <td><p>Converts a string to a datetime object.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ccsds_time_format</span></code>(time_string)</p></td>
-<td><p>Adapted by Andrew Ng, 18/3/2022.</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_ccsds_time_format</span></code>(time_string)</p></td>
+<td><p>Original MATLAB source code (adapted by Andrew Ng, 18/3/2022): <a class="reference external" href="https://github.com/nasa/CARA_Analysis_Tools">NASA CARA Analysis Tools</a></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_nan_or_inf</span></code>(value)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">has_nan_or_inf</span></code>(value)</p></td>
+<td><p>Checks if a value is NaN or Inf.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_date</span></code>(date_string, date_format)</p></td>
+<td><p>Checks if a string is in a valid date format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_number</span></code>(s)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_date</span></code>(date_string, date_format)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_number</span></code>(s)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keplerian_cartesian_partials</span></code>(state, mu)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keplerian_cartesian_partials</span></code>(state, mu)</p></td>
 <td><p>Computes the partial derivatives of the cartesian state with respect to the keplerian elements.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress_bar</span></code>(i, len)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress_bar</span></code>(i, len)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress_bar_end</span></code>([message])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress_bar_end</span></code>([message])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress_bar_init</span></code>(message, num_iters[, ...])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress_bar_init</span></code>(message, num_iters[, ...])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress_bar_update</span></code>(iter)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">progress_bar_update</span></code>(iter)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">propagate_upsample</span></code>(tle, times_mjd[, ...])</p></td>
-<td><p>This function is the same as <cite>lpop_sequence</cite>, but it allows to upsample the time, interpolating in between.</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">propagate_upsample</span></code>(tle, times_mjd[, ...])</p></td>
+<td><p>Propagates a TLE object to a set of times, and upsamples the result.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rotation_matrix</span></code>(state)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rotation_matrix</span></code>(state)</p></td>
 <td><p>Computes the UVW rotation matrix.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">seed</span></code>([seed])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">seed</span></code>([seed])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tile_rows_cols</span></code>(num_items)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tile_rows_cols</span></code>(num_items)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tle_elements</span></code>(tles)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">tle_elements</span></code>(tles)</p></td>
 <td><p>This function takes a list of TLEs as input and extracts their elements as lists.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trace_to_event</span></code>(trace)</p></td>
-<td><p></p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">trace_to_event</span></code>(trace)</p></td>
+<td><p>Converts a trace object to an Event object.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform_date_str</span></code>(date_string, ...)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform_date_str</span></code>(date_string, ...)</p></td>
+<td><p>Transforms a date string from one format to another.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">upsample</span></code>(s, target_resolution)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">upsample</span></code>(s, target_resolution)</p></td>
 <td><p>Upsamples a tensor to a given resolution, via linear interpolation.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p class="rubric">Classes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Categorical</span></code>([probs, logits, validate_args])</p></td>
+<td><p>Wraps <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.categorical.Categorical</span></code> with <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDistributionMixin</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">MixtureSameFamily</span></code>(mixture_distribution, ...)</p></td>
+<td><p>Wraps <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.mixture_same_family.MixtureSameFamily</span></code> with <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDistributionMixin</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TorchDistribution</span></code>([batch_shape, ...])</p></td>
+<td><p>Base class for PyTorch-compatible distributions with Pyro support.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">TruncatedNormal</span></code>(loc, scale, low, high)</p></td>
+<td><p>Truncated Normal distribution with specified lower and upper bounds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Uniform</span></code>(low, high[, validate_args])</p></td>
+<td><p>Wraps <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributions.uniform.Uniform</span></code> with <code class="xref py py-class docutils literal notranslate"><span class="pre">TorchDistributionMixin</span></code>.</p></td>
 </tr>
 </tbody>
 </table>

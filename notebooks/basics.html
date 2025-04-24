@@ -412,7 +412,6 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-cdms-from-kvn">Load CDMs from .kvn</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-cdms-from-pandas-dataframe-object">Loading CDMs from pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-cdms-from-kelvins-challenge-dataset">Loading CDMs from Kelvins Challenge  dataset</a></li>
 </ul>
             </nav>
@@ -427,13 +426,6 @@ document.write(`
                   
   <section class="tex2jax_ignore mathjax_ignore" id="basics-loading-cdms">
 <h1>Basics: loading CDMs<a class="headerlink" href="#basics-loading-cdms" title="Link to this heading">#</a></h1>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kessler</span>
-</pre></div>
-</div>
-</div>
-</div>
 <section id="load-cdms-from-kvn">
 <h2>Load CDMs from .kvn<a class="headerlink" href="#load-cdms-from-kvn" title="Link to this heading">#</a></h2>
 <p>In this tutorial, we show how to load CDMs from <code class="docutils literal notranslate"><span class="pre">.kvn</span></code> format.</p>
@@ -456,54 +448,16 @@ document.write(`
 <p>We can then proceed in creating the <code class="docutils literal notranslate"><span class="pre">EventDataset</span></code> object:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">path_to_cdms_folder</span><span class="o">=</span><span class="s1">&#39;cdm_data/cdms_kvn/&#39;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">path_to_cdms_folder</span><span class="o">=</span><span class="s1">&#39;synthetic_cdms/&#39;</span>
 
-<span class="n">events</span><span class="o">=</span><span class="n">EventDataset</span><span class="p">(</span><span class="n">path_to_cdms_folder</span><span class="p">)</span>
+<span class="n">events</span><span class="o">=</span><span class="n">EventDataset</span><span class="p">(</span><span class="n">path_to_cdms_folder</span><span class="p">,</span><span class="n">cdm_extension</span><span class="o">=</span><span class="s1">&#39;.kvn&#39;</span><span class="p">)</span>
 <span class="c1">#A message appears confirming that the loading has happened, with the number of CDMs and events.</span>
 </pre></div>
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loading CDMS (with extension .cdm.kvn.txt) from directory: /Users/giacomoacciarini/cdm_data/cdms_kvn/
-Loaded 39 CDMs grouped into 4 events
-</pre></div>
-</div>
-</div>
-</div>
-</section>
-<section id="loading-cdms-from-pandas-dataframe-object">
-<h2>Loading CDMs from pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> object<a class="headerlink" href="#loading-cdms-from-pandas-dataframe-object" title="Link to this heading">#</a></h2>
-<p>In this tutorial, we show how to load CDMs from pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> object.</p>
-<p>First we perform the relevant imports:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kessler</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">kessler</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventDataset</span>
-</pre></div>
-</div>
-</div>
-</div>
-<p>Then, we create the <code class="docutils literal notranslate"><span class="pre">EventDataset</span></code> object, after having uploaded the pandas dataframe and created the <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> object:</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">file_name</span><span class="o">=</span><span class="s1">&#39;cdm_data/cdms_csv/sample.csv&#39;</span>
-<span class="n">df</span><span class="o">=</span><span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>
-<span class="n">events</span><span class="o">=</span><span class="n">EventDataset</span><span class="o">.</span><span class="n">from_pandas</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Dataframe with 2 rows and 231 columns
-Dropping columns with NaNs
-Dataframe with 2 rows and 104 columns
-Grouping by event_id
-Grouped into 1 event(s)
-Converting DataFrame to EventDataset
-Time spent  | Time remain.| Progress             | Events | Events/sec
-0d:00:00:00 | 0d:00:00:00 | #################### | 1/1 | 404.06         
-
-EventDataset(Events:1, number of CDMs per event: 2 (min), 2 (max), 2.00 (mean))
+<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loading CDMS (with extension .kvn) from directory: synthetic_cdms/
+Loaded 14 CDMs grouped into 2 events
 </pre></div>
 </div>
 </div>
@@ -516,17 +470,7 @@ EventDataset(Events:1, number of CDMs per event: 2 (min), 2 (max), 2.00 (mean))
 First, we perform the relevant imports:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kessler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">kessler.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">kelvins_to_event_dataset</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Cannot import dbm.gnu: No module named &#39;_gdbm&#39;
-</pre></div>
-</div>
-<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/Users/giacomoacciarini/miniconda3/envs/fdl/lib/python3.7/site-packages/pyprob/util.py:327: UserWarning: Empirical distributions on disk may perform slow because GNU DBM is not available. Please install and configure gdbm library for Python for better speed.
-  warnings.warn(&#39;Empirical distributions on disk may perform slow because GNU DBM is not available. Please install and configure gdbm library for Python for better speed.&#39;)
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">kessler.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">kelvins_to_event_dataset</span>
 </pre></div>
 </div>
 </div>
@@ -534,7 +478,7 @@ First, we perform the relevant imports:</p>
 <p>Then, we proceed in converting the Kelvins dataset as an <code class="docutils literal notranslate"><span class="pre">EventDataset</span></code> objetc. In the following example, we leverage two extra entries (i.e., <code class="docutils literal notranslate"><span class="pre">drop_features</span></code> and <code class="docutils literal notranslate"><span class="pre">num_events</span></code>) to exclude certain features when importing, and to only import a limited number of events (in this case 1000).</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">file_name</span><span class="o">=</span><span class="s1">&#39;cdm_data/kelvins_data/test_data.csv&#39;</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">file_name</span><span class="o">=</span><span class="s1">&#39;kelvins_data/test_data.csv&#39;</span>
 <span class="n">events</span><span class="o">=</span><span class="n">kelvins_to_event_dataset</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">drop_features</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;c_rcs_estimate&#39;</span><span class="p">,</span> <span class="s1">&#39;t_rcs_estimate&#39;</span><span class="p">],</span> <span class="n">num_events</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
 <span class="c1">#The output will show the number of CDMs and events loaded, as they progress.</span>
 </pre></div>
@@ -607,7 +551,6 @@ Time spent  | Time remain.| Progress             | Events    | Events/sec
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-cdms-from-kvn">Load CDMs from .kvn</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-cdms-from-pandas-dataframe-object">Loading CDMs from pandas <code class="docutils literal notranslate"><span class="pre">DataFrame</span></code> object</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#loading-cdms-from-kelvins-challenge-dataset">Loading CDMs from Kelvins Challenge  dataset</a></li>
 </ul>
   </nav></div>

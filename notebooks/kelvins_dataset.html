@@ -429,7 +429,6 @@ document.write(`
   <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kessler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">kessler</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventDataset</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">kessler.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">LSTMPredictor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">kessler.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">kelvins_to_event_dataset</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
@@ -448,7 +447,7 @@ document.write(`
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#As an example, we first show the case in which the data comes from the Kelvins competition.</span>
 <span class="c1">#For this, we built a specific converter that takes care of the conversion from Kelvins format</span>
 <span class="c1">#to standard CDM format (the data can be downloaded at https://kelvins.esa.int/collision-avoidance-challenge/data/):</span>
-<span class="n">file_name</span> <span class="o">=</span> <span class="s1">&#39;/home/gunes/data/kelvins/train_data/train_data.csv&#39;</span>
+<span class="n">file_name</span><span class="o">=</span><span class="s1">&#39;kelvins_data/train_data.csv&#39;</span>
 <span class="n">events</span> <span class="o">=</span> <span class="n">kelvins_to_event_dataset</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">drop_features</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;c_rcs_estimate&#39;</span><span class="p">,</span> <span class="s1">&#39;t_rcs_estimate&#39;</span><span class="p">],</span> <span class="n">num_events</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span> <span class="c1">#we use only 200 events</span>
 </pre></div>
 </div>

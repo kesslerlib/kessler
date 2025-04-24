@@ -420,7 +420,6 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kessler</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">kessler</span><span class="w"> </span><span class="kn">import</span> <span class="n">EventDataset</span>
 <span class="n">path_to_cdms_folder</span><span class="o">=</span><span class="s1">&#39;synthetic_cdms&#39;</span>
 <span class="n">events</span><span class="o">=</span><span class="n">kessler</span><span class="o">.</span><span class="n">EventDataset</span><span class="p">(</span><span class="n">cdms_dir</span><span class="o">=</span><span class="n">path_to_cdms_folder</span><span class="p">,</span><span class="n">cdm_extension</span><span class="o">=</span><span class="s1">&#39;.kvn&#39;</span><span class="p">)</span>
 <span class="c1">#events=EventDataset(path_to_cdms_folder)</span>
@@ -428,6 +427,10 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/opt/hostedtoolcache/Python/3.9.22/x64/lib/python3.9/site-packages/tqdm/auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div>
+</div>
 <div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Loading CDMS (with extension .kvn) from directory: synthetic_cdms
 Loaded 14 CDMs grouped into 2 events
 </pre></div>
@@ -443,17 +446,13 @@ Loaded 14 CDMs grouped into 2 events
 </div>
 </div>
 <div class="cell_output docutils container">
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Converting EventDataset to DataFrame
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>  0%|          | 0/2 [00:00&lt;?, ?it/s]
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>Time spent  | Time remain.| Progress             | Events | Events/sec
-0d:00:00:00 | 0d:00:00:00 | ##########---------- | 1/2 | 102.19       
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>100%|██████████| 2/2 [00:00&lt;00:00, 59.31it/s]
 </pre></div>
 </div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>0d:00:00:00 | 0d:00:00:00 | #################### | 2/2 | 82.96       
-</pre></div>
-</div>
-<div class="output stream highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>
 </pre></div>
 </div>
 </div>

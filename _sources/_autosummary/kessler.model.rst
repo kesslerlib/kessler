@@ -20,10 +20,10 @@
       Conjunction
       ConjunctionDataMessage
       ConjunctionSimplified
-      Mixture
-      Model
+      GNSS
+      MixtureSameFamily
       Normal
+      Radar
       TLE
-      TruncatedNormal
       Uniform
    

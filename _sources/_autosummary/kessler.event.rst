@@ -17,4 +17,5 @@
       CDM
       Event
       EventDataset
+      tqdm
    

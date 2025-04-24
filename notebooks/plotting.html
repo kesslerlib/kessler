@@ -446,6 +446,7 @@ document.write(`
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">kessler</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">dsgp4</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 </pre></div>
 </div>
 </div>
@@ -469,7 +470,7 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/df996ae0e463739924a1db5e4705694dbc38a20c48fb5ec8208444d22b15328d.png" src="../_images/df996ae0e463739924a1db5e4705694dbc38a20c48fb5ec8208444d22b15328d.png" />
+<img alt="../_images/f435b02f682f00a91385868360887d5c9053154b63abee5672effc944a75d476.png" src="../_images/f435b02f682f00a91385868360887d5c9053154b63abee5672effc944a75d476.png" />
 </div>
 </div>
 </section>
@@ -480,7 +481,13 @@ document.write(`
 <div class="cell docutils container">
 <div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">priors</span><span class="o">=</span><span class="n">kessler</span><span class="o">.</span><span class="n">util</span><span class="o">.</span><span class="n">create_priors_from_tles</span><span class="p">(</span><span class="n">tles</span><span class="p">,</span> <span class="n">mixture_components</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mean_motion&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;eccentricity&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;inclination&#39;</span><span class="p">:</span> <span class="mi">13</span><span class="p">,</span> <span class="s1">&#39;b_star&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">})</span>
-<span class="c1">#we also extract the mean motion alues from the TLEs, to then have the minimum and maximum values for the mean motion priors (else the priors will be wide and you cannot see anything)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#we also extract the mean motion alues from the TLEs, to then have the minimum and maximum values for the mean motion priors (else the priors will be wide and you cannot see anything)</span>
 <span class="n">mean_motions</span><span class="o">=</span><span class="p">[</span><span class="n">el</span><span class="o">.</span><span class="n">mean_motion</span> <span class="k">for</span> <span class="n">el</span> <span class="ow">in</span> <span class="n">tles</span><span class="p">]</span>
 </pre></div>
 </div>
@@ -488,30 +495,9 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_mix</span><span class="p">(</span><span class="n">mix</span><span class="o">=</span><span class="n">priors</span><span class="p">[</span><span class="s1">&#39;mean_motion_prior&#39;</span><span class="p">],</span>              
-                      <span class="n">min_val</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span>
-                      <span class="n">max_val</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span>
-                      <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Mean Motion&#39;</span><span class="p">,</span>
-                      <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span>
-                      <span class="n">linewidth</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span>
-                      <span class="n">color</span><span class="o">=</span><span class="s1">&#39;dodgerblue&#39;</span><span class="p">,</span>
-                      <span class="n">resolution</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="cell_output docutils container">
-<img alt="../_images/10b021ceba9fe7526359a52fad77984841cae81dd53dd7f8ff34810db667c55b.png" src="../_images/10b021ceba9fe7526359a52fad77984841cae81dd53dd7f8ff34810db667c55b.png" />
-<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;Mean Motion&#39;, ylabel=&#39;Probability&#39;&gt;
-</pre></div>
-</div>
-</div>
-</div>
-<p>Or in log-scale</p>
-<div class="cell docutils container">
-<div class="cell_input docutils container">
 <div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_mix</span><span class="p">(</span><span class="n">mix</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="s1">&#39;mean_motion_prior&#39;</span><span class="p">],</span> 
-                      <span class="n">min_val</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span> 
-                      <span class="n">max_val</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span> 
+                      <span class="n">min_val</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span> 
+                      <span class="n">max_val</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">mean_motions</span><span class="p">),</span> 
                       <span class="n">log_yscale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                       <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Mean Motion&#39;</span><span class="p">,</span>
                       <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span>
@@ -522,8 +508,33 @@ document.write(`
 </div>
 </div>
 <div class="cell_output docutils container">
-<img alt="../_images/f811b8c465d4e4773d69aa0881fedd87548e348471e050d9588284b17b5f7f5b.png" src="../_images/f811b8c465d4e4773d69aa0881fedd87548e348471e050d9588284b17b5f7f5b.png" />
+<div class="output stderr highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>/Users/ga00693/miniconda3/envs/kessler/lib/python3.12/site-packages/torch/distributions/distribution.py:307: UserWarning: &lt;class &#39;pyro.distributions.torch.MixtureSameFamily&#39;&gt; does not define `support` to enable sample validation. Please initialize the distribution with `validate_args=False` to turn off validation.
+  warnings.warn(
+</pre></div>
+</div>
+<img alt="../_images/88ddf60c0b2960ef48e54183ad31691d3c52daaff4bd8db7fd4d29de807ac249.png" src="../_images/88ddf60c0b2960ef48e54183ad31691d3c52daaff4bd8db7fd4d29de807ac249.png" />
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;Mean Motion&#39;, ylabel=&#39;Probability&#39;&gt;
+</pre></div>
+</div>
+</div>
+</div>
+<div class="cell docutils container">
+<div class="cell_input docutils container">
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_mix</span><span class="p">(</span><span class="n">mix</span> <span class="o">=</span> <span class="n">priors</span><span class="p">[</span><span class="s1">&#39;inclination_prior&#39;</span><span class="p">],</span> 
+                      <span class="n">min_val</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> 
+                      <span class="n">max_val</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> 
+                      <span class="n">log_yscale</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                      <span class="n">xlabel</span><span class="o">=</span><span class="s1">&#39;Inclination&#39;</span><span class="p">,</span>
+                      <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span>
+                      <span class="n">linewidth</span><span class="o">=</span><span class="mf">4.</span><span class="p">,</span>
+                      <span class="n">color</span><span class="o">=</span><span class="s1">&#39;darkorange&#39;</span><span class="p">,</span>
+                      <span class="n">resolution</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="cell_output docutils container">
+<img alt="../_images/5b918a31f9b1613031690f82819913c1bd8d1b0dad882838ddc49b16b9ef8fe9.png" src="../_images/5b918a31f9b1613031690f82819913c1bd8d1b0dad882838ddc49b16b9ef8fe9.png" />
+<div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;Inclination&#39;, ylabel=&#39;Probability&#39;&gt;
 </pre></div>
 </div>
 </div>
@@ -534,7 +545,8 @@ document.write(`
 <p>Let’s load the generated trace:</p>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;trace.pickle&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#save to pickle the trace:</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;trace.pickle&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">trace</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -542,7 +554,7 @@ document.write(`
 </div>
 <div class="cell docutils container">
 <div class="cell_input docutils container">
-<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_trace_orbit</span><span class="p">(</span><span class="n">trace</span><span class="o">=</span><span class="n">trace</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<div class="highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">kessler</span><span class="o">.</span><span class="n">plot</span><span class="o">.</span><span class="n">plot_trace_orbit</span><span class="p">(</span><span class="n">trace</span><span class="o">=</span><span class="n">trace</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -550,7 +562,7 @@ document.write(`
 <div class="output text_plain highlight-myst-ansi notranslate"><div class="highlight"><pre><span></span>&lt;Axes: xlabel=&#39;y&#39;, ylabel=&#39;z&#39;&gt;
 </pre></div>
 </div>
-<img alt="../_images/0c0666f520a8811b6f7085a2dcdfc966aabbc8d4506ce652ec7bdf62e57a28e0.png" src="../_images/0c0666f520a8811b6f7085a2dcdfc966aabbc8d4506ce652ec7bdf62e57a28e0.png" />
+<img alt="../_images/ed56cdb2a3947ba4221a3481319f1c04e88bcfe3899b1f96f56be16f6fa324cf.png" src="../_images/ed56cdb2a3947ba4221a3481319f1c04e88bcfe3899b1f96f56be16f6fa324cf.png" />
 </div>
 </div>
 </section>
