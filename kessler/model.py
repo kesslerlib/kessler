@@ -8,16 +8,11 @@ import pyro.distributions as dist
 from . import GNSS, Radar, ConjunctionDataMessage, util
 from dsgp4 import TLE
 
-from torch.distributions import Normal, constraints
+from torch.distributions import constraints
 from torch.distributions.distribution import Distribution
 from torch.distributions.utils import broadcast_all
-from pyro.poutine import trace
 
 from pyro.distributions import MixtureSameFamily, Categorical, Uniform, Normal, Bernoulli
-
-import torch
-from torch.distributions import Normal, Distribution
-from torch.distributions import constraints
 
 def find_conjunction(tr0, 
                      tr1, 
