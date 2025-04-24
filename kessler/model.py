@@ -458,7 +458,7 @@ class Conjunction:
             cdm.set_relative_metadata('TCA', util.from_jd_to_cdm_datetime_str(tca_jd))
             cdm.set_header('CREATION_DATE', util.from_jd_to_cdm_datetime_str(obs_jd))
             if t_state_new_obs is not None:
-                obs_tle_t,_=dsgp4.newton_method(t_tle,time_obs_mjd,verbose=True)
+                obs_tle_t,_=dsgp4.newton_method(t_tle,time_obs_mjd,verbose=False)
                 # we return the state in XYZ, the state in RTN and the cov matrix in RTN
                 if self._up_method == 'MC':
                     t_mean_state_tca_xyz_TEME, t_cov_state_tca_rtn = self.propagate_uncertainty_monte_carlo(state_xyz = t_state_new_obs,
@@ -470,7 +470,7 @@ class Conjunction:
                     cdm.set_covariance(0, t_cov_state_tca_rtn)
                 #elif self._up_method == 'STM':
             if c_state_new_obs is not None:
-                obs_tle_c,_=dsgp4.newton_method(c_tle,time_obs_mjd,verbose=True)
+                obs_tle_c,_=dsgp4.newton_method(c_tle,time_obs_mjd,verbose=False)
                 if self._up_method == 'MC':
                     c_mean_state_tca_xyz_TEME, c_cov_state_tca_rtn = self.propagate_uncertainty_monte_carlo(state_xyz = c_state_new_obs,
                                                                                                             cov_matrix_diagonal_rtn = self._c_cov_matrix_diagonal_obs_noise,
