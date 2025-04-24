@@ -381,6 +381,7 @@ document.write(`
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#packages">Packages</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda">conda</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip">pip</a></li>
 </ul>
 </li>
@@ -402,6 +403,23 @@ document.write(`
 <h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h1>
 <section id="packages">
 <span id="installation-deps"></span><h2>Packages<a class="headerlink" href="#packages" title="Link to this heading">#</a></h2>
+<section id="conda">
+<h3>conda<a class="headerlink" href="#conda" title="Link to this heading">#</a></h3>
+<p><cite>kessler</cite> is available on [Anaconda](<a class="reference external" href="https://anaconda.org/conda-forge/kessler">https://anaconda.org/conda-forge/kessler</a>).
+To install it via <cite>conda</cite>, we add <cite>conda-forge</cite> channel to the channels:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>config<span class="w"> </span>--add<span class="w"> </span>channels<span class="w"> </span>conda-forge
+<span class="gp">$ </span>conda<span class="w"> </span>config<span class="w"> </span>--set<span class="w"> </span>channel_priority<span class="w"> </span>strict
+</pre></div>
+</div>
+<p>Now, we can install <cite>kessler</cite> either through <cite>conda</cite>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>conda<span class="w"> </span>install<span class="w"> </span>kessler
+</pre></div>
+</div>
+<p>or <cite>mamba</cite>:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>mamba<span class="w"> </span>install<span class="w"> </span>kessler
+</pre></div>
+</div>
+</section>
 <section id="pip">
 <h3>pip<a class="headerlink" href="#pip" title="Link to this heading">#</a></h3>
 <p><cite>kessler</cite> is available on [Pypi](<a class="reference external" href="https://pypi.org/project/kessler/">https://pypi.org/project/kessler/</a>). You can install it via <cite>pip</cite> as:</p>
@@ -414,8 +432,6 @@ document.write(`
 <h2>Installation from source<a class="headerlink" href="#installation-from-source" title="Link to this heading">#</a></h2>
 <p>Using <code class="docutils literal notranslate"><span class="pre">git</span></code>:</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/kesslerlib/kessler
-<span class="gp">$ </span><span class="nb">cd</span><span class="w"> </span>kessler
-<span class="gp">$ </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
 <p>We follow the usual PR-based development workflow, thus kessler’s <code class="docutils literal notranslate"><span class="pre">master</span></code>
@@ -423,7 +439,7 @@ branch is normally kept in a working state.</p>
 </section>
 <section id="verifying-the-installation">
 <h2>Verifying the installation<a class="headerlink" href="#verifying-the-installation" title="Link to this heading">#</a></h2>
-<p>You can verify that dSGP4 was successfully compiled and
+<p>You can verify that kessler was successfully compiled and
 installed by running the tests. To do so, you must first install the
 optional dependencies.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pytest
@@ -434,7 +450,7 @@ your kessler installation is ready for use.</p>
 </section>
 <section id="getting-help">
 <h2>Getting help<a class="headerlink" href="#getting-help" title="Link to this heading">#</a></h2>
-<p>If you run into troubles installing kessler, please do not hesitate
+<p>If you run into troubles installing <cite>kessler</cite>, please do not hesitate
 to contact us by opening an issue report on <a class="reference external" href="https://github.com/kesslerlib/kessler/issues">github</a>.</p>
 </section>
 </section>
@@ -485,6 +501,7 @@ to contact us by opening an issue report on <a class="reference external" href="
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#packages">Packages</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#conda">conda</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pip">pip</a></li>
 </ul>
 </li>
@@ -505,7 +522,7 @@ to contact us by opening an issue report on <a class="reference external" href="
   <div class="footer-item">
     
 <p class="component-author">
-By Giacomo Acciarini, Atılım Güneş Baydin, Francesco Pinto
+By Giacomo Acciarini, Atılım Güneş Baydin
 </p>
 
   </div>
