@@ -1,10 +1,21 @@
+# This code is part of Kessler, a machine learning library for spacecraft collision avoidance.
+#
+# Copyright (c) 2020-
+# Trillium Technologies
+# University of Oxford
+# Giacomo Acciarini (giacomo.acciarini@gmail.com)
+# and other contributors, see README in root of repository.
+#
+# GNU General Public License version 3. See LICENSE in root of repository.
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import os
 import uuid
 import tempfile
-import pyprob
+import pyro
+import dsgp4
 from pyprob.distributions import Empirical
 import numpy as np
 import torch
@@ -24,7 +35,7 @@ def plot_mix(mix, min_val=-10, max_val=10, resolution=1000, figsize=(10, 5), xla
         fig, ax = plt.subplots(figsize=figsize)
         fig.tight_layout()
         ax.grid()
-    xvals = np.linspace(min_val, max_val, resolution)
+    xvals = torch.linspace(min_val, max_val, resolution)
     ax.plot(xvals, [torch.exp(mix.log_prob(x)) for x in xvals], *args, **kwargs)
     if log_xscale:
         ax.set_xscale('log')
@@ -187,8 +198,6 @@ def plot_dist(dists, file_name=None, n_bins=30, num_resample=None, trace=None, f
         marginal_dists[i]['dist_num_cdms'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['num_cdms'])
         if len(marginal_dists[i]['dist_conj']) > 0:
             marginal_dists[i]['dist_time_cdm'] = marginal_dists[i]['dist_events_with_conjunction'].map(lambda t:t['time_cdm'])
-
-    pyprob.set_verbosity(2)
 
     fig, axs = plt.subplots(8, 4, figsize=figsize)
 
@@ -580,41 +589,44 @@ def plot_dist(dists, file_name=None, n_bins=30, num_resample=None, trace=None, f
 def plot_trace_orbit(trace, time_upsample_factor=100, figsize=(10, 8), file_name=None):
     t_color, c_color = 'red', 'forestgreen'
 
-    time0 = float(trace['time0'])
-    max_duration_days = float(trace['max_duration_days'])
-    delta_time = float(trace['delta_time'])
+    time0 = float(trace.nodes['time0']['value'])
+    max_duration_days = float(trace.nodes['max_duration_days']['value'])
+    delta_time = float(trace.nodes['delta_time']['value'])
     times = np.arange(time0, time0 + max_duration_days, delta_time)
 
-    t_mean_motion = float(trace['t_mean_motion'])
-    t_mean_motion_first_derivative = float(trace['t_mean_motion_first_derivative'])
-    t_mean_motion_second_derivative= float(trace['t_mean_motion_second_derivative'])
-    t_eccentricity = float(trace['t_eccentricity'])
-    t_inclination = float(trace['t_inclination'])
-    t_argument_of_perigee = float(trace['t_argument_of_perigee'])
-    t_raan = float(trace['t_raan'])
-    t_mean_anomaly = float(trace['t_mean_anomaly'])
-    t_b_star = float(trace['t_b_star'])
+    t_mean_motion = float(trace.nodes['t_mean_motion']['value'])
+    t_mean_motion_first_derivative = float(trace.nodes['t_mean_motion_first_derivative']['value'])
+    t_mean_motion_second_derivative= float(trace.nodes['t_mean_motion_second_derivative']['value'])
+    t_eccentricity = float(trace.nodes['t_eccentricity']['value'])
+    t_inclination = float(trace.nodes['t_inclination']['value'])
+    t_argument_of_perigee = float(trace.nodes['t_argument_of_perigee']['value'])
+    t_raan = float(trace.nodes['t_raan']['value'])
+    t_mean_anomaly = float(trace.nodes['t_mean_anomaly']['value'])
+    t_b_star = float(trace.nodes['t_b_star']['value'])
 
-    util.lpop_init(trace['t_tle0'])
+    t_tle=trace.nodes['t_tle']['infer']['t_tle']
     try:
-        t_states = util.lpop_sequence_upsample(times, time_upsample_factor)
+        dsgp4.initialize_tle(t_tle)
+        t_states = util.propagate_upsample(tle=t_tle, times_mjd=times, upsample_factor=time_upsample_factor)
         t_prop_error = False
     except RuntimeError as e:
+        print(f'Error during target propagation: {e}')
         t_prop_error = True
 
-    c_mean_motion = float(trace['c_mean_motion'])
-    c_mean_motion_first_derivative = float(trace['c_mean_motion_first_derivative'])
-    c_mean_motion_second_derivative= float(trace['c_mean_motion_second_derivative'])
-    c_eccentricity = float(trace['c_eccentricity'])
-    c_inclination = float(trace['c_inclination'])
-    c_argument_of_perigee = float(trace['c_argument_of_perigee'])
-    c_raan = float(trace['c_raan'])
-    c_mean_anomaly = float(trace['c_mean_anomaly'])
-    c_b_star = float(trace['c_b_star'])
+    c_mean_motion = float(trace.nodes['c_mean_motion']['value'])
+    c_mean_motion_first_derivative = float(trace.nodes['c_mean_motion_first_derivative']['value'])
+    c_mean_motion_second_derivative= float(trace.nodes['c_mean_motion_second_derivative']['value'])
+    c_eccentricity = float(trace.nodes['c_eccentricity']['value'])
+    c_inclination = float(trace.nodes['c_inclination']['value'])
+    c_argument_of_perigee = float(trace.nodes['c_argument_of_perigee']['value'])
+    c_raan = float(trace.nodes['c_raan']['value'])
+    c_mean_anomaly = float(trace.nodes['c_mean_anomaly']['value'])
+    c_b_star = float(trace.nodes['c_b_star']['value'])
 
-    util.lpop_init(trace['c_tle0'])
+    c_tle=trace.nodes['c_tle']['infer']['c_tle']
     try:
-        c_states = util.lpop_sequence_upsample(times, time_upsample_factor)
+        dsgp4.initialize_tle(c_tle)
+        c_states = util.propagate_upsample(tle=c_tle, times_mjd=times, upsample_factor=time_upsample_factor)
         c_prop_error = False
     except RuntimeError as e:
         c_prop_error = True
@@ -635,8 +647,8 @@ def plot_trace_orbit(trace, time_upsample_factor=100, figsize=(10, 8), file_name
     if not c_prop_error:
         ax.plot(c_states[:,0,0], c_states[:,0,1], c_states[:,0,2], alpha=0.75, color=c_color)
 #     set_axes_equal(ax)
-    if trace['conj']:
-        i_conj = int(trace['i_conj'])
+    if trace.nodes['conj']['value']:
+        i_conj = int(trace.nodes['i_conj']['value'])
         if not t_prop_error:
             t_pos_conj = t_states[i_conj, 0]
             ax.scatter(t_pos_conj[0], t_pos_conj[1], t_pos_conj[2], s=1e3, marker='*', color='green')

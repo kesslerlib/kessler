@@ -1,13 +1,12 @@
 # This code is part of Kessler, a machine learning library for spacecraft collision avoidance.
 #
 # Copyright (c) 2020-
-# University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 # Trillium Technologies
-# Giacomo Acciarini
+# University of Oxford
+# Giacomo Acciarini (giacomo.acciarini@gmail.com)
 # and other contributors, see README in root of repository.
 #
 # GNU General Public License version 3. See LICENSE in root of repository.
-
 
 import unittest
 import numpy as np
@@ -17,7 +16,7 @@ import dsgp4
 import kessler
 import kessler.util
 
-
+from pyro.distributions import Categorical, MixtureSameFamily
 class UtilTestCase(unittest.TestCase):
     def test_from_datetime_to_cdm_datetime_str(self):
         date = datetime.datetime(2823, 3, 4, 12, 1, 23, 252 )
@@ -130,5 +129,21 @@ class UtilTestCase(unittest.TestCase):
         self.assertAlmostEqual(Omega.item(), Omega_poliastro, places=5)
         self.assertAlmostEqual(omega.item(), omega_poliastro, places=5)
         self.assertAlmostEqual(M.item(), M_poliastro, places=5)
-        
+    
+    def test_TruncatedNormal(self):
+        #we check the truncated normal distribution, we do this for a mixture of them:         
+        locs=torch.tensor([6.391167644720491e-05, 0.021593032643530245,0.00089714840255561, 0.004279950440413096, ]) 
+        scales=torch.tensor([9.155414891172675e-05, 0.08825398369676822, 0.0006834100202961423,0.003464680595037937]) 
+        probs=torch.tensor([0.36699734 ,0.02809785 ,0.39047779,0.21442703 ]) 
+        min=-0.73577 
+        max=0.68639
+
+        categorical=Categorical(probs=probs)
+        batched_truncated_normal = kessler.util.TruncatedNormal(loc=locs, scale=scales, min=min, max=max)
+        mix_truncated=MixtureSameFamily(categorical, batched_truncated_normal)
+        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.0001)).item(), 7.382209300994873, places=8)
+        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.001)).item(), 5.485926151275635, places=8)
+        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.01)).item(), 1.863307237625122, places=8)
+        self.assertAlmostEqual(mix_truncated.log_prob(torch.tensor(0.1)).item(), -2.458112955093384, places=8)
+
 

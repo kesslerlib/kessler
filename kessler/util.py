@@ -1,9 +1,9 @@
 # This code is part of Kessler, a machine learning library for spacecraft collision avoidance.
 #
 # Copyright (c) 2020-
-# University of Oxford (Atilim Gunes Baydin <gunes@robots.ox.ac.uk>)
 # Trillium Technologies
-# Giacomo Acciarini
+# University of Oxford
+# Giacomo Acciarini (giacomo.acciarini@gmail.com)
 # and other contributors, see README in root of repository.
 #
 # GNU General Public License version 3. See LICENSE in root of repository.
@@ -19,7 +19,13 @@ import functools
 import random
 import dsgp4
 import matplotlib.pyplot as plt
+import pyro
+import warnings
 
+#for the TruncatedNormal custom distribution
+from torch.distributions import constraints
+from pyro.distributions.torch_distribution import TorchDistribution
+from pyro.distributions import MixtureSameFamily, Categorical, Uniform
 
 _print_refresh_rate = 0.25  #
 
@@ -36,6 +42,122 @@ def seed(seed=None):
         torch.cuda.manual_seed(seed)
 
 seed()
+  
+class TruncatedNormal(TorchDistribution):
+    """
+    Truncated Normal distribution with specified lower and upper bounds.
+    This class inherits from the Pyro Distribution class and implements
+    the log probability and sampling methods for a truncated normal distribution.
+
+    Args:
+        loc (``torch.Tensor``): The mean of the normal distribution.
+        scale (``torch.Tensor``): The standard deviation of the normal distribution.
+        low (``torch.Tensor``, optional): The lower bound for truncation. Default is None.
+        high (``torch.Tensor``, optional): The upper bound for truncation. Default is None.
+        validate_args (bool, optional): Whether to validate the arguments. Default is None.
+
+    Attributes:
+        loc (``torch.Tensor``): The mean of the normal distribution.
+        scale (``torch.Tensor``): The standard deviation of the normal distribution.
+        low (``torch.Tensor``): The lower bound for truncation.
+        high (``torch.Tensor``): The upper bound for truncation.
+        base_dist (``Normal``): The base normal distribution.
+
+    Methods:
+        log_prob(value): Computes the log probability of the given value.
+        sample(sample_shape): Samples from the truncated normal distribution.
+    """  
+    arg_constraints = {
+        '_loc': constraints.real,
+        '_scale': constraints.positive,
+        '_low': constraints.real,
+        '_high': constraints.real,
+    }
+    def __init__(self, loc, scale, low, high):#, clamp_mean_between_low_high=False):
+        self._loc = torch.as_tensor(loc)
+        self._scale = torch.as_tensor(scale)
+        self._low = torch.as_tensor(low)
+        self._high = torch.as_tensor(high)
+        # Define batch dimensions
+        if self._loc.dim() == 0:
+            self._batch_length = 0
+        elif self._loc.dim() in (1, 2):
+            self._batch_length = self._loc.size(0)
+        else:
+            raise RuntimeError('Expecting 1d or 2d (batched) probabilities.')
+
+        # Standard normal distribution for calculations
+        self._standard_normal_dist = pyro.distributions.Normal(
+            torch.zeros_like(self._loc),
+            torch.ones_like(self._scale)
+        )
+
+        # Precompute alpha, beta, CDFs, and Z
+        self._alpha = (self._low - self._loc) / self._scale
+        self._beta = (self._high - self._loc) / self._scale
+        self._standard_normal_cdf_alpha = self._standard_normal_dist.cdf(self._alpha)
+        self._standard_normal_cdf_beta = self._standard_normal_dist.cdf(self._beta)
+        self._Z = self._standard_normal_cdf_beta - self._standard_normal_cdf_alpha
+        self._log_stddev_Z = torch.log(self._scale * self._Z)
+
+        # Initialize base class
+        batch_shape = self._loc.shape
+        event_shape = torch.Size()
+        super().__init__(batch_shape=batch_shape, event_shape=event_shape)
+
+    def log_prob(self, value):
+        value = torch.as_tensor(value)
+
+        # Ensure the value is within bounds
+        lb = value.ge(self._low).type_as(self._low)
+        ub = value.le(self._high).type_as(self._low)
+
+        # Compute log probability
+        lp = (
+            torch.log(lb.mul(ub)) +
+            self._standard_normal_dist.log_prob((value - self._loc) / self._scale) -
+            self._log_stddev_Z
+        )
+
+        # Handle potential NaN or Inf values
+        if self._batch_length == 1:
+            lp = lp.squeeze(0)
+
+        if torch.any(torch.isnan(lp)) or torch.isinf(lp).any():
+            warnings.warn('NaN, -Inf, or Inf encountered in TruncatedNormal log_prob.')
+            print('distribution', self)
+            print('value', value)
+            print('log_prob', lp)
+
+        return lp
+
+    def sample(self, sample_shape=torch.Size()):
+        shape = self._low.expand(sample_shape + self._low.shape)
+        attempt_count = 0
+        ret = torch.full(shape, float('NaN'), dtype=self._low.dtype)
+
+        outside_domain = True
+        while torch.isnan(ret).any() or outside_domain:
+            attempt_count += 1
+            if attempt_count == 10000:
+                warnings.warn('Trying to sample from the tail of a truncated normal distribution, which can take a long time. A more efficient implementation is pending.')
+
+            # Sample uniformly between CDF(alpha) and CDF(beta)
+            rand = torch.rand(shape, dtype=self._low.dtype)
+            ret = (
+                self._standard_normal_dist.icdf(
+                    self._standard_normal_cdf_alpha + rand * (self._standard_normal_cdf_beta - self._standard_normal_cdf_alpha)
+                ) * self._scale + self._loc
+            )
+
+            # Check if the sample is within bounds
+            lb = ret.ge(self._low).type_as(self._low)
+            ub = ret.le(self._high).type_as(self._low)
+            outside_domain = (torch.sum(lb.mul(ub)) == 0)
+
+        if self._batch_length == 1:
+            ret = ret.squeeze(0)
+        return ret
 
 def fit_mixture(values, *args, **kwargs):
     """
@@ -617,12 +739,12 @@ def doy_2_date(value, doy, year, idx):
     doy_2_date  - Converts Day of Year (DOY) date format to date format.
     
     Args:
-        - value(``str``): Original date time string with day of year format "YYYY-DDDTHH:MM:SS.ff"
-        - doy  (``str``): The day of year in the DOY format. 
-        - year (``str``): The year.
-        - idx  (``int``): Index of the start of the original "value" string at which characters 'DDD' are found. 
+        value(``str``): Original date time string with day of year format "YYYY-DDDTHH:MM:SS.ff"
+        doy  (``str``): The day of year in the DOY format. 
+        year (``str``): The year.
+        idx  (``int``): Index of the start of the original "value" string at which characters 'DDD' are found. 
     Returns: 
-        -value (``str``): Transformed date in traditional date format. i.e.: "YYYY-mm-ddTHH:MM:SS.ff"
+        value (``str``): Transformed date in traditional date format. i.e.: "YYYY-mm-ddTHH:MM:SS.ff"
 
     '''
     # Calculate datetime format
@@ -649,13 +771,13 @@ def build_megaconstellation(launch_date,
     returned.
 
     Args:
-        launch_date (`datetime.datetime`): launch date as a datetime object
-        constellation_name (`str`)
-        groups (`str` or `int`): group number as an integer, or 'all' in case all groups shall be selected
-        mu_earth (`float`): gravitational parameter of the Earth i m^3/s^2
+        launch_date (``datetime.datetime``): launch date as a datetime object
+        constellation_name (``str``)
+        groups (``str`` or ``int``): group number as an integer, or 'all' in case all groups shall be selected
+        mu_earth (``float``): gravitational parameter of the Earth i m^3/s^2
 
     Returns:
-        `list`: list of TLE (`dsgp4.tle.TLE`) objects
+        ``list``: list of TLE (``dsgp4.tle.TLE``) objects
     """
     from . import TLE
 
@@ -1218,8 +1340,8 @@ def create_path(path, directory=False):
     This function creates a path if it does not exist.
 
     Args:
-        path (`str`): path to be created
-        directory (`bool`): if True, the path is a directory, otherwise it is a file
+        path (``str``): path to be created
+        directory (``bool``): if True, the path is a directory, otherwise it is a file
     """
     if directory:
         dir = path
@@ -1241,57 +1363,75 @@ def create_priors_from_tles(tles, mixture_components = {'mean_motion': 5, 'eccen
     by fitting probability density functions to data using the specified number of mixture components for each element.
 
     Args:
-        `list`: list of `dsgp4.tle.TLE` objects
-        `dict`: dictionary of mixture component numbers (`mean_motion`, `eccentricity`,
-                                      `inclination` and `b_star` can be selected).
+        ``list``: list of ``dsgp4.tle.TLE`` objects
+        ``dict``: dictionary of mixture component numbers (``mean_motion``, ``eccentricity``,
+                                      ``inclination`` and ``b_star`` can be selected).
 
     Returns:
-        `dict`: dictionary of prior distributions.
+        ``dict``: dictionary of prior distributions.
     """
-    from pyprob.distributions import Mixture, TruncatedNormal, Uniform
     #I extract the tle elements from the tles:
     tle_els = tle_elements(tles)
 
     mean_motion = tle_els[0]
     eccentricity = tle_els[1]
     inclination = tle_els[2]
-    agument_of_perigee = tle_els[3]
-    raan = tle_els[4]
+    #agument_of_perigee = tle_els[3]
+    #raan = tle_els[4]
     b_star = tle_els[5]
-    mean_anomaly = tle_els[6]
+    #mean_anomaly = tle_els[6]
     mean_motion_first_derivative = tle_els[7]
     #mean_motion_second_derivative = tle_els[8]
 
     priors_dict = {}
+    #first the mean motion:
     m = fit_mixture(np.array(mean_motion)*10000, n_components = mixture_components['mean_motion'], covariance_type = 'diag')
-    dists = []
+    locs=[]
+    scales=[]
     for i in range(len(m.means_)):
-        dists.append(TruncatedNormal(mean_non_truncated = m.means_[i][0]/10000, stddev_non_truncated = np.sqrt(m.covariances_[i][0])/10000, low = min(mean_motion), high = max(mean_motion)))
-    priors_dict['mean_motion_prior'] = Mixture(distributions = dists, probs = list(m.weights_))
-
+        locs.append(m.means_[i][0]/10000)
+        scales.append(np.sqrt(m.covariances_[i][0])/10000)
+    priors_dict['mean_motion_prior']=MixtureSameFamily(mixture_distribution=Categorical(probs=torch.tensor(m.weights_)),
+                                                       component_distribution=TruncatedNormal(loc=torch.tensor(locs), 
+                                                                                              scale=torch.tensor(scales), 
+                                                                                              low = min(mean_motion), 
+                                                                                              high = max(mean_motion)))
+    
+    #now the eccentricity:
     m = fit_mixture(values = np.array(eccentricity), n_components = mixture_components['eccentricity'], covariance_type = 'diag')
-    dists = []
+    locs=[]
+    scales=[]
     for i in range(len(m.means_)):
-        dists.append(TruncatedNormal(mean_non_truncated = m.means_[i][0], stddev_non_truncated = np.sqrt(m.covariances_[i][0]), low = 0., high = max(eccentricity) ))
-    priors_dict['eccentricity_prior'] = Mixture(distributions = dists, probs = list(m.weights_))
-
+        locs.append(m.means_[i][0])
+        scales.append(np.sqrt(m.covariances_[i][0]))
+    priors_dict['eccentricity_prior']=MixtureSameFamily(mixture_distribution=Categorical(probs=torch.tensor(m.weights_)),
+                      component_distribution=TruncatedNormal(loc=torch.tensor(locs), scale=torch.tensor(scales), low = 0., high = max(eccentricity)))
+    #now the inclination:
     m = fit_mixture(values = np.array(inclination), n_components = mixture_components['inclination'], covariance_type = 'diag')
-    dists = []
+    locs=[]
+    scales=[]
     for i in range(len(m.means_)):
-        dists.append(TruncatedNormal(mean_non_truncated = m.means_[i][0], stddev_non_truncated = np.sqrt(m.covariances_[i][0]), low = 0., high = np.pi ))
-    priors_dict['inclination_prior'] = Mixture(distributions = dists, probs = list(m.weights_))
-
+        locs.append(m.means_[i][0])
+        scales.append(np.sqrt(m.covariances_[i][0]))
+    priors_dict['inclination_prior']=MixtureSameFamily(mixture_distribution=Categorical(probs=torch.tensor(m.weights_)),
+                      component_distribution=TruncatedNormal(loc=torch.tensor(locs), scale=torch.tensor(scales), low = 0., high = np.pi))
+    #now the b_star:
     m = fit_mixture(values = np.array(b_star)*10000, n_components = mixture_components['b_star'], covariance_type = 'diag')
-    dists = []
+    locs=[]
+    scales=[]
     for i in range(len(m.means_)):
-        dists.append(TruncatedNormal(mean_non_truncated = m.means_[i][0]/10000, stddev_non_truncated = np.sqrt(m.covariances_[i][0]), low = min(b_star), high = max(b_star) ))
-    priors_dict['b_star_prior'] = Mixture(distributions = dists, probs = list(m.weights_))
-#    if plot==True:
-#        analysis.plot_mix(priors_dict)
+        locs.append(m.means_[i][0]/10000)
+        scales.append(np.sqrt(m.covariances_[i][0])/10000)
+    priors_dict['b_star_prior']=MixtureSameFamily(mixture_distribution=Categorical(probs=torch.tensor(m.weights_)),
+                      component_distribution=TruncatedNormal(loc=torch.tensor(locs), scale=torch.tensor(scales), low = min(b_star), high = max(b_star)))
+    #now the mean anomaly:
     priors_dict['mean_anomaly_prior'] = Uniform(low=0.0, high=2*np.pi)
+    #now the argument of perigee:
     priors_dict['argument_of_perigee_prior'] = Uniform(low=0.0, high=2*np.pi)
+    #now the raan:
     priors_dict['raan_prior'] = Uniform(low=0.0, high=2*np.pi)
-    priors_dict['mean_motion_first_derivative_prior'] = TruncatedNormal(mean_non_truncated = np.mean(mean_motion_first_derivative), stddev_non_truncated = np.std(mean_motion_first_derivative), low = min(mean_motion_first_derivative), high = max(mean_motion_first_derivative))
+    #now the mean motion first derivative:
+    priors_dict['mean_motion_first_derivative_prior']=TruncatedNormal(loc = np.mean(mean_motion_first_derivative), scale = np.std(mean_motion_first_derivative), low = min(mean_motion_first_derivative), high = max(mean_motion_first_derivative))
     return priors_dict
 
 
@@ -1300,15 +1440,16 @@ def tle_elements(tles):
     This function takes a list of TLEs as input and extracts their elements as lists.
 
     Args:
-        - tles (`list`): list of `dsgp4.tle.TLE` objects
+        tles (``list``): list of ``dsgp4.tle.TLE`` objects
     Returns:
-        - mean_motion, eccentricity, inclination, argument_of_perigee, raan, b_star, mean_anomaly, mean_motion_first_derivative, mean_motion_second_derivative
-    Example::
-        import matplotlib.pyplot as plt
-        import kessler
-        sats = dsgp4.tle.load(file_name = 'path_to_tle.txt')
-        n, e, i, omega, RAAN, B_star, M, n_dot, n_ddot = dsgp4.tle.tle_elements(sats)#tles is a list of TLEs dictionary
-        plt.hist(n)
+        mean_motion, eccentricity, inclination, argument_of_perigee, raan, b_star, mean_anomaly, mean_motion_first_derivative, mean_motion_second_derivative
+    
+    Example:
+        >>> import matplotlib.pyplot as plt
+        >>> import kessler
+        >>> sats = dsgp4.tle.load(file_name = 'path_to_tle.txt')
+        >>> n, e, i, omega, RAAN, B_star, M, n_dot, n_ddot = dsgp4.tle.tle_elements(sats)#tles is a list of TLEs dictionary
+        >>> plt.hist(n)
     """
     mean_motion, eccentricity, inclination, argument_of_perigee, raan, b_star, mean_anomaly, mean_motion_first_derivative, mean_motion_second_derivative = [], [], [], [], [], [], [], [], []
     for tle in tles:
@@ -1330,11 +1471,11 @@ def add_megaconstellation_from_file(tles, megaconstellation_file_name):
     a list of the original TLEs plus the TLEs of the added megaconstellation.
 
     Args:
-        tles (`list`): list of `dsgp4.tle.TLE` objects
-        megaconstellation_file_name (`str`): megaconstellation file name
+        tles (``list``): list of ``dsgp4.tle.TLE`` objects
+        megaconstellation_file_name (``str``): megaconstellation file name
 
     Returns:
-        `list`: list of `dsgp4.tle.TLE` objects
+        ``list``: list of ``dsgp4.tle.TLE`` objects
     """
     tles_megaconstellation=dsgp4.util.load(file_name=megaconstellation_file_name)
     return tles+tles_megaconstellation
