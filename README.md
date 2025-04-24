@@ -46,7 +46,7 @@ If you use `kessler`, we would be grateful if you could star the repository and/
 If you would like to learn more about or cite the techniques `kessler` uses, please see the following papers:
 
 * Giacomo Acciarini, Nicola Baresi, Christopher Bridges, Leonard Felicetti, Stephen Hobbs, Atılım Güneş Baydin. 2023. [“Observation Strategies and Megaconstellations Impact on Current LEO Population.”](https://conference.sdo.esoc.esa.int/proceedings/neosst2/paper/88) In 2nd NEO and Debris Detection Conference.
-```
+```bibtex
 @inproceedings{acciarini-2023-observation,
   title = {Observation Strategies and Megaconstellations Impact on Current LEO Population},
   author = {Acciarini, Giacomo and Baresi, Nicola and Bridges, Christopher and Felicetti, Leonard and Hobbs, Stephen and Baydin, Atılım Güneş},
