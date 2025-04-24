@@ -21,6 +21,7 @@
 -----------------------------------------
 [![Build Status](https://github.com/kesslerlib/kessler/workflows/build/badge.svg)](https://github.com/kesslerlib/kessler/actions)
 [![codecov](https://codecov.io/gh/kesslerlib/kessler/branch/master/graph/badge.svg?token=EQ9CLXD909)](https://codecov.io/gh/kesslerlib/kessler)
+[![Anaconda-Server Badge](https://anaconda.org/conda-forge/kessler/badges/latest_release_relative_date.svg)](https://anaconda.org/conda-forge/kessler)
 
 Kessler is a Python package for simulation-based inference and machine learning for space collision avoidance and assessment. It is named in honor of NASA scientist [Donald J. Kessler](https://en.wikipedia.org/wiki/Donald_J._Kessler) known for his studies regarding [space debris](https://en.wikipedia.org/wiki/Space_debris) and proposing the [Kessler syndrome](https://en.wikipedia.org/wiki/Kessler_syndrome).
 
@@ -84,7 +85,21 @@ If you would like to learn more about or cite the techniques `kessler` uses, ple
 
 ## Installation
 
-To install `kessler` locally, you can do the following:
+Via [conda](https://anaconda.org/conda-forge/kessler):
+```
+conda install conda-forge::kessler
+```
+
+or mamba:
+```
+mamba install kessler
+```
+
+Via [pip](https://pypi.org/project/kessler/):
+```
+pip install kessler
+```
+Local installation:
 
 ```
 git clone https://github.com/kesslerlib/kessler.git
