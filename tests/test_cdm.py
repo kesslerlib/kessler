@@ -151,6 +151,7 @@ class CDMTestCase(unittest.TestCase):
 
         cdm_covariance_1 = cdm.get_covariance(0)
         cdm_covariance_2 = cdm.get_covariance(1)
+        print(cdm_covariance_1)
         cdm_covariance_1_correct = np.array([[3.833e+01, 9.360e+01, -1.306e+01, 0.000e+00, 0.000e+00, 0.000e+00],
                                              [9.360e+01, 3.410e+03, 2.131e+00, 0.000e+00, 0.000e+00, 0.000e+00],
                                              [-1.306e+01, 2.131e+00, 9.339e+01, 0.000e+00, 0.000e+00, 0.000e+00],

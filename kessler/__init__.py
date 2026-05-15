@@ -16,3 +16,4 @@ from .event import Event, EventDataset
 from .observation_model import GNSS, Radar
 from . import plot, model
 from . import util
+from .model import foster_collision_probability, Conjunction
