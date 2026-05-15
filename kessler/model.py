@@ -14,6 +14,7 @@ import uuid
 import torch
 import pyro
 import pyro.distributions as dist
+import scipy.integrate
 
 from . import GNSS, Radar, ConjunctionDataMessage, util
 from dsgp4 import TLE
@@ -422,20 +423,29 @@ class Conjunction:
             #Recommended standards to compute Pc:
             #FOSTER-1992, CHAN-1997,PATERA-2001, and, ALFANO-2005
             if self._pc_method == 'MC':
-                #We extract the state and transform it to RTN
-                t_state_tca_rtn, _ = util.from_cartesian_to_rtn(cdm.get_state(0)*1e3)
-                c_state_tca_rtn, _ = util.from_cartesian_to_rtn(cdm.get_state(1)*1e3)
-                #and we extract the covariance matrix in the RTN frame:
-                t_cov_pos_tca=cdm.get_covariance(0)[:3,:3]
-                c_cov_pos_tca=cdm.get_covariance(1)[:3,:3]
-                #we now sample the state of the target and chaser at the time of closest approach
+                # Monte Carlo Pc computation
+                # Note: CDM state is in km, covariance is in m² (CCSDS 508.0-B-1 spec)
+                
+                # Extract state and covariance, convert state to meters for consistent sampling
+                t_state_tca_rtn, _ = util.from_cartesian_to_rtn(cdm.get_state(0)*1e3)  # now in meters
+                c_state_tca_rtn, _ = util.from_cartesian_to_rtn(cdm.get_state(1)*1e3)  # now in meters
+                
+                # Covariance is already in m² (per CCSDS spec), which matches meter-scale state
+                t_cov_pos_tca=cdm.get_covariance(0)[:3,:3]  # m²
+                c_cov_pos_tca=cdm.get_covariance(1)[:3,:3]  # m²
+                
+                # Sample from distributions: mean in meters, covariance in m²
                 t_samples_tca=torch.distributions.MultivariateNormal(torch.tensor(t_state_tca_rtn[0]),torch.tensor(t_cov_pos_tca)).sample((int(self._mc_samples*self._mc_upsample_factor),))
                 c_samples_tca=torch.distributions.MultivariateNormal(torch.tensor(c_state_tca_rtn[0]),torch.tensor(c_cov_pos_tca)).sample((int(self._mc_samples*self._mc_upsample_factor),))
-                #we compute all vs all miss distances:
-                miss_distances=torch.cdist(t_samples_tca,c_samples_tca)
-                #we compute the probability of collision as the number of samples that are below the threshold
-                probability_of_collision=(miss_distances<self._collision_threshold).to(torch.int32).sum()/torch.numel(miss_distances)
-            #elif self._pc_method == 'FOSTER-1992':
+                
+                # Compute paired miss distances (i-th target sample vs i-th chaser sample)
+                miss_distances = torch.linalg.norm(t_samples_tca - c_samples_tca, dim=1)
+                
+                # Probability of collision: fraction of paired samples below collision threshold
+                probability_of_collision=(miss_distances<self._collision_threshold).to(torch.int32).sum()/len(miss_distances)
+            elif self._pc_method == 'FOSTER-1992':
+                # Use the Foster 1992 method for Pc computation
+                probability_of_collision = foster_collision_probability(cdm, collision_radius=self._collision_threshold)
             cdm.set_relative_metadata('COLLISION_PROBABILITY', float(probability_of_collision))
             cdm.set_relative_metadata('COLLISION_PROBABILITY_METHOD', self._pc_method)
             return cdm
@@ -837,3 +847,108 @@ class ConjunctionSimplified(Conjunction):
             pyro.deterministic('c_mean_motion_second_derivative', torch.tensor(tle.mean_motion_second_derivative))
             pyro.deterministic('c_b_star',torch.tensor(tle.b_star))
         return tle
+
+
+def foster_collision_probability(cdm, collision_radius=70):
+    """
+    Compute the probability of collision (Pc) using the Foster (1992) method.
+    
+    The Foster method computes the probability of collision by integrating a 2D Gaussian
+    distribution in the B-plane (the plane perpendicular to the relative velocity vector).
+    The integration is performed over a collision circle with a specified radius.
+    
+    **Unit Convention (per CCSDS 508.0-B-1):**
+    - Input CDM state: km, km/s
+    - Input CDM covariance: m², (m/s)²
+    - collision_radius parameter: meters
+    All calculations internally use SI units (meters, m/s).
+    
+    Args:
+        cdm (ConjunctionDataMessage): A CDM object containing the state and covariance 
+                                      of two objects (CCSDS 508.0-B-1 format).
+        collision_radius (float, optional): The collision radius in meters. Default is 70 m.
+    
+    Returns:
+        float: The probability of collision (Pc) between 0 and 1.
+    
+    References:
+        Foster, J. L., & Estes, H. S. Parametric analysis of orbital debris collision probability 
+        and maneuver rate for space vehicles. NASA Technical Memorandum.
+        https://stacks.stanford.edu/file/druid:dg552pb6632/Foster-estes-parametric_analysis_of_orbital_debris_collision_probability.pdf
+    """
+    # Extract state and covariance from the CDM
+    # Per CCSDS 508.0-B-1: state in km, covariance in m²
+    # Convert state to meters for consistent SI calculation
+    state_t = cdm.get_state(0) * 1e3  # km → meters
+    state_c = cdm.get_state(1) * 1e3  # km → meters
+    
+    # Covariance is already in SI units (m² for position, (m/s)² for velocity)
+    # No conversion needed - this matches the meter-scale state
+    covariance_t = cdm.get_covariance(0)  # m²
+    covariance_c = cdm.get_covariance(1)  # m²
+    
+    # Combined covariance matrix for positions only
+    P = covariance_t[:3, :3] + covariance_c[:3, :3]
+    
+    # Relative position and velocity
+    rho0 = state_c[0] - state_t[0]
+    vr = state_c[1] - state_t[1]
+    
+    # Normalize velocity to get i_hat (along-track direction)
+    vr_norm = np.linalg.norm(vr)
+    if vr_norm < 1e-10:
+        raise ValueError("Relative velocity is too small or zero")
+    
+    i_hat = vr / vr_norm
+    
+    # Cross-track direction (perpendicular to orbital plane)
+    c_vel_cross_t_vel = np.cross(state_c[1], state_t[1])
+    c_vel_cross_t_vel_norm = np.linalg.norm(c_vel_cross_t_vel)
+    if c_vel_cross_t_vel_norm < 1e-10:
+        raise ValueError("Velocity vectors are parallel or close to parallel")
+    
+    j_hat = c_vel_cross_t_vel / c_vel_cross_t_vel_norm
+    
+    # Radial direction
+    k_hat = np.cross(i_hat, j_hat)
+    k_hat = k_hat / np.linalg.norm(k_hat)
+    
+    # Rotation matrix from ECI to B-plane coordinates
+    C = np.stack([i_hat, j_hat, k_hat])
+    
+    # Rotate covariance to B-plane coordinates
+    P_uvw = C @ P @ C.T
+    
+    # Extract 2x2 covariance in the B-plane (v-w plane, perpendicular to relative velocity)
+    P_vw = P_uvw[1:, 1:]
+    
+    # Determinant and normalization constant
+    det_P_vw = np.linalg.det(P_vw)
+    if det_P_vw <= 0:
+        raise ValueError("Covariance matrix is not positive definite")
+    
+    normalization = 1.0 / (2 * np.pi * np.sqrt(det_P_vw))
+    
+    # Transform initial relative position to B-plane coordinates
+    s_0 = C @ rho0
+    s_0_vw = s_0[1:]
+    
+    # Inverse of 2x2 covariance matrix
+    P_vw_inv = np.linalg.inv(P_vw)
+    
+    # Define the integrand: 2D Gaussian over the B-plane
+    def gaussian_2d(y, z):
+        delta = np.array([y, z]) - s_0_vw
+        exponent = -0.5 * (delta @ P_vw_inv @ delta)
+        return normalization * np.exp(exponent)
+    
+    # Integrate over the collision circle
+    pc, _ = scipy.integrate.dblquad(
+        gaussian_2d,
+        -collision_radius,
+        collision_radius,
+        lambda y: -np.sqrt(collision_radius**2 - y**2),
+        lambda y: np.sqrt(collision_radius**2 - y**2),
+    )
+    
+    return pc
